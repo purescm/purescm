@@ -2,3 +2,14 @@ resolver: lts-17.10
 
 packages:
   - .
+
+extra-deps:
+# Purescript wants this version
+- language-javascript-0.7.0.0
+
+- github: purescript/purescript
+  commit: v0.14.1
+  subdirs:
+    - lib/purescript-ast
+    - lib/purescript-cst
+    - '.'
