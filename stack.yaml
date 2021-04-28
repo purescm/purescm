@@ -13,3 +13,6 @@ extra-deps:
     - lib/purescript-ast
     - lib/purescript-cst
     - '.'
+
+nix:
+  packages: [zlib]
