@@ -1,6 +1,4 @@
 module Main where
+import qualified PureScm.CoreFn as CoreFn
 
-import Lib
-
-main :: IO ()
-main = someFunc
+main = CoreFn.readJSONFile "resources/corefn.json"
