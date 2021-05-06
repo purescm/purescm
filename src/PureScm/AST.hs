@@ -1,8 +1,14 @@
 module PureScm.AST where
 
-import qualified Data.List as L
-import Language.PureScript.PSString (PSString)
-import Language.PureScript.AST.Literals (Literal(..))
+import qualified Data.Text                        as T
+import           Data.Text                        (Text)
+import qualified Data.List                        as L
+import qualified Language.PureScript.PSString     as PSString
+import           Language.PureScript.PSString     (PSString)
+import           Language.PureScript.AST.Literals (Literal(..))
+
+showT :: Show a => a -> Text
+showT = T.pack . show
 
 -- TODO: Expr must have also:
 --       - Accessor (should map to Scheme's hashmap-get)
@@ -13,34 +19,37 @@ import Language.PureScript.AST.Literals (Literal(..))
 data Expr =
     Symbol String
   | Literal (Literal Expr)
-  | Lambda String Expr
+  | Lambda Text Expr
   | Application Expr Expr
   deriving Show
 
 -- TODO: In scheme we're using strings as keys.
 --       Check if using symbols instead of strings can give us some benefit
 --       e.g. better performance.
-makeObject :: [(PSString, Expr)] -> String
+makeObject :: [(PSString, Expr)] -> Text
 makeObject xs =
      "(let ([ht (make-hashtable string-hash string=?)]) "
   <> foldMap (\(k, v) -> "(hashtable-set! ht "
-                      <> show k <> " " <> render v
+                      <> showT k <> " " <> render v
                       <> ") ")
              xs
   <> "ht)"
 
-render :: Expr -> String
+render :: Expr -> Text
 
-render (Symbol s) = s
+render (Symbol s) = T.pack s
 
 render (Literal literal) = case literal of
-  NumericLiteral (Left integer) -> show $ integer
-  NumericLiteral (Right double) -> show $ double
-  StringLiteral  psString       -> show $ psString
-  CharLiteral    char           -> "#\\" <> [char]  -- TODO: escape char, check purerl
+  NumericLiteral (Left integer) -> showT integer
+  NumericLiteral (Right double) -> showT double
+  StringLiteral  psString       -> case PSString.decodeString psString of
+    Just s -> s
+    Nothing -> ""
+  CharLiteral    char           -> "#\\" <> T.singleton char
+  -- ^ TODO: escape char, check purerl
   BooleanLiteral True           -> "#t"
   BooleanLiteral False          -> "#f"
-  ArrayLiteral   xs             -> "#(" <> (L.intercalate " " $ map render xs) <> ")"
+  ArrayLiteral   xs             -> "#(" <> (T.intercalate " " $ map render xs) <> ")"
   ObjectLiteral  kvs            -> makeObject kvs
 
 
