@@ -1,0 +1,145 @@
+{
+  "moduleName": [
+    "PureScmTest",
+    "Literals"
+  ],
+  "reExports": {
+  },
+  "imports": [
+    {
+      "annotation": {
+        "meta": null,
+        "sourceSpan": {
+          "start": [
+            1,
+            1
+          ],
+          "end": [
+            3,
+            14
+          ]
+        }
+      },
+      "moduleName": [
+        "Prim"
+      ]
+    }
+  ],
+  "builtWith": "0.14.1",
+  "modulePath": "src/PureScmTest/Literals.purs",
+  "exports": [
+    "foo"
+  ],
+  "decls": [
+    {
+      "annotation": {
+        "meta": null,
+        "sourceSpan": {
+          "start": [
+            3,
+            1
+          ],
+          "end": [
+            3,
+            14
+          ]
+        }
+      },
+      "identifier": "foo",
+      "expression": {
+        "annotation": {
+          "meta": null,
+          "sourceSpan": {
+            "start": [
+              3,
+              7
+            ],
+            "end": [
+              3,
+              14
+            ]
+          }
+        },
+        "value": {
+          "literalType": "ArrayLiteral",
+          "value": [
+            {
+              "annotation": {
+                "meta": null,
+                "sourceSpan": {
+                  "start": [
+                    3,
+                    8
+                  ],
+                  "end": [
+                    3,
+                    9
+                  ]
+                }
+              },
+              "value": {
+                "literalType": "IntLiteral",
+                "value": 1
+              },
+              "type": "Literal"
+            },
+            {
+              "annotation": {
+                "meta": null,
+                "sourceSpan": {
+                  "start": [
+                    3,
+                    10
+                  ],
+                  "end": [
+                    3,
+                    11
+                  ]
+                }
+              },
+              "value": {
+                "literalType": "IntLiteral",
+                "value": 2
+              },
+              "type": "Literal"
+            },
+            {
+              "annotation": {
+                "meta": null,
+                "sourceSpan": {
+                  "start": [
+                    3,
+                    12
+                  ],
+                  "end": [
+                    3,
+                    13
+                  ]
+                }
+              },
+              "value": {
+                "literalType": "IntLiteral",
+                "value": 3
+              },
+              "type": "Literal"
+            }
+          ]
+        },
+        "type": "Literal"
+      },
+      "bindType": "NonRec"
+    }
+  ],
+  "comments": [],
+  "foreign": [],
+  "sourceSpan": {
+    "start": [
+      1,
+      1
+    ],
+    "end": [
+      3,
+      14
+    ]
+  }
+}
