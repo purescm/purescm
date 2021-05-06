@@ -12,9 +12,10 @@ extra-source-files:
 description:         Please see the README on GitHub at <https://github.com/githubuser/purescm#readme>
 
 dependencies:
-- base >= 4.7 && < 5
-- purescript
-- aeson
+  - base >= 4.7 && < 5
+  - purescript
+  - purescript-ast
+  - aeson
 
 library:
   source-dirs: src
@@ -23,12 +24,18 @@ executables:
   purescm-exe:
     main:                Main.hs
     source-dirs:         app
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
+
     dependencies:
-    - purescm
+      - purescm
+
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+      - -Wall
+      - -Wcompat
+      - -Wincomplete-record-updates
+      - -Wredundant-constraints
 
 tests:
   purescm-test:
