@@ -5,7 +5,7 @@ import Data.Text (Text)
 -- | Data type for Scheme expression
 data AST
 
-  -- | An integer literal.
+  -- | Integer literal.
   -- Chez Scheme uses two distinct types for integers:
   --   - Fixnums represent integers in the fixnum range accessible through
   --     the most-negative-fixnum and most-positive-fixnum procedures.
@@ -17,6 +17,15 @@ data AST
   -- but they are not used by PureScheme (yet).
   -- Check Chez Scheme Version 9 User's Guide chapter 8 for more information.
   = IntegerLiteral Integer
+
+  -- | Vector literal.
+  -- Whereas accessing an arbitrary element in a list requires a linear traversal
+  -- of the list up to the selected element, arbitrary vector elements are
+  -- accessed in constant time.
+  -- Vectors can't be resized.
+  -- Check The Scheme Programming Language Fourth Edition Chapter 6.9 for more
+  -- information.
+  | VectorLiteral [AST]
 
   -- | Variable definition.
   -- In Scheme there are two define syntax:

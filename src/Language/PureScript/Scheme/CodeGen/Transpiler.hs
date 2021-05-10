@@ -3,7 +3,7 @@ module Language.PureScript.Scheme.CodeGen.Transpiler where
 import Language.PureScript.CoreFn.Module      (Module(..))
 import Language.PureScript.CoreFn.Ann         (Ann)
 import Language.PureScript.CoreFn.Expr        (Expr(..), Bind(..))
-import Language.PureScript.Names              (Ident, runIdent)
+import Language.PureScript.Names              (runIdent)
 import Language.PureScript.AST.Literals       (Literal(..))
 import Language.PureScript.Scheme.CodeGen.AST (AST(..))
 
@@ -27,4 +27,5 @@ exprToScheme _ = error "Not implemented"
 
 literalToScheme :: Literal (Expr Ann) -> AST
 literalToScheme (NumericLiteral (Left integer)) = IntegerLiteral integer
+literalToScheme (ArrayLiteral xs) = VectorLiteral $ fmap exprToScheme xs
 literalToScheme _ = error "Not implemented"
