@@ -27,6 +27,17 @@ data AST
   -- information.
   | VectorLiteral [AST]
 
+  -- | Variable.
+  | Identifier Text
+
+  | Cond [(AST, AST)]
+
+  -- | Function application.
+  | Application AST [AST]
+
+  -- | Lambda form.
+  | Lambda Text AST
+
   -- | Variable definition.
   -- In Scheme there are two define syntax:
   --   - Simple variable definition: (define var expr). This expression binds
