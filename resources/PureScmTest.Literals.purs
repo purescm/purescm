@@ -1,3 +1,4 @@
 module PureScmTest.Literals where
 
-foo = [1,2,3]
+integerLiteral1 = 23
+integerLiteral2 = 42

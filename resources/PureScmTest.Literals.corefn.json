@@ -15,8 +15,8 @@
             1
           ],
           "end": [
-            3,
-            14
+            4,
+            21
           ]
         }
       },
@@ -28,9 +28,47 @@
   "builtWith": "0.14.1",
   "modulePath": "src/PureScmTest/Literals.purs",
   "exports": [
-    "foo"
+    "integerLiteral1",
+    "integerLiteral2"
   ],
   "decls": [
+    {
+      "annotation": {
+        "meta": null,
+        "sourceSpan": {
+          "start": [
+            4,
+            1
+          ],
+          "end": [
+            4,
+            21
+          ]
+        }
+      },
+      "identifier": "integerLiteral2",
+      "expression": {
+        "annotation": {
+          "meta": null,
+          "sourceSpan": {
+            "start": [
+              4,
+              19
+            ],
+            "end": [
+              4,
+              21
+            ]
+          }
+        },
+        "value": {
+          "literalType": "IntLiteral",
+          "value": 42
+        },
+        "type": "Literal"
+      },
+      "bindType": "NonRec"
+    },
     {
       "annotation": {
         "meta": null,
@@ -41,89 +79,28 @@
           ],
           "end": [
             3,
-            14
+            21
           ]
         }
       },
-      "identifier": "foo",
+      "identifier": "integerLiteral1",
       "expression": {
         "annotation": {
           "meta": null,
           "sourceSpan": {
             "start": [
               3,
-              7
+              19
             ],
             "end": [
               3,
-              14
+              21
             ]
           }
         },
         "value": {
-          "literalType": "ArrayLiteral",
-          "value": [
-            {
-              "annotation": {
-                "meta": null,
-                "sourceSpan": {
-                  "start": [
-                    3,
-                    8
-                  ],
-                  "end": [
-                    3,
-                    9
-                  ]
-                }
-              },
-              "value": {
-                "literalType": "IntLiteral",
-                "value": 1
-              },
-              "type": "Literal"
-            },
-            {
-              "annotation": {
-                "meta": null,
-                "sourceSpan": {
-                  "start": [
-                    3,
-                    10
-                  ],
-                  "end": [
-                    3,
-                    11
-                  ]
-                }
-              },
-              "value": {
-                "literalType": "IntLiteral",
-                "value": 2
-              },
-              "type": "Literal"
-            },
-            {
-              "annotation": {
-                "meta": null,
-                "sourceSpan": {
-                  "start": [
-                    3,
-                    12
-                  ],
-                  "end": [
-                    3,
-                    13
-                  ]
-                }
-              },
-              "value": {
-                "literalType": "IntLiteral",
-                "value": 3
-              },
-              "type": "Literal"
-            }
-          ]
+          "literalType": "IntLiteral",
+          "value": 23
         },
         "type": "Literal"
       },
@@ -138,8 +115,8 @@
       1
     ],
     "end": [
-      3,
-      14
+      4,
+      21
     ]
   }
 }
