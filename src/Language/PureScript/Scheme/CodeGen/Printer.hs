@@ -12,15 +12,28 @@ parens x = "(" <> x <> ")"
 list :: [Text] -> Text
 list xs = parens $ intercalate " " xs
 
-define :: Text -> Text -> Text
-define name expr = list ["define", name, expr]
-
 vector :: [Text] -> Text
 vector xs = list ("vector" : xs)
+
+cond :: [Text] -> Text
+cond xs = list ("cond" : xs)
+
+application :: Text -> [Text] -> Text
+application function args = list (function : args)
+
+lambda :: Text -> Text -> Text
+lambda parameter expr = list ["lambda", list [parameter], expr]
+
+define :: Text -> Text -> Text
+define name expr = list ["define", name, expr]
 
 emit :: AST -> Text
 emit (IntegerLiteral integer) = tshow integer
 emit (VectorLiteral xs) = vector (fmap emit xs)
+emit (Identifier x) = x
+emit (Cond xs) = cond $ fmap (\(test, expr) -> list [emit test, emit expr]) xs
+emit (Application function args) = application (emit function) (fmap emit args)
+emit (Lambda arg expr) = lambda arg (emit expr)
 emit (Define name expr) = define name (emit expr)
 
 printScheme :: [AST] -> Text
