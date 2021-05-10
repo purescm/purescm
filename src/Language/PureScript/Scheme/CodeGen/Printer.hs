@@ -3,8 +3,8 @@ module Language.PureScript.Scheme.CodeGen.Printer where
 import Data.Text                              (Text, pack, intercalate)
 import Language.PureScript.Scheme.CodeGen.AST (AST(..))
 
-showT :: Show a => a -> Text
-showT x = pack $ show x
+tshow :: Show a => a -> Text
+tshow = pack . show
 
 parens :: Text -> Text
 parens x = "(" <> x <> ")"
@@ -19,7 +19,7 @@ vector :: [Text] -> Text
 vector xs = list ("vector" : xs)
 
 emit :: AST -> Text
-emit (IntegerLiteral integer) = showT integer
+emit (IntegerLiteral integer) = tshow integer
 emit (VectorLiteral xs) = vector (fmap emit xs)
 emit (Define name expr) = define name (emit expr)
 
