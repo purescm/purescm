@@ -8,10 +8,11 @@ import           Language.PureScript.CoreFn.Module             (Module)
 import           Language.PureScript.CoreFn.Ann                (Ann)
 import           Language.PureScript.Scheme.CodeGen.Transpiler (moduleToScheme)
 import           Language.PureScript.Scheme.CodeGen.Printer    (printScheme)
+import           Language.PureScript.Scheme.CodeGen.Optimizer  (runOptimizations)
 
 main :: IO ()
-main = (printScheme . moduleToScheme)
-   <$> readJSONFile "resources/PureScmTest.Literals.corefn.json"
+main = (printScheme . runOptimizations . moduleToScheme)
+   <$> readJSONFile "resources/PureScmTest.Inc.corefn.json"
    >>= T.putStrLn
 
 readJSONFile :: FilePath -> IO (Module Ann)
