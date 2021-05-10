@@ -15,8 +15,12 @@ list xs = parens $ intercalate " " xs
 define :: Text -> Text -> Text
 define name expr = list ["define", name, expr]
 
+vector :: [Text] -> Text
+vector xs = list ("vector" : xs)
+
 emit :: AST -> Text
 emit (IntegerLiteral integer) = showT integer
+emit (VectorLiteral xs) = vector (fmap emit xs)
 emit (Define name expr) = define name (emit expr)
 
 printScheme :: [AST] -> Text
