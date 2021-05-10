@@ -10,7 +10,9 @@ import           Language.PureScript.Scheme.CodeGen.Transpiler (moduleToScheme)
 import           Language.PureScript.Scheme.CodeGen.Printer    (printScheme)
 
 main :: IO ()
-main = scheme >>= T.putStrLn
+main = (printScheme . moduleToScheme)
+   <$> readJSONFile "resources/PureScmTest.Literals.corefn.json"
+   >>= T.putStrLn
 
 readJSONFile :: FilePath -> IO (Module Ann)
 readJSONFile path = do
@@ -18,8 +20,4 @@ readJSONFile path = do
   let res = r >>= JSON.T.parseMaybe CoreFn.moduleFromJSON
   case res of
     Nothing -> error "Nope"
-    Just (version, module_) -> return module_
-
-readJSON = readJSONFile "resources/PureScmTest.Literals.corefn.json"
-
-scheme = (printScheme . moduleToScheme) <$> readJSON
+    Just (_version, module_) -> return module_
