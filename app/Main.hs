@@ -1,13 +1,16 @@
 module Main where
 
-import qualified Data.Aeson                                   as JSON
-import qualified Data.Aeson.Types                             as JSON.T
-import qualified Language.PureScript.CoreFn.FromJSON          as CoreFn
-import           Language.PureScript.CoreFn.Module            (Module)
-import           Language.PureScript.CoreFn.Ann               (Ann)
-import           Language.PureScript.Scheme.CodeGen.Transpile (moduleToScheme)
+import           Data.Text.IO                                  as T (putStrLn)
+import qualified Data.Aeson                                    as JSON
+import qualified Data.Aeson.Types                              as JSON.T
+import qualified Language.PureScript.CoreFn.FromJSON           as CoreFn
+import           Language.PureScript.CoreFn.Module             (Module)
+import           Language.PureScript.CoreFn.Ann                (Ann)
+import           Language.PureScript.Scheme.CodeGen.Transpiler (moduleToScheme)
+import           Language.PureScript.Scheme.CodeGen.Printer    (printScheme)
 
-main = (fmap moduleToScheme readJSON) >>= print
+main :: IO ()
+main = scheme >>= T.putStrLn
 
 readJSONFile :: FilePath -> IO (Module Ann)
 readJSONFile path = do
@@ -18,3 +21,5 @@ readJSONFile path = do
     Just (version, module_) -> return module_
 
 readJSON = readJSONFile "resources/PureScmTest.Literals.corefn.json"
+
+scheme = (printScheme . moduleToScheme) <$> readJSON
