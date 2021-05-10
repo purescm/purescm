@@ -1,0 +1,758 @@
+{
+  "moduleName": [
+    "PureScmTest",
+    "Fib"
+  ],
+  "reExports": {
+  },
+  "imports": [
+    {
+      "annotation": {
+        "meta": null,
+        "sourceSpan": {
+          "start": [
+            1,
+            1
+          ],
+          "end": [
+            7,
+            30
+          ]
+        }
+      },
+      "moduleName": [
+        "Data",
+        "Ring"
+      ]
+    },
+    {
+      "annotation": {
+        "meta": null,
+        "sourceSpan": {
+          "start": [
+            1,
+            1
+          ],
+          "end": [
+            7,
+            30
+          ]
+        }
+      },
+      "moduleName": [
+        "Data",
+        "Semiring"
+      ]
+    },
+    {
+      "annotation": {
+        "meta": null,
+        "sourceSpan": {
+          "start": [
+            3,
+            1
+          ],
+          "end": [
+            3,
+            15
+          ]
+        }
+      },
+      "moduleName": [
+        "Prelude"
+      ]
+    },
+    {
+      "annotation": {
+        "meta": null,
+        "sourceSpan": {
+          "start": [
+            1,
+            1
+          ],
+          "end": [
+            7,
+            30
+          ]
+        }
+      },
+      "moduleName": [
+        "Prim"
+      ]
+    },
+    {
+      "annotation": {
+        "meta": null,
+        "sourceSpan": {
+          "start": [
+            1,
+            1
+          ],
+          "end": [
+            7,
+            30
+          ]
+        }
+      },
+      "moduleName": [
+        "PureScmTest",
+        "Fib"
+      ]
+    }
+  ],
+  "builtWith": "0.14.1",
+  "modulePath": "src/PureScmTest/Fib.purs",
+  "exports": [
+    "fib"
+  ],
+  "decls": [
+    {
+      "binds": [
+        {
+          "annotation": {
+            "meta": null,
+            "sourceSpan": {
+              "start": [
+                5,
+                1
+              ],
+              "end": [
+                5,
+                10
+              ]
+            }
+          },
+          "identifier": "fib",
+          "expression": {
+            "annotation": {
+              "meta": null,
+              "sourceSpan": {
+                "start": [
+                  5,
+                  1
+                ],
+                "end": [
+                  5,
+                  10
+                ]
+              }
+            },
+            "body": {
+              "annotation": {
+                "meta": null,
+                "sourceSpan": {
+                  "start": [
+                    5,
+                    1
+                  ],
+                  "end": [
+                    5,
+                    10
+                  ]
+                }
+              },
+              "caseExpressions": [
+                {
+                  "annotation": {
+                    "meta": null,
+                    "sourceSpan": {
+                      "start": [
+                        5,
+                        1
+                      ],
+                      "end": [
+                        5,
+                        10
+                      ]
+                    }
+                  },
+                  "value": {
+                    "moduleName": null,
+                    "identifier": "v"
+                  },
+                  "type": "Var"
+                }
+              ],
+              "caseAlternatives": [
+                {
+                  "binders": [
+                    {
+                      "annotation": {
+                        "meta": null,
+                        "sourceSpan": {
+                          "start": [
+                            5,
+                            5
+                          ],
+                          "end": [
+                            5,
+                            6
+                          ]
+                        }
+                      },
+                      "literal": {
+                        "literalType": "IntLiteral",
+                        "value": 0
+                      },
+                      "binderType": "LiteralBinder"
+                    }
+                  ],
+                  "expression": {
+                    "annotation": {
+                      "meta": null,
+                      "sourceSpan": {
+                        "start": [
+                          5,
+                          9
+                        ],
+                        "end": [
+                          5,
+                          10
+                        ]
+                      }
+                    },
+                    "value": {
+                      "literalType": "IntLiteral",
+                      "value": 0
+                    },
+                    "type": "Literal"
+                  },
+                  "isGuarded": false
+                },
+                {
+                  "binders": [
+                    {
+                      "annotation": {
+                        "meta": null,
+                        "sourceSpan": {
+                          "start": [
+                            6,
+                            5
+                          ],
+                          "end": [
+                            6,
+                            6
+                          ]
+                        }
+                      },
+                      "literal": {
+                        "literalType": "IntLiteral",
+                        "value": 1
+                      },
+                      "binderType": "LiteralBinder"
+                    }
+                  ],
+                  "expression": {
+                    "annotation": {
+                      "meta": null,
+                      "sourceSpan": {
+                        "start": [
+                          6,
+                          9
+                        ],
+                        "end": [
+                          6,
+                          10
+                        ]
+                      }
+                    },
+                    "value": {
+                      "literalType": "IntLiteral",
+                      "value": 1
+                    },
+                    "type": "Literal"
+                  },
+                  "isGuarded": false
+                },
+                {
+                  "binders": [
+                    {
+                      "annotation": {
+                        "meta": null,
+                        "sourceSpan": {
+                          "start": [
+                            7,
+                            5
+                          ],
+                          "end": [
+                            7,
+                            6
+                          ]
+                        }
+                      },
+                      "identifier": "n",
+                      "binderType": "VarBinder"
+                    }
+                  ],
+                  "expression": {
+                    "annotation": {
+                      "meta": null,
+                      "sourceSpan": {
+                        "start": [
+                          7,
+                          9
+                        ],
+                        "end": [
+                          7,
+                          30
+                        ]
+                      }
+                    },
+                    "argument": {
+                      "annotation": {
+                        "meta": null,
+                        "sourceSpan": {
+                          "start": [
+                            7,
+                            21
+                          ],
+                          "end": [
+                            7,
+                            30
+                          ]
+                        }
+                      },
+                      "argument": {
+                        "annotation": {
+                          "meta": null,
+                          "sourceSpan": {
+                            "start": [
+                              7,
+                              26
+                            ],
+                            "end": [
+                              7,
+                              29
+                            ]
+                          }
+                        },
+                        "argument": {
+                          "annotation": {
+                            "meta": null,
+                            "sourceSpan": {
+                              "start": [
+                                7,
+                                28
+                              ],
+                              "end": [
+                                7,
+                                29
+                              ]
+                            }
+                          },
+                          "value": {
+                            "literalType": "IntLiteral",
+                            "value": 2
+                          },
+                          "type": "Literal"
+                        },
+                        "type": "App",
+                        "abstraction": {
+                          "annotation": {
+                            "meta": null,
+                            "sourceSpan": {
+                              "start": [
+                                7,
+                                26
+                              ],
+                              "end": [
+                                7,
+                                29
+                              ]
+                            }
+                          },
+                          "argument": {
+                            "annotation": {
+                              "meta": null,
+                              "sourceSpan": {
+                                "start": [
+                                  7,
+                                  26
+                                ],
+                                "end": [
+                                  7,
+                                  27
+                                ]
+                              }
+                            },
+                            "value": {
+                              "moduleName": null,
+                              "identifier": "n"
+                            },
+                            "type": "Var"
+                          },
+                          "type": "App",
+                          "abstraction": {
+                            "annotation": {
+                              "meta": null,
+                              "sourceSpan": {
+                                "start": [
+                                  7,
+                                  26
+                                ],
+                                "end": [
+                                  7,
+                                  29
+                                ]
+                              }
+                            },
+                            "argument": {
+                              "annotation": {
+                                "meta": null,
+                                "sourceSpan": {
+                                  "start": [
+                                    0,
+                                    0
+                                  ],
+                                  "end": [
+                                    0,
+                                    0
+                                  ]
+                                }
+                              },
+                              "value": {
+                                "moduleName": [
+                                  "Data",
+                                  "Ring"
+                                ],
+                                "identifier": "ringInt"
+                              },
+                              "type": "Var"
+                            },
+                            "type": "App",
+                            "abstraction": {
+                              "annotation": {
+                                "meta": {
+                                  "metaType": "IsForeign"
+                                },
+                                "sourceSpan": {
+                                  "start": [
+                                    7,
+                                    27
+                                  ],
+                                  "end": [
+                                    7,
+                                    28
+                                  ]
+                                }
+                              },
+                              "value": {
+                                "moduleName": [
+                                  "Data",
+                                  "Ring"
+                                ],
+                                "identifier": "sub"
+                              },
+                              "type": "Var"
+                            }
+                          }
+                        }
+                      },
+                      "type": "App",
+                      "abstraction": {
+                        "annotation": {
+                          "meta": null,
+                          "sourceSpan": {
+                            "start": [
+                              7,
+                              21
+                            ],
+                            "end": [
+                              7,
+                              24
+                            ]
+                          }
+                        },
+                        "value": {
+                          "moduleName": [
+                            "PureScmTest",
+                            "Fib"
+                          ],
+                          "identifier": "fib"
+                        },
+                        "type": "Var"
+                      }
+                    },
+                    "type": "App",
+                    "abstraction": {
+                      "annotation": {
+                        "meta": null,
+                        "sourceSpan": {
+                          "start": [
+                            7,
+                            9
+                          ],
+                          "end": [
+                            7,
+                            30
+                          ]
+                        }
+                      },
+                      "argument": {
+                        "annotation": {
+                          "meta": null,
+                          "sourceSpan": {
+                            "start": [
+                              7,
+                              9
+                            ],
+                            "end": [
+                              7,
+                              18
+                            ]
+                          }
+                        },
+                        "argument": {
+                          "annotation": {
+                            "meta": null,
+                            "sourceSpan": {
+                              "start": [
+                                7,
+                                14
+                              ],
+                              "end": [
+                                7,
+                                17
+                              ]
+                            }
+                          },
+                          "argument": {
+                            "annotation": {
+                              "meta": null,
+                              "sourceSpan": {
+                                "start": [
+                                  7,
+                                  16
+                                ],
+                                "end": [
+                                  7,
+                                  17
+                                ]
+                              }
+                            },
+                            "value": {
+                              "literalType": "IntLiteral",
+                              "value": 1
+                            },
+                            "type": "Literal"
+                          },
+                          "type": "App",
+                          "abstraction": {
+                            "annotation": {
+                              "meta": null,
+                              "sourceSpan": {
+                                "start": [
+                                  7,
+                                  14
+                                ],
+                                "end": [
+                                  7,
+                                  17
+                                ]
+                              }
+                            },
+                            "argument": {
+                              "annotation": {
+                                "meta": null,
+                                "sourceSpan": {
+                                  "start": [
+                                    7,
+                                    14
+                                  ],
+                                  "end": [
+                                    7,
+                                    15
+                                  ]
+                                }
+                              },
+                              "value": {
+                                "moduleName": null,
+                                "identifier": "n"
+                              },
+                              "type": "Var"
+                            },
+                            "type": "App",
+                            "abstraction": {
+                              "annotation": {
+                                "meta": null,
+                                "sourceSpan": {
+                                  "start": [
+                                    7,
+                                    14
+                                  ],
+                                  "end": [
+                                    7,
+                                    17
+                                  ]
+                                }
+                              },
+                              "argument": {
+                                "annotation": {
+                                  "meta": null,
+                                  "sourceSpan": {
+                                    "start": [
+                                      0,
+                                      0
+                                    ],
+                                    "end": [
+                                      0,
+                                      0
+                                    ]
+                                  }
+                                },
+                                "value": {
+                                  "moduleName": [
+                                    "Data",
+                                    "Ring"
+                                  ],
+                                  "identifier": "ringInt"
+                                },
+                                "type": "Var"
+                              },
+                              "type": "App",
+                              "abstraction": {
+                                "annotation": {
+                                  "meta": {
+                                    "metaType": "IsForeign"
+                                  },
+                                  "sourceSpan": {
+                                    "start": [
+                                      7,
+                                      15
+                                    ],
+                                    "end": [
+                                      7,
+                                      16
+                                    ]
+                                  }
+                                },
+                                "value": {
+                                  "moduleName": [
+                                    "Data",
+                                    "Ring"
+                                  ],
+                                  "identifier": "sub"
+                                },
+                                "type": "Var"
+                              }
+                            }
+                          }
+                        },
+                        "type": "App",
+                        "abstraction": {
+                          "annotation": {
+                            "meta": null,
+                            "sourceSpan": {
+                              "start": [
+                                7,
+                                9
+                              ],
+                              "end": [
+                                7,
+                                12
+                              ]
+                            }
+                          },
+                          "value": {
+                            "moduleName": [
+                              "PureScmTest",
+                              "Fib"
+                            ],
+                            "identifier": "fib"
+                          },
+                          "type": "Var"
+                        }
+                      },
+                      "type": "App",
+                      "abstraction": {
+                        "annotation": {
+                          "meta": null,
+                          "sourceSpan": {
+                            "start": [
+                              7,
+                              9
+                            ],
+                            "end": [
+                              7,
+                              30
+                            ]
+                          }
+                        },
+                        "argument": {
+                          "annotation": {
+                            "meta": null,
+                            "sourceSpan": {
+                              "start": [
+                                0,
+                                0
+                              ],
+                              "end": [
+                                0,
+                                0
+                              ]
+                            }
+                          },
+                          "value": {
+                            "moduleName": [
+                              "Data",
+                              "Semiring"
+                            ],
+                            "identifier": "semiringInt"
+                          },
+                          "type": "Var"
+                        },
+                        "type": "App",
+                        "abstraction": {
+                          "annotation": {
+                            "meta": {
+                              "metaType": "IsForeign"
+                            },
+                            "sourceSpan": {
+                              "start": [
+                                7,
+                                19
+                              ],
+                              "end": [
+                                7,
+                                20
+                              ]
+                            }
+                          },
+                          "value": {
+                            "moduleName": [
+                              "Data",
+                              "Semiring"
+                            ],
+                            "identifier": "add"
+                          },
+                          "type": "Var"
+                        }
+                      }
+                    }
+                  },
+                  "isGuarded": false
+                }
+              ],
+              "type": "Case"
+            },
+            "argument": "v",
+            "type": "Abs"
+          }
+        }
+      ],
+      "bindType": "Rec"
+    }
+  ],
+  "comments": [],
+  "foreign": [],
+  "sourceSpan": {
+    "start": [
+      1,
+      1
+    ],
+    "end": [
+      7,
+      30
+    ]
+  }
+}
