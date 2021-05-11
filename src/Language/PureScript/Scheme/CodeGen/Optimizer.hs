@@ -3,6 +3,8 @@ module Language.PureScript.Scheme.CodeGen.Optimizer where
 import Language.PureScript.Scheme.CodeGen.AST (AST(..))
 
 
+-- Single pass optimizer.
+-- Run through all the AST expressions and apply the optimizations.
 runOptimizations :: [AST] -> [AST]
 runOptimizations xs = map (\x -> everywhere specializeOperators x) xs
 
@@ -21,6 +23,7 @@ specializeOperators (Application (Application (Application (Identifier "Data.Rin
 specializeOperators ast = ast
 
 
+-- | Recursively apply f to each AST.
 everywhere :: (AST -> AST) -> AST -> AST
 everywhere f = go where
   go :: AST -> AST
