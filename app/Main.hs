@@ -1,5 +1,6 @@
 module Main where
 
+import           Data.Text                                     (Text)
 import           Data.Text.IO                                  as T (putStrLn)
 import qualified Data.Aeson                                    as JSON
 import qualified Data.Aeson.Types                              as JSON.T
@@ -11,9 +12,11 @@ import           Language.PureScript.Scheme.CodeGen.Printer    (printScheme)
 import           Language.PureScript.Scheme.CodeGen.Optimizer  (runOptimizations)
 
 main :: IO ()
-main = (printScheme . runOptimizations . moduleToScheme)
-   <$> readJSONFile "resources/PureScmTest.Inc.corefn.json"
-   >>= T.putStrLn
+main = compile "resources/PureScmTest.Fib.corefn.json" >>= T.putStrLn
+
+compile :: FilePath -> IO Text
+compile path = (printScheme . runOptimizations . moduleToScheme)
+           <$> readJSONFile path
 
 readJSONFile :: FilePath -> IO (Module Ann)
 readJSONFile path = do
