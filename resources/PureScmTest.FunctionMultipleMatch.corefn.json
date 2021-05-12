@@ -1,0 +1,532 @@
+{
+  "moduleName": [
+    "PureScmTest",
+    "FunctionMultipleMatch"
+  ],
+  "reExports": {
+  },
+  "imports": [
+    {
+      "annotation": {
+        "meta": null,
+        "sourceSpan": {
+          "start": [
+            1,
+            1
+          ],
+          "end": [
+            8,
+            13
+          ]
+        }
+      },
+      "moduleName": [
+        "Prim"
+      ]
+    }
+  ],
+  "builtWith": "0.14.1",
+  "modulePath": "src/PureScmTest/FunctionMultipleMatch.purs",
+  "exports": [
+    "foo"
+  ],
+  "decls": [
+    {
+      "annotation": {
+        "meta": null,
+        "sourceSpan": {
+          "start": [
+            3,
+            1
+          ],
+          "end": [
+            3,
+            12
+          ]
+        }
+      },
+      "identifier": "foo",
+      "expression": {
+        "annotation": {
+          "meta": null,
+          "sourceSpan": {
+            "start": [
+              3,
+              1
+            ],
+            "end": [
+              3,
+              12
+            ]
+          }
+        },
+        "body": {
+          "annotation": {
+            "meta": null,
+            "sourceSpan": {
+              "start": [
+                3,
+                1
+              ],
+              "end": [
+                3,
+                12
+              ]
+            }
+          },
+          "body": {
+            "annotation": {
+              "meta": null,
+              "sourceSpan": {
+                "start": [
+                  3,
+                  1
+                ],
+                "end": [
+                  3,
+                  12
+                ]
+              }
+            },
+            "caseExpressions": [
+              {
+                "annotation": {
+                  "meta": null,
+                  "sourceSpan": {
+                    "start": [
+                      3,
+                      1
+                    ],
+                    "end": [
+                      3,
+                      12
+                    ]
+                  }
+                },
+                "value": {
+                  "moduleName": null,
+                  "identifier": "v"
+                },
+                "type": "Var"
+              },
+              {
+                "annotation": {
+                  "meta": null,
+                  "sourceSpan": {
+                    "start": [
+                      3,
+                      1
+                    ],
+                    "end": [
+                      3,
+                      12
+                    ]
+                  }
+                },
+                "value": {
+                  "moduleName": null,
+                  "identifier": "v1"
+                },
+                "type": "Var"
+              }
+            ],
+            "caseAlternatives": [
+              {
+                "binders": [
+                  {
+                    "annotation": {
+                      "meta": null,
+                      "sourceSpan": {
+                        "start": [
+                          3,
+                          5
+                        ],
+                        "end": [
+                          3,
+                          6
+                        ]
+                      }
+                    },
+                    "literal": {
+                      "literalType": "IntLiteral",
+                      "value": 0
+                    },
+                    "binderType": "LiteralBinder"
+                  },
+                  {
+                    "annotation": {
+                      "meta": null,
+                      "sourceSpan": {
+                        "start": [
+                          3,
+                          7
+                        ],
+                        "end": [
+                          3,
+                          8
+                        ]
+                      }
+                    },
+                    "literal": {
+                      "literalType": "IntLiteral",
+                      "value": 0
+                    },
+                    "binderType": "LiteralBinder"
+                  }
+                ],
+                "expression": {
+                  "annotation": {
+                    "meta": null,
+                    "sourceSpan": {
+                      "start": [
+                        3,
+                        11
+                      ],
+                      "end": [
+                        3,
+                        12
+                      ]
+                    }
+                  },
+                  "value": {
+                    "literalType": "IntLiteral",
+                    "value": 0
+                  },
+                  "type": "Literal"
+                },
+                "isGuarded": false
+              },
+              {
+                "binders": [
+                  {
+                    "annotation": {
+                      "meta": null,
+                      "sourceSpan": {
+                        "start": [
+                          4,
+                          5
+                        ],
+                        "end": [
+                          4,
+                          6
+                        ]
+                      }
+                    },
+                    "literal": {
+                      "literalType": "IntLiteral",
+                      "value": 0
+                    },
+                    "binderType": "LiteralBinder"
+                  },
+                  {
+                    "annotation": {
+                      "meta": null,
+                      "sourceSpan": {
+                        "start": [
+                          4,
+                          7
+                        ],
+                        "end": [
+                          4,
+                          8
+                        ]
+                      }
+                    },
+                    "literal": {
+                      "literalType": "IntLiteral",
+                      "value": 1
+                    },
+                    "binderType": "LiteralBinder"
+                  }
+                ],
+                "expression": {
+                  "annotation": {
+                    "meta": null,
+                    "sourceSpan": {
+                      "start": [
+                        4,
+                        11
+                      ],
+                      "end": [
+                        4,
+                        12
+                      ]
+                    }
+                  },
+                  "value": {
+                    "literalType": "IntLiteral",
+                    "value": 1
+                  },
+                  "type": "Literal"
+                },
+                "isGuarded": false
+              },
+              {
+                "binders": [
+                  {
+                    "annotation": {
+                      "meta": null,
+                      "sourceSpan": {
+                        "start": [
+                          5,
+                          5
+                        ],
+                        "end": [
+                          5,
+                          6
+                        ]
+                      }
+                    },
+                    "literal": {
+                      "literalType": "IntLiteral",
+                      "value": 1
+                    },
+                    "binderType": "LiteralBinder"
+                  },
+                  {
+                    "annotation": {
+                      "meta": null,
+                      "sourceSpan": {
+                        "start": [
+                          5,
+                          7
+                        ],
+                        "end": [
+                          5,
+                          8
+                        ]
+                      }
+                    },
+                    "literal": {
+                      "literalType": "IntLiteral",
+                      "value": 0
+                    },
+                    "binderType": "LiteralBinder"
+                  }
+                ],
+                "expression": {
+                  "annotation": {
+                    "meta": null,
+                    "sourceSpan": {
+                      "start": [
+                        5,
+                        11
+                      ],
+                      "end": [
+                        5,
+                        13
+                      ]
+                    }
+                  },
+                  "value": {
+                    "literalType": "IntLiteral",
+                    "value": 10
+                  },
+                  "type": "Literal"
+                },
+                "isGuarded": false
+              },
+              {
+                "binders": [
+                  {
+                    "annotation": {
+                      "meta": null,
+                      "sourceSpan": {
+                        "start": [
+                          6,
+                          5
+                        ],
+                        "end": [
+                          6,
+                          6
+                        ]
+                      }
+                    },
+                    "binderType": "NullBinder"
+                  },
+                  {
+                    "annotation": {
+                      "meta": null,
+                      "sourceSpan": {
+                        "start": [
+                          6,
+                          7
+                        ],
+                        "end": [
+                          6,
+                          8
+                        ]
+                      }
+                    },
+                    "literal": {
+                      "literalType": "IntLiteral",
+                      "value": 2
+                    },
+                    "binderType": "LiteralBinder"
+                  }
+                ],
+                "expression": {
+                  "annotation": {
+                    "meta": null,
+                    "sourceSpan": {
+                      "start": [
+                        6,
+                        11
+                      ],
+                      "end": [
+                        6,
+                        12
+                      ]
+                    }
+                  },
+                  "value": {
+                    "literalType": "IntLiteral",
+                    "value": 2
+                  },
+                  "type": "Literal"
+                },
+                "isGuarded": false
+              },
+              {
+                "binders": [
+                  {
+                    "annotation": {
+                      "meta": null,
+                      "sourceSpan": {
+                        "start": [
+                          7,
+                          5
+                        ],
+                        "end": [
+                          7,
+                          6
+                        ]
+                      }
+                    },
+                    "literal": {
+                      "literalType": "IntLiteral",
+                      "value": 3
+                    },
+                    "binderType": "LiteralBinder"
+                  },
+                  {
+                    "annotation": {
+                      "meta": null,
+                      "sourceSpan": {
+                        "start": [
+                          7,
+                          7
+                        ],
+                        "end": [
+                          7,
+                          8
+                        ]
+                      }
+                    },
+                    "binderType": "NullBinder"
+                  }
+                ],
+                "expression": {
+                  "annotation": {
+                    "meta": null,
+                    "sourceSpan": {
+                      "start": [
+                        7,
+                        11
+                      ],
+                      "end": [
+                        7,
+                        13
+                      ]
+                    }
+                  },
+                  "value": {
+                    "literalType": "IntLiteral",
+                    "value": 30
+                  },
+                  "type": "Literal"
+                },
+                "isGuarded": false
+              },
+              {
+                "binders": [
+                  {
+                    "annotation": {
+                      "meta": null,
+                      "sourceSpan": {
+                        "start": [
+                          8,
+                          5
+                        ],
+                        "end": [
+                          8,
+                          6
+                        ]
+                      }
+                    },
+                    "binderType": "NullBinder"
+                  },
+                  {
+                    "annotation": {
+                      "meta": null,
+                      "sourceSpan": {
+                        "start": [
+                          8,
+                          7
+                        ],
+                        "end": [
+                          8,
+                          8
+                        ]
+                      }
+                    },
+                    "binderType": "NullBinder"
+                  }
+                ],
+                "expression": {
+                  "annotation": {
+                    "meta": null,
+                    "sourceSpan": {
+                      "start": [
+                        8,
+                        11
+                      ],
+                      "end": [
+                        8,
+                        13
+                      ]
+                    }
+                  },
+                  "value": {
+                    "literalType": "IntLiteral",
+                    "value": 50
+                  },
+                  "type": "Literal"
+                },
+                "isGuarded": false
+              }
+            ],
+            "type": "Case"
+          },
+          "argument": "v1",
+          "type": "Abs"
+        },
+        "argument": "v",
+        "type": "Abs"
+      },
+      "bindType": "NonRec"
+    }
+  ],
+  "comments": [],
+  "foreign": [],
+  "sourceSpan": {
+    "start": [
+      1,
+      1
+    ],
+    "end": [
+      8,
+      13
+    ]
+  }
+}
