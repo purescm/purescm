@@ -82,16 +82,25 @@ straightenCaseAlternatives values caseAlternatives =
 
 caseAlternativesToScheme :: [Expr Ann] -> [CaseAlternative Ann] -> AST
 caseAlternativesToScheme values caseAlternatives =
-  let alternatives = straightenCaseAlternatives values caseAlternatives
-  in Cond $ concatMap (\(valuesAndBinders, result) ->
-                         map (\(value, binder) ->
-                                ((unifyBinder value binder),
-                                 case result of
-                                   Left _xs -> error "Not implemented"
-                                   Right expr -> exprToScheme expr))
-                             valuesAndBinders)
-                      alternatives
+  let
+    alternatives = straightenCaseAlternatives values caseAlternatives
 
+    condClauses = map makeClause alternatives
+
+    makeClause (_valuesAndBinders, Left _xs) = error "Not implemented"
+    makeClause (valuesAndBinders, Right expr) = 
+      (makeTest valuesAndBinders, exprToScheme expr)
+
+    -- If we're handling multiple values and binders for a single result
+    -- we have to wrap each one inside an `and' form.
+    makeTest [(value, binder)] = unifyBinder value binder
+    makeTest valueAndBinders =
+      Application (Identifier "and")
+                  (map (\(value, binder) -> unifyBinder value binder)
+                       valueAndBinders)
+  in
+    Cond condClauses
+        
 
 -- Produce clauses for the cond expression.
 -- (value: 23, binder: 42) -> (= 23 42)
@@ -105,6 +114,8 @@ unifyBinder value (LiteralBinder _ann literal) = unifyLiteralBinder value litera
 -- syntax violation to reference it outside of contexts where they are recognized
 -- as such.
 unifyBinder _value (VarBinder _ann _ident) = Identifier "else"
+
+unifyBinder _value (NullBinder _ann) = Identifier "#t"
 
 unifyBinder _ _ = error "Not implemented"
 
