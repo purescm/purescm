@@ -1,15 +1,29 @@
-name:                purescm
-version:             0.1.0.0
-github:              "githubuser/purescm"
-license:             GPL-2
-author:              "Tancredi Orlando"
-maintainer:          ""
-copyright:           "2021 Tancredi Orlando"
+name: purescm
+version: "0.0.1"
+
+license: AGPL-3
+license-file: LICENSE.txt
+copyright: 2021 Tancredi Orlando
+
+author:
+- Tancredi Orlando <tancredi.orlando@gmail.com>
+- Fabrizio Ferrai <fabrizio.ferrai@gmail.com>
+
+maintainer:
+- Tancredi Orlando <tancredi.orlando@gmail.com>
+- Fabrizio Ferrai <fabrizio.ferrai@gmail.com>
+
+homepage: https://github.com/turlando/purescm
+github: turlando/purescm
+
+description: |
+  Scheme backend for PureScript (a small strongly, statically typed programming
+  language with expressive types, inspired by Haskell).
 
 extra-source-files:
+- stack.yaml
 - README.md
-
-description:         Please see the README on GitHub at <https://github.com/githubuser/purescm#readme>
+- LICENSE.txt
 
 dependencies:
 - base >= 4.7 && < 5
@@ -44,8 +58,8 @@ library:
 
 executables:
   purescm-exe:
-    main:                Main.hs
-    source-dirs:         app
+    main: Main.hs
+    source-dirs: app
 
     dependencies:
     - purescm
@@ -57,8 +71,8 @@ executables:
 
 tests:
   purescm-test:
-    main:                Spec.hs
-    source-dirs:         test
+    main: Spec.hs
+    source-dirs: test
     ghc-options:
     - -threaded
     - -rtsopts
