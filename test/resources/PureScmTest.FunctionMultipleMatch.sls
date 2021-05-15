@@ -1,0 +1,1 @@
+(define foo (lambda (v) (lambda (v1) (cond ((and (= v 0) (= v1 0)) 0) ((and (= v 0) (= v1 1)) 1) ((and (= v 1) (= v1 0)) 10) ((and #t (= v1 2)) 2) ((and (= v 3) #t) 30) ((and #t #t) 50)))))
