@@ -10,7 +10,9 @@ basePath = "test/resources"
 modules :: [String]
 modules = [ "PureScmTest.Literals"
           , "PureScmTest.Fib"
-          , "PureScmTest.FunctionMultipleMatch" ]
+          , "PureScmTest.FunctionMultipleMatch"
+          , "PureScmTest.MutuallyRecursiveFunction"
+          ]
 
 coreFnPath :: String -> FilePath
 coreFnPath module_ = basePath <> "/" <> module_ <> ".corefn.json"
