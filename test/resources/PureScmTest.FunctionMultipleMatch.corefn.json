@@ -15,8 +15,45 @@
             1
           ],
           "end": [
-            8,
-            13
+            12,
+            16
+          ]
+        }
+      },
+      "moduleName": [
+        "Data",
+        "Semiring"
+      ]
+    },
+    {
+      "annotation": {
+        "meta": null,
+        "sourceSpan": {
+          "start": [
+            3,
+            1
+          ],
+          "end": [
+            3,
+            15
+          ]
+        }
+      },
+      "moduleName": [
+        "Prelude"
+      ]
+    },
+    {
+      "annotation": {
+        "meta": null,
+        "sourceSpan": {
+          "start": [
+            1,
+            1
+          ],
+          "end": [
+            12,
+            16
           ]
         }
       },
@@ -36,11 +73,11 @@
         "meta": null,
         "sourceSpan": {
           "start": [
-            3,
+            5,
             1
           ],
           "end": [
-            3,
+            5,
             12
           ]
         }
@@ -51,11 +88,11 @@
           "meta": null,
           "sourceSpan": {
             "start": [
-              3,
+              5,
               1
             ],
             "end": [
-              3,
+              5,
               12
             ]
           }
@@ -65,11 +102,11 @@
             "meta": null,
             "sourceSpan": {
               "start": [
-                3,
+                5,
                 1
               ],
               "end": [
-                3,
+                5,
                 12
               ]
             }
@@ -79,11 +116,11 @@
               "meta": null,
               "sourceSpan": {
                 "start": [
-                  3,
+                  5,
                   1
                 ],
                 "end": [
-                  3,
+                  5,
                   12
                 ]
               }
@@ -94,11 +131,11 @@
                   "meta": null,
                   "sourceSpan": {
                     "start": [
-                      3,
+                      5,
                       1
                     ],
                     "end": [
-                      3,
+                      5,
                       12
                     ]
                   }
@@ -114,11 +151,11 @@
                   "meta": null,
                   "sourceSpan": {
                     "start": [
-                      3,
+                      5,
                       1
                     ],
                     "end": [
-                      3,
+                      5,
                       12
                     ]
                   }
@@ -138,11 +175,11 @@
                       "meta": null,
                       "sourceSpan": {
                         "start": [
-                          3,
+                          5,
                           5
                         ],
                         "end": [
-                          3,
+                          5,
                           6
                         ]
                       }
@@ -158,11 +195,11 @@
                       "meta": null,
                       "sourceSpan": {
                         "start": [
-                          3,
+                          5,
                           7
                         ],
                         "end": [
-                          3,
+                          5,
                           8
                         ]
                       }
@@ -179,11 +216,11 @@
                     "meta": null,
                     "sourceSpan": {
                       "start": [
-                        3,
+                        5,
                         11
                       ],
                       "end": [
-                        3,
+                        5,
                         12
                       ]
                     }
@@ -203,11 +240,11 @@
                       "meta": null,
                       "sourceSpan": {
                         "start": [
-                          4,
+                          6,
                           5
                         ],
                         "end": [
-                          4,
+                          6,
                           6
                         ]
                       }
@@ -223,11 +260,11 @@
                       "meta": null,
                       "sourceSpan": {
                         "start": [
-                          4,
+                          6,
                           7
                         ],
                         "end": [
-                          4,
+                          6,
                           8
                         ]
                       }
@@ -244,11 +281,11 @@
                     "meta": null,
                     "sourceSpan": {
                       "start": [
-                        4,
+                        6,
                         11
                       ],
                       "end": [
-                        4,
+                        6,
                         12
                       ]
                     }
@@ -268,11 +305,11 @@
                       "meta": null,
                       "sourceSpan": {
                         "start": [
-                          5,
+                          7,
                           5
                         ],
                         "end": [
-                          5,
+                          7,
                           6
                         ]
                       }
@@ -288,11 +325,11 @@
                       "meta": null,
                       "sourceSpan": {
                         "start": [
-                          5,
+                          7,
                           7
                         ],
                         "end": [
-                          5,
+                          7,
                           8
                         ]
                       }
@@ -309,11 +346,11 @@
                     "meta": null,
                     "sourceSpan": {
                       "start": [
-                        5,
+                        7,
                         11
                       ],
                       "end": [
-                        5,
+                        7,
                         13
                       ]
                     }
@@ -333,11 +370,11 @@
                       "meta": null,
                       "sourceSpan": {
                         "start": [
-                          6,
+                          8,
                           5
                         ],
                         "end": [
-                          6,
+                          8,
                           6
                         ]
                       }
@@ -349,11 +386,11 @@
                       "meta": null,
                       "sourceSpan": {
                         "start": [
-                          6,
+                          8,
                           7
                         ],
                         "end": [
-                          6,
+                          8,
                           8
                         ]
                       }
@@ -370,11 +407,11 @@
                     "meta": null,
                     "sourceSpan": {
                       "start": [
-                        6,
+                        8,
                         11
                       ],
                       "end": [
-                        6,
+                        8,
                         12
                       ]
                     }
@@ -394,11 +431,11 @@
                       "meta": null,
                       "sourceSpan": {
                         "start": [
-                          7,
+                          9,
                           5
                         ],
                         "end": [
-                          7,
+                          9,
                           6
                         ]
                       }
@@ -414,11 +451,11 @@
                       "meta": null,
                       "sourceSpan": {
                         "start": [
-                          7,
+                          9,
                           7
                         ],
                         "end": [
-                          7,
+                          9,
                           8
                         ]
                       }
@@ -431,11 +468,11 @@
                     "meta": null,
                     "sourceSpan": {
                       "start": [
-                        7,
+                        9,
                         11
                       ],
                       "end": [
-                        7,
+                        9,
                         13
                       ]
                     }
@@ -455,32 +492,37 @@
                       "meta": null,
                       "sourceSpan": {
                         "start": [
-                          8,
+                          10,
                           5
                         ],
                         "end": [
-                          8,
+                          10,
                           6
                         ]
                       }
                     },
-                    "binderType": "NullBinder"
+                    "literal": {
+                      "literalType": "IntLiteral",
+                      "value": 4
+                    },
+                    "binderType": "LiteralBinder"
                   },
                   {
                     "annotation": {
                       "meta": null,
                       "sourceSpan": {
                         "start": [
-                          8,
+                          10,
                           7
                         ],
                         "end": [
-                          8,
+                          10,
                           8
                         ]
                       }
                     },
-                    "binderType": "NullBinder"
+                    "identifier": "n",
+                    "binderType": "VarBinder"
                   }
                 ],
                 "expression": {
@@ -488,20 +530,257 @@
                     "meta": null,
                     "sourceSpan": {
                       "start": [
-                        8,
+                        10,
                         11
                       ],
                       "end": [
-                        8,
-                        13
+                        10,
+                        12
                       ]
                     }
                   },
                   "value": {
-                    "literalType": "IntLiteral",
-                    "value": 50
+                    "moduleName": null,
+                    "identifier": "n"
                   },
-                  "type": "Literal"
+                  "type": "Var"
+                },
+                "isGuarded": false
+              },
+              {
+                "binders": [
+                  {
+                    "annotation": {
+                      "meta": null,
+                      "sourceSpan": {
+                        "start": [
+                          11,
+                          5
+                        ],
+                        "end": [
+                          11,
+                          6
+                        ]
+                      }
+                    },
+                    "identifier": "m",
+                    "binderType": "VarBinder"
+                  },
+                  {
+                    "annotation": {
+                      "meta": null,
+                      "sourceSpan": {
+                        "start": [
+                          11,
+                          7
+                        ],
+                        "end": [
+                          11,
+                          8
+                        ]
+                      }
+                    },
+                    "literal": {
+                      "literalType": "IntLiteral",
+                      "value": 5
+                    },
+                    "binderType": "LiteralBinder"
+                  }
+                ],
+                "expression": {
+                  "annotation": {
+                    "meta": null,
+                    "sourceSpan": {
+                      "start": [
+                        11,
+                        11
+                      ],
+                      "end": [
+                        11,
+                        12
+                      ]
+                    }
+                  },
+                  "value": {
+                    "moduleName": null,
+                    "identifier": "m"
+                  },
+                  "type": "Var"
+                },
+                "isGuarded": false
+              },
+              {
+                "binders": [
+                  {
+                    "annotation": {
+                      "meta": null,
+                      "sourceSpan": {
+                        "start": [
+                          12,
+                          5
+                        ],
+                        "end": [
+                          12,
+                          6
+                        ]
+                      }
+                    },
+                    "identifier": "m",
+                    "binderType": "VarBinder"
+                  },
+                  {
+                    "annotation": {
+                      "meta": null,
+                      "sourceSpan": {
+                        "start": [
+                          12,
+                          7
+                        ],
+                        "end": [
+                          12,
+                          8
+                        ]
+                      }
+                    },
+                    "identifier": "n",
+                    "binderType": "VarBinder"
+                  }
+                ],
+                "expression": {
+                  "annotation": {
+                    "meta": null,
+                    "sourceSpan": {
+                      "start": [
+                        12,
+                        11
+                      ],
+                      "end": [
+                        12,
+                        16
+                      ]
+                    }
+                  },
+                  "argument": {
+                    "annotation": {
+                      "meta": null,
+                      "sourceSpan": {
+                        "start": [
+                          12,
+                          15
+                        ],
+                        "end": [
+                          12,
+                          16
+                        ]
+                      }
+                    },
+                    "value": {
+                      "moduleName": null,
+                      "identifier": "n"
+                    },
+                    "type": "Var"
+                  },
+                  "type": "App",
+                  "abstraction": {
+                    "annotation": {
+                      "meta": null,
+                      "sourceSpan": {
+                        "start": [
+                          12,
+                          11
+                        ],
+                        "end": [
+                          12,
+                          16
+                        ]
+                      }
+                    },
+                    "argument": {
+                      "annotation": {
+                        "meta": null,
+                        "sourceSpan": {
+                          "start": [
+                            12,
+                            11
+                          ],
+                          "end": [
+                            12,
+                            12
+                          ]
+                        }
+                      },
+                      "value": {
+                        "moduleName": null,
+                        "identifier": "m"
+                      },
+                      "type": "Var"
+                    },
+                    "type": "App",
+                    "abstraction": {
+                      "annotation": {
+                        "meta": null,
+                        "sourceSpan": {
+                          "start": [
+                            12,
+                            11
+                          ],
+                          "end": [
+                            12,
+                            16
+                          ]
+                        }
+                      },
+                      "argument": {
+                        "annotation": {
+                          "meta": null,
+                          "sourceSpan": {
+                            "start": [
+                              0,
+                              0
+                            ],
+                            "end": [
+                              0,
+                              0
+                            ]
+                          }
+                        },
+                        "value": {
+                          "moduleName": [
+                            "Data",
+                            "Semiring"
+                          ],
+                          "identifier": "semiringInt"
+                        },
+                        "type": "Var"
+                      },
+                      "type": "App",
+                      "abstraction": {
+                        "annotation": {
+                          "meta": {
+                            "metaType": "IsForeign"
+                          },
+                          "sourceSpan": {
+                            "start": [
+                              12,
+                              13
+                            ],
+                            "end": [
+                              12,
+                              14
+                            ]
+                          }
+                        },
+                        "value": {
+                          "moduleName": [
+                            "Data",
+                            "Semiring"
+                          ],
+                          "identifier": "add"
+                        },
+                        "type": "Var"
+                      }
+                    }
+                  }
                 },
                 "isGuarded": false
               }
@@ -525,8 +804,8 @@
       1
     ],
     "end": [
-      8,
-      13
+      12,
+      16
     ]
   }
 }
