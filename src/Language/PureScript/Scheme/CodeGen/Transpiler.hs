@@ -42,8 +42,12 @@ exprToScheme (Literal _ann literal) =
 exprToScheme (Var _ann qualifiedIdent) =
   Identifier (showQualified runIdent qualifiedIdent)
 
+-- values holds the values we're matching against, for instance it could be
+-- a list of Vars where each Var is the LHS of the pattern matching.
+-- caseAlternatives holds the various cases we're matching against such values.
+-- for each case there is a binder and a possible result if the match holds.
 exprToScheme (Case _ann values caseAlternatives) =
-  caseAlternativesToScheme values caseAlternatives
+  caseToScheme values caseAlternatives
 
 exprToScheme (Abs _ann arg expr) =
   Lambda (runIdent arg) (exprToScheme expr)
@@ -70,59 +74,45 @@ literalToScheme _ = error "Not implemented"
 -- To:
 -- [([(Value1, BinderA1), (Value2, BinderA2), (Value3, BinderA3)], ResA),
 --  ([(Value1, BinderB1), (Value2, BinderB2), (Value3, BinderB3)], ResB)]
-straightenCaseAlternatives
+straightenCaseExpr
   :: [Expr Ann]
   -> [CaseAlternative Ann]
   -> [([(Expr Ann, Binder Ann)], Either [(Guard Ann, Expr Ann)] (Expr Ann))]
   --     ^Value^^  ^Binder^^^    ^Res^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-straightenCaseAlternatives values caseAlternatives =
+straightenCaseExpr values caseAlternatives =
   map (\(CaseAlternative binders result) -> (zip values binders, result))
       caseAlternatives
 
 
-caseAlternativesToScheme :: [Expr Ann] -> [CaseAlternative Ann] -> AST
-caseAlternativesToScheme values caseAlternatives =
+caseToScheme :: [Expr Ann] -> [CaseAlternative Ann] -> AST
+caseToScheme values caseAlternatives =
   let
-    alternatives = straightenCaseAlternatives values caseAlternatives
+    caseExpr = straightenCaseExpr values caseAlternatives
 
-    condClauses = map makeClause alternatives
+    clauses = map clause caseExpr
 
-    makeClause (_valuesAndBinders, Left _xs) = error "Not implemented"
-    makeClause (valuesAndBinders, Right expr) = 
-      (makeTest valuesAndBinders, exprToScheme expr)
+    -- (cond clause1, clause2, ...)
+    clause (_valuesAndBinders, Left _xs) = error "Not implemented"
+    clause (valuesAndBinders, Right expr) = 
+      (test valuesAndBinders, exprToScheme expr)
 
+    -- (cond (test1 result1) (test2 result2) ...)
     -- If we're handling multiple values and binders for a single result
     -- we have to wrap each one inside an `and' form.
-    makeTest [(value, binder)] = unifyBinder value binder
-    makeTest valueAndBinders =
+    test [(value, binder)] = binderToTest value binder
+    test valueAndBinders =
       Application (Identifier "and")
-                  (map (\(value, binder) -> unifyBinder value binder)
+                  (map (\(value, binder) -> binderToTest value binder)
                        valueAndBinders)
+
+    -- Produce clauses for the cond expression.
+    -- (value: 23, binder: 42) -> (= 23 42)
+    binderToTest :: Expr Ann -> Binder Ann -> AST
+    binderToTest value (LiteralBinder _ann (NumericLiteral (Left integer))) =
+      Application (Identifier "=") [exprToScheme value, IntegerLiteral integer]
+    binderToTest _value (VarBinder _ann _ident) = Identifier "#t"
+    binderToTest _value (NullBinder _ann) = Identifier "#t"
+    binderToTest _ _ = error "Not implemented"
+
   in
-    Cond condClauses
-        
-
--- Produce clauses for the cond expression.
--- (value: 23, binder: 42) -> (= 23 42)
-unifyBinder :: Expr Ann -> Binder Ann -> AST
-
-unifyBinder value (LiteralBinder _ann literal) = unifyLiteralBinder value literal
-
--- TODO: This is possibly a nasty hack to make Cond work.
--- Check how to properly translate VarBinder.
--- Mind that `else' is not an identifier but an auxiliary keyword and it is a
--- syntax violation to reference it outside of contexts where they are recognized
--- as such.
-unifyBinder _value (VarBinder _ann _ident) = Identifier "else"
-
-unifyBinder _value (NullBinder _ann) = Identifier "#t"
-
-unifyBinder _ _ = error "Not implemented"
-
-
-unifyLiteralBinder :: Expr Ann -> Literal (Binder Ann) -> AST
-
-unifyLiteralBinder value (NumericLiteral (Left integer))=
-  Application (Identifier "=") [exprToScheme value, IntegerLiteral integer]
-
-unifyLiteralBinder _ _ = error "Not implemented"
+    Cond clauses
