@@ -12,6 +12,7 @@ modules = [ "PureScmTest.Literals"
           , "PureScmTest.Fib"
           , "PureScmTest.FunctionMultipleMatch"
           , "PureScmTest.MutuallyRecursiveFunction"
+          , "PureScmTest.GuardedFunction"
           ]
 
 coreFnPath :: String -> FilePath
