@@ -1,5 +1,6 @@
 module Language.PureScript.Scheme.CodeGen.Transpiler where
 
+import Data.Text                              (Text)
 import Language.PureScript.CoreFn.Module      (Module(..))
 import Language.PureScript.CoreFn.Ann         (Ann)
 import Language.PureScript.CoreFn.Expr        (Expr(..), Bind(..), Guard,
@@ -7,7 +8,7 @@ import Language.PureScript.CoreFn.Expr        (Expr(..), Bind(..), Guard,
 import Language.PureScript.CoreFn.Binders     (Binder(..))
 import Language.PureScript.Names              (runIdent, showQualified)
 import Language.PureScript.AST.Literals       (Literal(..))
-import Language.PureScript.Scheme.CodeGen.AST (AST(..))
+import Language.PureScript.Scheme.CodeGen.AST (AST(..), everywhere)
 
 -- TODO: translate a PureScript module to a Scheme library instead.
 moduleToScheme :: Module Ann -> [AST]
@@ -86,7 +87,8 @@ straightenCaseExpr values caseAlternatives =
 
 caseToScheme :: [Expr Ann] -> [CaseAlternative Ann] -> AST
 caseToScheme values caseAlternatives =
-  let
+  Cond clauses
+  where
     caseExpr = straightenCaseExpr values caseAlternatives
 
     clauses = map clause caseExpr
@@ -94,7 +96,7 @@ caseToScheme values caseAlternatives =
     -- (cond clause1, clause2, ...)
     clause (_valuesAndBinders, Left _xs) = error "Not implemented"
     clause (valuesAndBinders, Right expr) = 
-      (test valuesAndBinders, exprToScheme expr)
+      (test valuesAndBinders, result valuesAndBinders expr)
 
     -- (cond (test1 result1) (test2 result2) ...)
     -- If we're handling multiple values and binders for a single result
@@ -114,5 +116,19 @@ caseToScheme values caseAlternatives =
     binderToTest _value (NullBinder _ann) = Identifier "#t"
     binderToTest _ _ = error "Not implemented"
 
-  in
-    Cond clauses
+    result :: [(Expr Ann, Binder a)] -> Expr Ann -> AST
+    result valuesAndBinders expr =
+      everywhere (\ast -> (replaceVariables ast variablesToReplace))
+                          (exprToScheme expr)
+      where
+        variablesToReplace = [ (runIdent ident, exprToScheme value)
+                             | (value, (VarBinder _ann ident)) <- valuesAndBinders
+                             ]
+
+
+-- Replace each (Identifier from) into a `to' AST everywhere in ast
+replaceVariables :: AST -> [(Text, AST)] -> AST
+replaceVariables (Identifier i) ((from, to):xs) =
+  if i == from then to else replaceVariables (Identifier i) xs
+replaceVariables ast [] = ast
+replaceVariables ast _xs = ast

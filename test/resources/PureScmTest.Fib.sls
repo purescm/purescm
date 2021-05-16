@@ -1,1 +1,1 @@
-(define fib (lambda (v) (cond ((= v 0) 0) ((= v 1) 1) (#t (+ (PureScmTest.Fib.fib (- n 1)) (PureScmTest.Fib.fib (- n 2)))))))
+(define fib (lambda (v) (cond ((= v 0) 0) ((= v 1) 1) (#t (+ (PureScmTest.Fib.fib (- v 1)) (PureScmTest.Fib.fib (- v 2)))))))
