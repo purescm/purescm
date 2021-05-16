@@ -14,25 +14,15 @@ import Language.PureScript.Scheme.CodeGen.AST (AST(..), everywhere)
 moduleToScheme :: Module Ann -> [AST]
 moduleToScheme (Module _sourceSpan _comments _name _path
                        _imports _exports _reExports _foreigns declarations) =
-  fmap bindToScheme declarations
+  concatMap topLevelBindToScheme declarations
 
 
--- TODO: CoreFn uses Bind both for top-level definitions and let bindings so
--- it is very likely that this will break once let expressions are translated.
-bindToScheme :: Bind Ann -> AST
-
-bindToScheme (NonRec _ann ident expr) =
-  Define (runIdent ident) (exprToScheme expr)
-
--- TODO: handle multiple definitions
--- For top-level definitions mapping each (ident, expr) to define form should be
--- enough since Scheme can handle recursive defines.
--- For let bindings it may be the case to determine what to use between let,
--- let*, letrec and letrec*.
--- In both cases we should have to change the return signature from AST to [AST].
-bindToScheme (Rec xs) =
-  let ((_ann, ident), expr) = xs !! 0
-  in Define (runIdent ident) (exprToScheme expr)
+topLevelBindToScheme :: Bind Ann -> [AST]
+topLevelBindToScheme (NonRec _ann ident expr) =
+  [Define (runIdent ident) (exprToScheme expr)]
+topLevelBindToScheme (Rec xs) =
+  [ Define (runIdent ident) (exprToScheme expr)
+  | ((_ann, ident), expr) <- xs ]
 
 
 exprToScheme :: Expr Ann -> AST
