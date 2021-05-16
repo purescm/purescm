@@ -68,3 +68,15 @@ data AST
   | Define Text AST
 
   deriving (Show)
+
+
+-- | Recursively apply f to each AST.
+everywhere :: (AST -> AST) -> AST -> AST
+everywhere f = go where
+  go :: AST -> AST
+  go (VectorLiteral xs) = f (VectorLiteral (map go xs))
+  go (Cond xs) = f (Cond (map (\(test, expr) -> (go test, go expr)) xs))
+  go (Application function args) = f (Application (go function) (map go args))
+  go (Lambda arg expr) = f (Lambda arg (go expr))
+  go (Define name expr) = f (Define name (go expr))
+  go other = f other

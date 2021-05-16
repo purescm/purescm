@@ -1,6 +1,6 @@
 module Language.PureScript.Scheme.CodeGen.Optimizer where
 
-import Language.PureScript.Scheme.CodeGen.AST (AST(..))
+import Language.PureScript.Scheme.CodeGen.AST (AST(..), everywhere)
 
 
 -- Single pass optimizer.
@@ -21,15 +21,3 @@ specializeOperators (Application (Application (Application (Identifier "Data.Rin
   = Application (Identifier "-") [x, y]
 
 specializeOperators ast = ast
-
-
--- | Recursively apply f to each AST.
-everywhere :: (AST -> AST) -> AST -> AST
-everywhere f = go where
-  go :: AST -> AST
-  go (VectorLiteral xs) = f (VectorLiteral (map go xs))
-  go (Cond xs) = f (Cond (map (\(test, expr) -> (go test, go expr)) xs))
-  go (Application function args) = f (Application (go function) (map go args))
-  go (Lambda arg expr) = f (Lambda arg (go expr))
-  go (Define name expr) = f (Define name (go expr))
-  go other = f other
