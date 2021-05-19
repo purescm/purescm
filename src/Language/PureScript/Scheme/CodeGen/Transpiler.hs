@@ -43,9 +43,10 @@ exprToScheme (Literal _ann literal) =
 exprToScheme (Var _ann qualifiedIdent) =
   Identifier (showQualified runIdent qualifiedIdent)
 
--- values holds the values we're matching against, for instance it could be
--- a list of Vars where each Var is the LHS of the pattern matching.
--- caseAlternatives holds the various cases we're matching against such values.
+-- `values' holds the values we're matching against, for instance it could be
+-- a list of Vars where each Var is the LHS of the pattern matching. For instance
+-- in `foo 1 a = 0', `1' and `a' are values.
+-- `caseAlternatives' holds the various cases we're matching against such values.
 -- for each case there is a binder and a possible result if the match holds.
 exprToScheme (Case _ann values caseAlternatives) =
   caseToScheme values caseAlternatives
@@ -93,22 +94,24 @@ caseToScheme values caseAlternatives =
 
     clauses = map clause caseExpr
 
-    -- (cond clause1, clause2, ...)
+    -- Emit a single cond clause for each values and binders associated to
+    -- a single result. In scheme: (cond clause1 clause2, ...)
     clause (_valuesAndBinders, Left _xs) = error "Not implemented"
     clause (valuesAndBinders, Right expr) = 
-      (test valuesAndBinders, result valuesAndBinders expr)
+      (test valuesAndBinders, bindersToResult valuesAndBinders expr)
 
-    -- (cond (test1 result1) (test2 result2) ...)
+    -- Emit the test for a cond clause. In scheme: (cond (test1 result1) ...)
     -- If we're handling multiple values and binders for a single result
-    -- we have to wrap each one inside an `and' form.
+    -- we have to wrap the various resulting test into an `and' expression.
+    -- In scheme: (cond ((and test1a test1b) result1) ...)
     test [(value, binder)] = binderToTest value binder
     test valueAndBinders =
       Application (Identifier "and")
                   (map (\(value, binder) -> binderToTest value binder)
                        valueAndBinders)
 
-    -- Produce clauses for the cond expression.
-    -- (value: 23, binder: 42) -> (= 23 42)
+    -- Emit a cond clause test for each value and binder.
+    -- E.g.: (value: 23, binder: 42) -> (= 23 42)
     binderToTest :: Expr Ann -> Binder Ann -> AST
     binderToTest value (LiteralBinder _ann (NumericLiteral (Left integer))) =
       Application (Identifier "=") [exprToScheme value, IntegerLiteral integer]
@@ -116,11 +119,19 @@ caseToScheme values caseAlternatives =
     binderToTest _value (NullBinder _ann) = Identifier "#t"
     binderToTest _ _ = error "Not implemented"
 
-    result :: [(Expr Ann, Binder a)] -> Expr Ann -> AST
-    result valuesAndBinders expr =
+    -- Emit a cond clause result for multiple values and binders associated to
+    -- a single result. This is done by replacing the identifiers in the result
+    -- expression according to its VarBinders.
+    bindersToResult :: [(Expr Ann, Binder a)] -> Expr Ann -> AST
+    bindersToResult valuesAndBinders result =
       everywhere (\ast -> (replaceVariables ast variablesToReplace))
-                          (exprToScheme expr)
+                          (exprToScheme result)
       where
+        -- Each identifier in a VarBinder will be replaced by its corresponding
+        -- value. E.g. `foo m n = m + n' will emit a function whose parameters are
+        -- v and v0, but the `m + n' expression will use `m' and `n' as variable.
+        -- We have to replace each occurrence of `m' with `v' and each occurrence
+        -- of `n' with `v0'.
         variablesToReplace = [ (runIdent ident, exprToScheme value)
                              | (value, (VarBinder _ann ident)) <- valuesAndBinders
                              ]
