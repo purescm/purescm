@@ -74,9 +74,10 @@ data AST
 everywhere :: (AST -> AST) -> AST -> AST
 everywhere f = go where
   go :: AST -> AST
+  go (IntegerLiteral i) = f (IntegerLiteral i)
   go (VectorLiteral xs) = f (VectorLiteral (map go xs))
+  go (Identifier t) = f (Identifier t)
   go (Cond xs) = f (Cond (map (\(test, expr) -> (go test, go expr)) xs))
   go (Application function args) = f (Application (go function) (map go args))
   go (Lambda arg expr) = f (Lambda arg (go expr))
   go (Define name expr) = f (Define name (go expr))
-  go other = f other
