@@ -95,7 +95,8 @@ caseToScheme values caseAlternatives =
     -- each result.
     condClauses (valuesAndBinders, Left guardsAndResults) =
       map (\(guard, result) ->
-             (exprToScheme guard,
+             (replaceVariables (exprToScheme guard)
+                               (variablesToReplace valuesAndBinders),
               replaceVariables (exprToScheme result)
                                (variablesToReplace valuesAndBinders)))
           guardsAndResults
@@ -130,9 +131,8 @@ caseToScheme values caseAlternatives =
     -- expression according to its VarBinders.
     bindersToResult :: [(Expr Ann, Binder a)] -> Expr Ann -> AST
     bindersToResult valuesAndBinders result =
-      everywhere
-        (\ast -> (replaceVariables ast (variablesToReplace valuesAndBinders)))
-        (exprToScheme result)
+      replaceVariables (exprToScheme result)
+                       (variablesToReplace valuesAndBinders)
 
     -- Each identifier in a VarBinder will be replaced by its corresponding
     -- value. E.g. `foo m n = m + n' will emit a function whose parameters are
@@ -146,9 +146,9 @@ caseToScheme values caseAlternatives =
 
 -- Replace each (Identifier from) into a `to' AST everywhere in ast
 replaceVariables :: AST -> [(Text, AST)] -> AST
-replaceVariables (Identifier i) ((from, to):xs) =
-  if i == from then to else replaceVariables (Identifier i) xs
-replaceVariables ast [] = ast
-replaceVariables ast _xs = ast
-
-
+replaceVariables ast mapping = everywhere (go mapping) ast
+  where
+    go ((from, to):xs) (Identifier i) =
+      if i == from then to else go xs (Identifier i) 
+    go [] ast' = ast'
+    go _xs ast' = ast'
