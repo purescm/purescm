@@ -80,15 +80,31 @@ caseToScheme :: [Expr Ann] -> [CaseAlternative Ann] -> AST
 caseToScheme values caseAlternatives =
   Cond clauses
   where
+    clauses = concatMap condClauses caseExpr
     caseExpr = straightenCaseExpr values caseAlternatives
 
-    clauses = map clause caseExpr
+    -- Emit clauses for a cond expression. In scheme: (cond clause1 clause2 ...)
+    -- Return a list of pairs where the first element is the condition and the
+    -- second element is the result.
+    condClauses
+      :: ([(Expr Ann, Binder Ann)], Either [(Expr Ann, Expr Ann)] (Expr Ann))
+      -> [(AST, AST)]
 
-    -- Emit a single cond clause for each values and binders associated to
-    -- a single result. In scheme: (cond clause1 clause2, ...)
-    clause (_valuesAndBinders, Left _xs) = error "Not implemented"
-    clause (valuesAndBinders, Right expr) = 
-      (test valuesAndBinders, bindersToResult valuesAndBinders expr)
+    -- If there are guards we're provided with multiple results and each result
+    -- is associated to a guard. Thus we have to emit multiple cond clauses for
+    -- each result.
+    condClauses (valuesAndBinders, Left guardsAndResults) =
+      map (\(guard, result) ->
+             (exprToScheme guard,
+              replaceVariables (exprToScheme result)
+                               (variablesToReplace valuesAndBinders)))
+          guardsAndResults
+
+    -- If there are no guards we're provided with a single result. In this case
+    -- we can emit a single cond clause for the single result associated to
+    -- multiple values and binders.
+    condClauses (valuesAndBinders, Right result) = 
+      [(test valuesAndBinders, bindersToResult valuesAndBinders result)]
 
     -- Emit the test for a cond clause. In scheme: (cond (test1 result1) ...)
     -- If we're handling multiple values and binders for a single result
@@ -114,17 +130,18 @@ caseToScheme values caseAlternatives =
     -- expression according to its VarBinders.
     bindersToResult :: [(Expr Ann, Binder a)] -> Expr Ann -> AST
     bindersToResult valuesAndBinders result =
-      everywhere (\ast -> (replaceVariables ast variablesToReplace))
-                          (exprToScheme result)
-      where
-        -- Each identifier in a VarBinder will be replaced by its corresponding
-        -- value. E.g. `foo m n = m + n' will emit a function whose parameters are
-        -- v and v0, but the `m + n' expression will use `m' and `n' as variable.
-        -- We have to replace each occurrence of `m' with `v' and each occurrence
-        -- of `n' with `v0'.
-        variablesToReplace = [ (runIdent ident, exprToScheme value)
-                             | (value, (VarBinder _ann ident)) <- valuesAndBinders
-                             ]
+      everywhere
+        (\ast -> (replaceVariables ast (variablesToReplace valuesAndBinders)))
+        (exprToScheme result)
+
+    -- Each identifier in a VarBinder will be replaced by its corresponding
+    -- value. E.g. `foo m n = m + n' will emit a function whose parameters are
+    -- v and v0, but the `m + n' expression will use `m' and `n' as variable.
+    -- We have to replace each occurrence of `m' with `v' and each occurrence
+    -- of `n' with `v0'.
+    variablesToReplace valuesAndBinders =
+      [ (runIdent ident, exprToScheme value)
+      | (value, (VarBinder _ann ident)) <- valuesAndBinders ]
 
 
 -- Replace each (Identifier from) into a `to' AST everywhere in ast
@@ -133,3 +150,5 @@ replaceVariables (Identifier i) ((from, to):xs) =
   if i == from then to else replaceVariables (Identifier i) xs
 replaceVariables ast [] = ast
 replaceVariables ast _xs = ast
+
+
