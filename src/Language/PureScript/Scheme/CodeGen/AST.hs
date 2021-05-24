@@ -18,15 +18,6 @@ data AST
   -- Check Chez Scheme Version 9 User's Guide chapter 8 for more information.
   = IntegerLiteral Integer
 
-  -- | Vector literal.
-  -- Whereas accessing an arbitrary element in a list requires a linear traversal
-  -- of the list up to the selected element, arbitrary vector elements are
-  -- accessed in constant time.
-  -- Vectors can't be resized.
-  -- Check The Scheme Programming Language Fourth Edition Chapter 6.9 for more
-  -- information.
-  | VectorLiteral [AST]
-
   -- | Bound variable reference.
   -- Any identifier appearing as an expression in a program is a variable if a
   -- visible variable binding for the identifier exists.
@@ -75,7 +66,6 @@ everywhere :: (AST -> AST) -> AST -> AST
 everywhere f = go where
   go :: AST -> AST
   go (IntegerLiteral i) = f (IntegerLiteral i)
-  go (VectorLiteral xs) = f (VectorLiteral (map go xs))
   go (Identifier t) = f (Identifier t)
   go (Cond xs) = f (Cond (map (\(test, expr) -> (go test, go expr)) xs))
   go (Application function args) = f (Application (go function) (map go args))
