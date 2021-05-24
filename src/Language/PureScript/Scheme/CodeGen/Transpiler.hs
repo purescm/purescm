@@ -11,7 +11,9 @@ import Language.PureScript.Names                 (runIdent, runProperName,
                                                   showQualified, disqualify)
 import Language.PureScript.AST.Literals          (Literal(..))
 import Language.PureScript.Scheme.CodeGen.AST    (AST(..), everywhere)
-import Language.PureScript.Scheme.CodeGen.Scheme (eqQ, quote, cons, car,
+import Language.PureScript.Scheme.CodeGen.Scheme (t,
+                                                  eq, eqQ, and_, quote,
+                                                  cons, car,
                                                   vector, vectorRef)
 
 -- TODO: translate a PureScript module to a Scheme library instead.
@@ -39,7 +41,7 @@ exprToScheme (Constructor _ann _typeName constructorName fields) =
   where
     go (x:xs) = Lambda (runIdent x) (go xs)
     go [] = cons (quote (Identifier (runProperName constructorName)))
-                 (vector (fmap (\f -> Identifier (runIdent f)) fields))
+                 (vector (fmap (\field -> Identifier (runIdent field)) fields))
 
 exprToScheme (Var _ann qualifiedIdent) =
   Identifier (showQualified runIdent qualifiedIdent)
@@ -126,18 +128,17 @@ caseToScheme values caseAlternatives =
     -- but it's easier to optimize (and foo) -> foo.
     -- TODO: Optimize (and foo) into foo.
     test valueAndBinders =
-      Application (Identifier "and")
-                  (concatMap (\(value, binder) -> binderToTest (exprToScheme value)
-                                                               binder)
-                             valueAndBinders)
+      and_ (concatMap (\(value, binder) -> binderToTest (exprToScheme value)
+                                                        binder)
+           valueAndBinders)
 
     -- Emit a cond clause test for each value and binder.
     -- E.g.: (value: 23, binder: 42) -> (= 23 42)
     binderToTest :: AST -> Binder Ann -> [AST]
-    binderToTest _value (NullBinder _ann) = [Identifier "#t"]
+    binderToTest _value (NullBinder _ann) = [t]
     binderToTest value (LiteralBinder _ann (NumericLiteral (Left integer))) =
-      [Application (Identifier "=") [value, IntegerLiteral integer]]
-    binderToTest _value (VarBinder _ann _ident) = [Identifier "#t"]
+      [eq [value, IntegerLiteral integer]]
+    binderToTest _value (VarBinder _ann _ident) = [t]
     binderToTest value (ConstructorBinder _ann _typeName constructorName binders) =
       (:) (eqQ (car value)
                (quote (Identifier (runProperName (disqualify constructorName)))))
