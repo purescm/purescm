@@ -1,14 +1,15 @@
 module Language.PureScript.Scheme.CodeGen.Transpiler where
 
-import Data.Text                              (Text)
-import Language.PureScript.CoreFn.Module      (Module(..))
-import Language.PureScript.CoreFn.Ann         (Ann)
-import Language.PureScript.CoreFn.Expr        (Expr(..), Bind(..), Guard,
-                                               CaseAlternative(..))
-import Language.PureScript.CoreFn.Binders     (Binder(..))
-import Language.PureScript.Names              (runIdent, showQualified)
-import Language.PureScript.AST.Literals       (Literal(..))
-import Language.PureScript.Scheme.CodeGen.AST (AST(..), everywhere)
+import Data.Text                                 (Text)
+import Language.PureScript.CoreFn.Module         (Module(..))
+import Language.PureScript.CoreFn.Ann            (Ann)
+import Language.PureScript.CoreFn.Expr           (Expr(..), Bind(..), Guard,
+                                                  CaseAlternative(..))
+import Language.PureScript.CoreFn.Binders        (Binder(..))
+import Language.PureScript.Names                 (runIdent, showQualified)
+import Language.PureScript.AST.Literals          (Literal(..))
+import Language.PureScript.Scheme.CodeGen.AST    (AST(..), everywhere)
+import Language.PureScript.Scheme.CodeGen.Scheme (vector)
 
 -- TODO: translate a PureScript module to a Scheme library instead.
 moduleToScheme :: Module Ann -> [AST]
@@ -52,7 +53,7 @@ exprToScheme _ = error "Not implemented"
 
 literalToScheme :: Literal (Expr Ann) -> AST
 literalToScheme (NumericLiteral (Left integer)) = IntegerLiteral integer
-literalToScheme (ArrayLiteral xs) = VectorLiteral $ fmap exprToScheme xs
+literalToScheme (ArrayLiteral xs) = vector $ fmap exprToScheme xs
 literalToScheme _ = error "Not implemented"
 
 

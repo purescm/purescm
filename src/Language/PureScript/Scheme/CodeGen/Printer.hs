@@ -12,9 +12,6 @@ parens x = "(" <> x <> ")"
 list :: [Text] -> Text
 list xs = parens $ intercalate " " xs
 
-vector :: [Text] -> Text
-vector xs = list ("vector" : xs)
-
 cond :: [Text] -> Text
 cond xs = list ("cond" : xs)
 
@@ -29,7 +26,6 @@ define name expr = list ["define", name, expr]
 
 emit :: AST -> Text
 emit (IntegerLiteral integer) = tshow integer
-emit (VectorLiteral xs) = vector (fmap emit xs)
 emit (Identifier x) = x
 emit (Cond xs) = cond $ fmap (\(test, expr) -> list [emit test, emit expr]) xs
 emit (Application function args) = application (emit function) (fmap emit args)
