@@ -1,15 +1,18 @@
 module Language.PureScript.Scheme.CodeGen.Transpiler where
 
+import Data.List                                 (genericLength)
 import Data.Text                                 (Text)
 import Language.PureScript.CoreFn.Module         (Module(..))
 import Language.PureScript.CoreFn.Ann            (Ann)
 import Language.PureScript.CoreFn.Expr           (Expr(..), Bind(..), Guard,
                                                   CaseAlternative(..))
 import Language.PureScript.CoreFn.Binders        (Binder(..))
-import Language.PureScript.Names                 (runIdent, showQualified)
+import Language.PureScript.Names                 (runIdent, runProperName,
+                                                  showQualified, disqualify)
 import Language.PureScript.AST.Literals          (Literal(..))
 import Language.PureScript.Scheme.CodeGen.AST    (AST(..), everywhere)
-import Language.PureScript.Scheme.CodeGen.Scheme (vector)
+import Language.PureScript.Scheme.CodeGen.Scheme (eqQ, quote, cons, car,
+                                                  vector, vectorRef)
 
 -- TODO: translate a PureScript module to a Scheme library instead.
 moduleToScheme :: Module Ann -> [AST]
@@ -30,6 +33,13 @@ exprToScheme :: Expr Ann -> AST
 
 exprToScheme (Literal _ann literal) =
   literalToScheme literal
+
+exprToScheme (Constructor _ann _typeName constructorName fields) =
+  go fields
+  where
+    go (x:xs) = Lambda (runIdent x) (go xs)
+    go [] = cons (quote (Identifier (runProperName constructorName)))
+                 (vector (fmap (\f -> Identifier (runIdent f)) fields))
 
 exprToScheme (Var _ann qualifiedIdent) =
   Identifier (showQualified runIdent qualifiedIdent)
@@ -108,23 +118,32 @@ caseToScheme values caseAlternatives =
     condClauses (valuesAndBinders, Right result) = 
       [(test valuesAndBinders, bindersToResult valuesAndBinders result)]
 
-    -- Emit the test for a cond clause. In scheme: (cond (test1 result1) ...)
-    -- If we're handling multiple values and binders for a single result
-    -- we have to wrap the various resulting test into an `and' expression.
+    -- Emit the test for a cond clause.
     -- In scheme: (cond ((and test1a test1b) result1) ...)
-    test [(value, binder)] = binderToTest value binder
+    -- Always wrap the test in an `and' form since binderToTest has to return a
+    -- list because when applied to a ConstructorBinder it returns a list of AST.
+    -- We could have generated an `and' expression in such case in binderToTest,
+    -- but it's easier to optimize (and foo) -> foo.
+    -- TODO: Optimize (and foo) into foo.
     test valueAndBinders =
       Application (Identifier "and")
-                  (map (\(value, binder) -> binderToTest value binder)
-                       valueAndBinders)
+                  (concatMap (\(value, binder) -> binderToTest (exprToScheme value)
+                                                               binder)
+                             valueAndBinders)
 
     -- Emit a cond clause test for each value and binder.
     -- E.g.: (value: 23, binder: 42) -> (= 23 42)
-    binderToTest :: Expr Ann -> Binder Ann -> AST
+    binderToTest :: AST -> Binder Ann -> [AST]
+    binderToTest _value (NullBinder _ann) = [Identifier "#t"]
     binderToTest value (LiteralBinder _ann (NumericLiteral (Left integer))) =
-      Application (Identifier "=") [exprToScheme value, IntegerLiteral integer]
-    binderToTest _value (VarBinder _ann _ident) = Identifier "#t"
-    binderToTest _value (NullBinder _ann) = Identifier "#t"
+      [Application (Identifier "=") [value, IntegerLiteral integer]]
+    binderToTest _value (VarBinder _ann _ident) = [Identifier "#t"]
+    binderToTest value (ConstructorBinder _ann _typeName constructorName binders) =
+      (:) (eqQ (car value)
+               (quote (Identifier (runProperName (disqualify constructorName)))))
+          (concatMap (\(i, b) -> (binderToTest (vectorRef value (IntegerLiteral i)) b))
+                     (zip [1 .. (genericLength binders)]
+                          binders))
     binderToTest _ _ = error "Not implemented"
 
     -- Emit a cond clause result for multiple values and binders associated to
@@ -141,8 +160,23 @@ caseToScheme values caseAlternatives =
     -- We have to replace each occurrence of `m' with `v' and each occurrence
     -- of `n' with `v0'.
     variablesToReplace valuesAndBinders =
-      [ (runIdent ident, exprToScheme value)
-      | (value, (VarBinder _ann ident)) <- valuesAndBinders ]
+      concatMap go valuesAndBinders
+      where
+        go (_value, NullBinder _ann) = []
+        go (_value, LiteralBinder _ann _literal) = []
+        go (value, VarBinder _ann ident) = [(runIdent ident, exprToScheme value)]
+        go (value, ConstructorBinder _ann _typeName _constructorName binders) =
+          map (\(i, b) -> (go' b, vectorRef (exprToScheme value)
+                                            (IntegerLiteral i)))
+              (zip [1 .. (genericLength binders)]
+                   binders)
+        go _ = error "Not implemented"
+
+        -- TODO: possible fire hazard. So far I've met no ConstructorBinder
+        -- whose binders are anything but VarBinders. But if that doesn't hold
+        -- then it will explode here.
+        go' (VarBinder _ann ident) = runIdent ident
+        go' _ = error "Not implemented"
 
 
 -- Replace each (Identifier from) into a `to' AST everywhere in ast
