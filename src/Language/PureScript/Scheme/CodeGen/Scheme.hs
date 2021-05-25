@@ -36,6 +36,9 @@ cons x y = app "cons" [x, y]
 car :: AST -> AST
 car l = app "car" [l]
 
+cdr :: AST -> AST
+cdr l = app "cdr" [l]
+
 vector :: [AST] -> AST
 vector xs = app "vector" xs
 
