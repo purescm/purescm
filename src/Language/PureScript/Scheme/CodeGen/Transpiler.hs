@@ -13,7 +13,7 @@ import Language.PureScript.Scheme.Util           (mapWithIndex, concatMapWithInd
 import Language.PureScript.Scheme.CodeGen.AST    (AST(..), everywhere)
 import Language.PureScript.Scheme.CodeGen.Scheme (t,
                                                   eq, eqQ, and_, quote,
-                                                  cons, car,
+                                                  cons, car, cdr,
                                                   vector, vectorRef)
 
 -- TODO: translate a PureScript module to a Scheme library instead.
@@ -204,7 +204,7 @@ caseToScheme values caseAlternatives =
       (:) (eqQ (car value)
                (quote (Identifier (runProperName (disqualify constructorName)))))
           (concatMapWithIndex
-           (\i b -> (binderToTest (vectorRef value (IntegerLiteral i)) b))
+           (\i b -> (binderToTest (vectorRef (cdr value) (IntegerLiteral i)) b))
            binders)
     binderToTest _ _ = error "Not implemented"
 
@@ -227,8 +227,12 @@ caseToScheme values caseAlternatives =
         go (_value, NullBinder _ann) = []
         go (_value, LiteralBinder _ann _literal) = []
         go (value, VarBinder _ann ident) = [(runIdent ident, exprToScheme value)]
+
+        -- For a ConstructorBinder we have to replace each identifier in its
+        -- binders with an access to the right index of the vector in the cdr
+        -- of the tagged pair holding the Constructor values.
         go (value, ConstructorBinder _ann _typeName _constructorName binders) =
-          mapWithIndex (\i b -> (go' b, vectorRef (exprToScheme value)
+          mapWithIndex (\i b -> (go' b, vectorRef (cdr (exprToScheme value))
                                                   (IntegerLiteral i)))
                        binders
 
