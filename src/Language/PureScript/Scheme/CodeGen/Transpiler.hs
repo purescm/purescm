@@ -36,6 +36,31 @@ exprToScheme :: Expr Ann -> AST
 exprToScheme (Literal _ann literal) =
   literalToScheme literal
 
+-- An ADT is translated to a tagged pair. The car of the pair is the tag,
+-- holding the name of the Constructor as a quoted symbol. The cdr of the
+-- pair is a vector, holding the values of the Constructor, if any.
+--
+-- A Constructor is either a pair literal in the case of a simple sum type
+-- (e.g. data Foo = Bar | Baz) or a a function that produces a tagged pair
+-- holding the values for the constructed ADT.
+--
+-- A product type with N fields results into a curried function of N arguments.
+--     data Foo = Bar Int Int
+--     (lambda (v0) (lambda (v1) (cons 'Bar (vector v0 v1)))) ; defined as Bar
+--
+-- A sum type results into multiple Constructor. If the sum type is `simple'
+-- we just emit a constant representing that constructed value.
+--     data Foo = Bar | Baz
+--     (cons (quote Bar) (vector)) ; defined as Bar
+--     (cons (quote Baz) (vector)) ; defined as Baz
+-- TODO: maybe we could remove that empty vector?
+--
+-- If the sum type is not simple, so its constructors could be product types
+-- we emit multiple functions.
+--     data Foo = Bar Int Int
+--              | Baz
+--     (lambda (v0) (lambda (v1)) (cons 'Bar (vector v0 v1))) ; defined as Bar
+--     (cons (quote Baz) (vector))                            ; defined as Baz
 exprToScheme (Constructor _ann _typeName constructorName fields) =
   go fields
   where
@@ -122,11 +147,26 @@ caseToScheme values caseAlternatives =
 
     -- Emit the test for a cond clause.
     -- In scheme: (cond ((and test1a test1b) result1) ...)
+    -- 
     -- Always wrap the test in an `and' form since binderToTest has to return a
-    -- list because when applied to a ConstructorBinder it returns a list of AST.
-    -- We could have generated an `and' expression in such case in binderToTest,
-    -- but it's easier to optimize (and foo) -> foo.
-    -- TODO: Optimize (and foo) into foo.
+    -- list because when applied to a ConstructorBinder it returns a list of AST
+    -- (while the other cases return a list of AST with a single element only).
+    --
+    -- We could have produced a single AST node instead of a list of AST in
+    -- binderToTest (so that for a ConstructorBinder it would have emitted an
+    -- `and' form and for all other cases a simple AST node) but we would have
+    -- ended up with nested `and's: one coming from `test' and one coming from
+    -- `binderToTest' when it handles a ConstructorBinder.
+    --
+    -- This means that we could end up with and `and' form with a single node
+    -- (e.g. (and foo)) but this is very simple to optimize compared to nested
+    -- `and' forms that the alternative would have caused.
+    --
+    -- Keep in mind that this means that we could end up in the case of a
+    -- ConstructorBinder with something like:
+    --     (cond ((and (eq? (car v) 'Foo) cond1)  result1)
+    --           ((and (eq? (car v) 'Foo) cond2)) result2)
+    -- TODO: Maybe we should avoid the repeating of the first check.
     test valueAndBinders =
       and_ (concatMap (\(value, binder) -> binderToTest (exprToScheme value)
                                                         binder)
@@ -139,6 +179,27 @@ caseToScheme values caseAlternatives =
     binderToTest value (LiteralBinder _ann (NumericLiteral (Left integer))) =
       [eq [value, IntegerLiteral integer]]
     binderToTest _value (VarBinder _ann _ident) = [t]
+
+    -- For a ConstructorBinder we have to emit at least one test, but more likely
+    -- multiple tests.
+    --
+    -- The first test has to check if, given the tagged pair
+    -- ('ConstructorName . fields), its head containing the Constructor name
+    -- matches the `value' we're currently analyzing in the code.
+    -- For instance, in:
+    --     match (Foo x) = x
+    -- The first test translates into
+    --     (eq? (car value) (quote Foo))
+    -- Where value is the expression holding (Foo x)
+    -- 
+    -- Then we have to check the constructor fields, if any. The
+    -- ConstructorBinder could contain multiple binders, each one binding an
+    -- identifier to an element of the Constructor. We have to compare and
+    -- access those through vector-ref.
+    -- For instance, in:
+    --     match (Foo 1) = 1
+    -- The remaining tests translate into:
+    --     (= (vector-ref (cdr v) 0) 1)
     binderToTest value (ConstructorBinder _ann _typeName constructorName binders) =
       (:) (eqQ (car value)
                (quote (Identifier (runProperName (disqualify constructorName)))))
