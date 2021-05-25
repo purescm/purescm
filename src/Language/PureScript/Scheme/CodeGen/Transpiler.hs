@@ -1,6 +1,5 @@
 module Language.PureScript.Scheme.CodeGen.Transpiler where
 
-import Data.List                                 (genericLength)
 import Data.Text                                 (Text)
 import Language.PureScript.CoreFn.Module         (Module(..))
 import Language.PureScript.CoreFn.Ann            (Ann)
@@ -10,6 +9,7 @@ import Language.PureScript.CoreFn.Binders        (Binder(..))
 import Language.PureScript.Names                 (runIdent, runProperName,
                                                   showQualified, disqualify)
 import Language.PureScript.AST.Literals          (Literal(..))
+import Language.PureScript.Scheme.Util           (mapWithIndex, concatMapWithIndex)
 import Language.PureScript.Scheme.CodeGen.AST    (AST(..), everywhere)
 import Language.PureScript.Scheme.CodeGen.Scheme (t,
                                                   eq, eqQ, and_, quote,
@@ -203,9 +203,9 @@ caseToScheme values caseAlternatives =
     binderToTest value (ConstructorBinder _ann _typeName constructorName binders) =
       (:) (eqQ (car value)
                (quote (Identifier (runProperName (disqualify constructorName)))))
-          (concatMap (\(i, b) -> (binderToTest (vectorRef value (IntegerLiteral i)) b))
-                     (zip [1 .. (genericLength binders)]
-                          binders))
+          (concatMapWithIndex
+           (\i b -> (binderToTest (vectorRef value (IntegerLiteral i)) b))
+           binders)
     binderToTest _ _ = error "Not implemented"
 
     -- Emit a cond clause result for multiple values and binders associated to
@@ -228,10 +228,10 @@ caseToScheme values caseAlternatives =
         go (_value, LiteralBinder _ann _literal) = []
         go (value, VarBinder _ann ident) = [(runIdent ident, exprToScheme value)]
         go (value, ConstructorBinder _ann _typeName _constructorName binders) =
-          map (\(i, b) -> (go' b, vectorRef (exprToScheme value)
-                                            (IntegerLiteral i)))
-              (zip [1 .. (genericLength binders)]
-                   binders)
+          mapWithIndex (\i b -> (go' b, vectorRef (exprToScheme value)
+                                                  (IntegerLiteral i)))
+                       binders
+
         go _ = error "Not implemented"
 
         -- TODO: possible fire hazard. So far I've met no ConstructorBinder
