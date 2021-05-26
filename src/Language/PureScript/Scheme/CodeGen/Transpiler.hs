@@ -178,6 +178,7 @@ caseToScheme values caseAlternatives =
     binderToTest _value (NullBinder _ann) = [t]
     binderToTest value (LiteralBinder _ann (NumericLiteral (Left integer))) =
       [eq [value, IntegerLiteral integer]]
+    binderToTest _value (LiteralBinder _ann _) = error "Not implemented"
     binderToTest _value (VarBinder _ann _ident) = [t]
 
     -- For a ConstructorBinder we have to emit at least one test, but more likely
@@ -206,7 +207,14 @@ caseToScheme values caseAlternatives =
           (concatMapWithIndex
            (\i b -> (binderToTest (vectorRef (cdr value) (IntegerLiteral i)) b))
            binders)
-    binderToTest _ _ = error "Not implemented"
+
+    -- We have a level of indirection. `value' is bound to `binder' through
+    -- `ident'. For instance in
+    --     data Foo = Bar Int
+    --     match bar@(Bar i) = bar
+    -- `value' is an Identifier referring to (Bar i), ident is an Ident "bar"
+    -- and binder is the ConstructorBinder for (Bar i).
+    binderToTest value (NamedBinder _ann _ident binder) = binderToTest value binder
 
     -- Emit a cond clause result for multiple values and binders associated to
     -- a single result. This is done by replacing the identifiers in the result
@@ -236,7 +244,13 @@ caseToScheme values caseAlternatives =
                                                   (IntegerLiteral i)))
                        binders
 
-        go _ = error "Not implemented"
+        -- We have to unfold the level of indirection introduced by the
+        -- NamedBinder. We do so by replacing its ident with its value.
+        -- We also have to handle the binder associated to the NamedBinder.
+        -- We do so by recursively calling go against the binder.
+        go (value, NamedBinder _ann ident binder) =
+          (:) (runIdent ident, exprToScheme value)
+              (go (value, binder))
 
         -- TODO: possible fire hazard. So far I've met no ConstructorBinder
         -- whose binders are anything but VarBinders. But if that doesn't hold
