@@ -1,0 +1,380 @@
+{
+  "moduleName": [
+    "PureScmTest",
+    "NestedConstructor"
+  ],
+  "reExports": {
+  },
+  "imports": [
+    {
+      "annotation": {
+        "meta": null,
+        "sourceSpan": {
+          "start": [
+            1,
+            1
+          ],
+          "end": [
+            9,
+            13
+          ]
+        }
+      },
+      "moduleName": [
+        "Prim"
+      ]
+    },
+    {
+      "annotation": {
+        "meta": null,
+        "sourceSpan": {
+          "start": [
+            1,
+            1
+          ],
+          "end": [
+            9,
+            13
+          ]
+        }
+      },
+      "moduleName": [
+        "PureScmTest",
+        "NestedConstructor"
+      ]
+    }
+  ],
+  "builtWith": "0.14.1",
+  "modulePath": "src/PureScmTest/NestedConstructor.purs",
+  "exports": [
+    "Foo",
+    "Bar",
+    "match"
+  ],
+  "decls": [
+    {
+      "annotation": {
+        "meta": null,
+        "sourceSpan": {
+          "start": [
+            3,
+            1
+          ],
+          "end": [
+            3,
+            19
+          ]
+        }
+      },
+      "identifier": "Foo",
+      "expression": {
+        "constructorName": "Foo",
+        "annotation": {
+          "meta": null,
+          "sourceSpan": {
+            "start": [
+              3,
+              1
+            ],
+            "end": [
+              3,
+              19
+            ]
+          }
+        },
+        "typeName": "Foo",
+        "fieldNames": [
+          "value0"
+        ],
+        "type": "Constructor"
+      },
+      "bindType": "NonRec"
+    },
+    {
+      "annotation": {
+        "meta": null,
+        "sourceSpan": {
+          "start": [
+            5,
+            1
+          ],
+          "end": [
+            5,
+            19
+          ]
+        }
+      },
+      "identifier": "Bar",
+      "expression": {
+        "constructorName": "Bar",
+        "annotation": {
+          "meta": null,
+          "sourceSpan": {
+            "start": [
+              5,
+              1
+            ],
+            "end": [
+              5,
+              19
+            ]
+          }
+        },
+        "typeName": "Bar",
+        "fieldNames": [
+          "value0"
+        ],
+        "type": "Constructor"
+      },
+      "bindType": "NonRec"
+    },
+    {
+      "annotation": {
+        "meta": null,
+        "sourceSpan": {
+          "start": [
+            7,
+            1
+          ],
+          "end": [
+            7,
+            20
+          ]
+        }
+      },
+      "identifier": "match",
+      "expression": {
+        "annotation": {
+          "meta": null,
+          "sourceSpan": {
+            "start": [
+              7,
+              1
+            ],
+            "end": [
+              7,
+              20
+            ]
+          }
+        },
+        "body": {
+          "annotation": {
+            "meta": null,
+            "sourceSpan": {
+              "start": [
+                7,
+                1
+              ],
+              "end": [
+                7,
+                20
+              ]
+            }
+          },
+          "caseExpressions": [
+            {
+              "annotation": {
+                "meta": null,
+                "sourceSpan": {
+                  "start": [
+                    8,
+                    1
+                  ],
+                  "end": [
+                    8,
+                    24
+                  ]
+                }
+              },
+              "value": {
+                "moduleName": null,
+                "identifier": "v"
+              },
+              "type": "Var"
+            }
+          ],
+          "caseAlternatives": [
+            {
+              "binders": [
+                {
+                  "constructorName": {
+                    "moduleName": [
+                      "PureScmTest",
+                      "NestedConstructor"
+                    ],
+                    "identifier": "Bar"
+                  },
+                  "annotation": {
+                    "meta": {
+                      "metaType": "IsConstructor",
+                      "identifiers": [
+                        "value0"
+                      ],
+                      "constructorType": "ProductType"
+                    },
+                    "sourceSpan": {
+                      "start": [
+                        8,
+                        8
+                      ],
+                      "end": [
+                        8,
+                        19
+                      ]
+                    }
+                  },
+                  "typeName": {
+                    "moduleName": [
+                      "PureScmTest",
+                      "NestedConstructor"
+                    ],
+                    "identifier": "Bar"
+                  },
+                  "binders": [
+                    {
+                      "constructorName": {
+                        "moduleName": [
+                          "PureScmTest",
+                          "NestedConstructor"
+                        ],
+                        "identifier": "Foo"
+                      },
+                      "annotation": {
+                        "meta": {
+                          "metaType": "IsConstructor",
+                          "identifiers": [
+                            "value0"
+                          ],
+                          "constructorType": "ProductType"
+                        },
+                        "sourceSpan": {
+                          "start": [
+                            8,
+                            13
+                          ],
+                          "end": [
+                            8,
+                            18
+                          ]
+                        }
+                      },
+                      "typeName": {
+                        "moduleName": [
+                          "PureScmTest",
+                          "NestedConstructor"
+                        ],
+                        "identifier": "Foo"
+                      },
+                      "binders": [
+                        {
+                          "annotation": {
+                            "meta": null,
+                            "sourceSpan": {
+                              "start": [
+                                8,
+                                17
+                              ],
+                              "end": [
+                                8,
+                                18
+                              ]
+                            }
+                          },
+                          "literal": {
+                            "literalType": "IntLiteral",
+                            "value": 0
+                          },
+                          "binderType": "LiteralBinder"
+                        }
+                      ],
+                      "binderType": "ConstructorBinder"
+                    }
+                  ],
+                  "binderType": "ConstructorBinder"
+                }
+              ],
+              "expression": {
+                "annotation": {
+                  "meta": null,
+                  "sourceSpan": {
+                    "start": [
+                      8,
+                      23
+                    ],
+                    "end": [
+                      8,
+                      24
+                    ]
+                  }
+                },
+                "value": {
+                  "literalType": "IntLiteral",
+                  "value": 1
+                },
+                "type": "Literal"
+              },
+              "isGuarded": false
+            },
+            {
+              "binders": [
+                {
+                  "annotation": {
+                    "meta": null,
+                    "sourceSpan": {
+                      "start": [
+                        9,
+                        7
+                      ],
+                      "end": [
+                        9,
+                        8
+                      ]
+                    }
+                  },
+                  "binderType": "NullBinder"
+                }
+              ],
+              "expression": {
+                "annotation": {
+                  "meta": null,
+                  "sourceSpan": {
+                    "start": [
+                      9,
+                      11
+                    ],
+                    "end": [
+                      9,
+                      13
+                    ]
+                  }
+                },
+                "value": {
+                  "literalType": "IntLiteral",
+                  "value": 23
+                },
+                "type": "Literal"
+              },
+              "isGuarded": false
+            }
+          ],
+          "type": "Case"
+        },
+        "argument": "v",
+        "type": "Abs"
+      },
+      "bindType": "NonRec"
+    }
+  ],
+  "comments": [],
+  "foreign": [],
+  "sourceSpan": {
+    "start": [
+      1,
+      1
+    ],
+    "end": [
+      9,
+      13
+    ]
+  }
+}
