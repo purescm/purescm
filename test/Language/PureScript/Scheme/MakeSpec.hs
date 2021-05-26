@@ -15,6 +15,7 @@ modules = [ "PureScmTest.Literals"
           , "PureScmTest.GuardedFunction"
           , "PureScmTest.Constructor"
           , "PureScmTest.NestedConstructor"
+          , "PureScmTest.NamedBinder"
           ]
 
 coreFnPath :: String -> FilePath
