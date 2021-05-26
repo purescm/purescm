@@ -170,7 +170,7 @@ caseToScheme values caseAlternatives =
     test valueAndBinders =
       and_ (concatMap (\(value, binder) -> binderToTest (exprToScheme value)
                                                         binder)
-           valueAndBinders)
+                      valueAndBinders)
 
     -- Emit a cond clause test for each value and binder.
     -- E.g.: (value: 23, binder: 42) -> (= 23 42)
@@ -224,24 +224,27 @@ caseToScheme values caseAlternatives =
       replaceVariables (exprToScheme result)
                        (variablesToReplace valuesAndBinders)
 
-    -- Each identifier in a VarBinder will be replaced by its corresponding
-    -- value. E.g. `foo m n = m + n' will emit a function whose parameters are
-    -- v and v0, but the `m + n' expression will use `m' and `n' as variable.
-    -- We have to replace each occurrence of `m' with `v' and each occurrence
-    -- of `n' with `v0'.
+
+    variablesToReplace :: [(Expr Ann, Binder a)] -> [(Text, AST)]
     variablesToReplace valuesAndBinders =
-      concatMap (\(value, binder) -> go value binder) valuesAndBinders
+      concatMap (\(value, binder) -> go (exprToScheme value) binder)
+                valuesAndBinders
       where
         go _value (NullBinder _ann) = []
         go _value (LiteralBinder _ann _literal) = []
-        go value (VarBinder _ann ident) = [(runIdent ident, exprToScheme value)]
+
+        -- Each identifier in a VarBinder will be replaced by its corresponding
+        -- value. E.g. `foo m n = m + n' will emit a function whose parameters are
+        -- v and v0, but the `m + n' expression will use `m' and `n' as variable.
+        -- We have to replace each occurrence of `m' with `v' and each occurrence
+        -- of `n' with `v0'.
+        go value (VarBinder _ann ident) = [(runIdent ident, value)]
 
         -- For a ConstructorBinder we have to replace each identifier in its
         -- binders with an access to the right index of the vector in the cdr
         -- of the tagged pair holding the Constructor values.
         go value (ConstructorBinder _ann _typeName _constructorName binders) =
-          mapWithIndex (\i b -> (go' b, vectorRef (cdr (exprToScheme value))
-                                                  (IntegerLiteral i)))
+          mapWithIndex (\i b -> (go' b, vectorRef (cdr value) (IntegerLiteral i)))
                        binders
 
         -- We have to unfold the level of indirection introduced by the
@@ -249,7 +252,7 @@ caseToScheme values caseAlternatives =
         -- We also have to handle the binder associated to the NamedBinder.
         -- We do so by recursively calling go against the binder.
         go value (NamedBinder _ann ident binder) =
-          (:) (runIdent ident, exprToScheme value)
+          (:) (runIdent ident, value)
               (go value binder)
 
         -- TODO: possible fire hazard. So far I've met no ConstructorBinder
