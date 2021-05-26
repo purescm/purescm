@@ -230,16 +230,16 @@ caseToScheme values caseAlternatives =
     -- We have to replace each occurrence of `m' with `v' and each occurrence
     -- of `n' with `v0'.
     variablesToReplace valuesAndBinders =
-      concatMap go valuesAndBinders
+      concatMap (\(value, binder) -> go value binder) valuesAndBinders
       where
-        go (_value, NullBinder _ann) = []
-        go (_value, LiteralBinder _ann _literal) = []
-        go (value, VarBinder _ann ident) = [(runIdent ident, exprToScheme value)]
+        go _value (NullBinder _ann) = []
+        go _value (LiteralBinder _ann _literal) = []
+        go value (VarBinder _ann ident) = [(runIdent ident, exprToScheme value)]
 
         -- For a ConstructorBinder we have to replace each identifier in its
         -- binders with an access to the right index of the vector in the cdr
         -- of the tagged pair holding the Constructor values.
-        go (value, ConstructorBinder _ann _typeName _constructorName binders) =
+        go value (ConstructorBinder _ann _typeName _constructorName binders) =
           mapWithIndex (\i b -> (go' b, vectorRef (cdr (exprToScheme value))
                                                   (IntegerLiteral i)))
                        binders
@@ -248,9 +248,9 @@ caseToScheme values caseAlternatives =
         -- NamedBinder. We do so by replacing its ident with its value.
         -- We also have to handle the binder associated to the NamedBinder.
         -- We do so by recursively calling go against the binder.
-        go (value, NamedBinder _ann ident binder) =
+        go value (NamedBinder _ann ident binder) =
           (:) (runIdent ident, exprToScheme value)
-              (go (value, binder))
+              (go value binder)
 
         -- TODO: possible fire hazard. So far I've met no ConstructorBinder
         -- whose binders are anything but VarBinders. But if that doesn't hold
