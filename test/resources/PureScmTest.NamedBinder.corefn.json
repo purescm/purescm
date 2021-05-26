@@ -1,0 +1,380 @@
+{
+  "moduleName": [
+    "PureScmTest",
+    "NamedBinder"
+  ],
+  "reExports": {
+  },
+  "imports": [
+    {
+      "annotation": {
+        "meta": null,
+        "sourceSpan": {
+          "start": [
+            1,
+            1
+          ],
+          "end": [
+            7,
+            16
+          ]
+        }
+      },
+      "moduleName": [
+        "Prim"
+      ]
+    },
+    {
+      "annotation": {
+        "meta": null,
+        "sourceSpan": {
+          "start": [
+            1,
+            1
+          ],
+          "end": [
+            7,
+            16
+          ]
+        }
+      },
+      "moduleName": [
+        "PureScmTest",
+        "NamedBinder"
+      ]
+    }
+  ],
+  "builtWith": "0.14.1",
+  "modulePath": "src/PureScmTest/NamedBinder.purs",
+  "exports": [
+    "Bar",
+    "Baz",
+    "match"
+  ],
+  "decls": [
+    {
+      "annotation": {
+        "meta": null,
+        "sourceSpan": {
+          "start": [
+            3,
+            1
+          ],
+          "end": [
+            4,
+            15
+          ]
+        }
+      },
+      "identifier": "Bar",
+      "expression": {
+        "constructorName": "Bar",
+        "annotation": {
+          "meta": null,
+          "sourceSpan": {
+            "start": [
+              3,
+              1
+            ],
+            "end": [
+              4,
+              15
+            ]
+          }
+        },
+        "typeName": "Foo",
+        "fieldNames": [
+          "value0"
+        ],
+        "type": "Constructor"
+      },
+      "bindType": "NonRec"
+    },
+    {
+      "annotation": {
+        "meta": null,
+        "sourceSpan": {
+          "start": [
+            3,
+            1
+          ],
+          "end": [
+            4,
+            15
+          ]
+        }
+      },
+      "identifier": "Baz",
+      "expression": {
+        "constructorName": "Baz",
+        "annotation": {
+          "meta": null,
+          "sourceSpan": {
+            "start": [
+              3,
+              1
+            ],
+            "end": [
+              4,
+              15
+            ]
+          }
+        },
+        "typeName": "Foo",
+        "fieldNames": [],
+        "type": "Constructor"
+      },
+      "bindType": "NonRec"
+    },
+    {
+      "annotation": {
+        "meta": null,
+        "sourceSpan": {
+          "start": [
+            6,
+            1
+          ],
+          "end": [
+            6,
+            24
+          ]
+        }
+      },
+      "identifier": "match",
+      "expression": {
+        "annotation": {
+          "meta": null,
+          "sourceSpan": {
+            "start": [
+              6,
+              1
+            ],
+            "end": [
+              6,
+              24
+            ]
+          }
+        },
+        "body": {
+          "annotation": {
+            "meta": null,
+            "sourceSpan": {
+              "start": [
+                6,
+                1
+              ],
+              "end": [
+                6,
+                24
+              ]
+            }
+          },
+          "caseExpressions": [
+            {
+              "annotation": {
+                "meta": null,
+                "sourceSpan": {
+                  "start": [
+                    6,
+                    1
+                  ],
+                  "end": [
+                    6,
+                    24
+                  ]
+                }
+              },
+              "value": {
+                "moduleName": null,
+                "identifier": "v"
+              },
+              "type": "Var"
+            }
+          ],
+          "caseAlternatives": [
+            {
+              "binders": [
+                {
+                  "annotation": {
+                    "meta": null,
+                    "sourceSpan": {
+                      "start": [
+                        6,
+                        7
+                      ],
+                      "end": [
+                        6,
+                        18
+                      ]
+                    }
+                  },
+                  "identifier": "bar",
+                  "binder": {
+                    "constructorName": {
+                      "moduleName": [
+                        "PureScmTest",
+                        "NamedBinder"
+                      ],
+                      "identifier": "Bar"
+                    },
+                    "annotation": {
+                      "meta": {
+                        "metaType": "IsConstructor",
+                        "identifiers": [
+                          "value0"
+                        ],
+                        "constructorType": "SumType"
+                      },
+                      "sourceSpan": {
+                        "start": [
+                          6,
+                          12
+                        ],
+                        "end": [
+                          6,
+                          17
+                        ]
+                      }
+                    },
+                    "typeName": {
+                      "moduleName": [
+                        "PureScmTest",
+                        "NamedBinder"
+                      ],
+                      "identifier": "Foo"
+                    },
+                    "binders": [
+                      {
+                        "annotation": {
+                          "meta": null,
+                          "sourceSpan": {
+                            "start": [
+                              6,
+                              16
+                            ],
+                            "end": [
+                              6,
+                              17
+                            ]
+                          }
+                        },
+                        "identifier": "i",
+                        "binderType": "VarBinder"
+                      }
+                    ],
+                    "binderType": "ConstructorBinder"
+                  },
+                  "binderType": "NamedBinder"
+                }
+              ],
+              "expression": {
+                "annotation": {
+                  "meta": null,
+                  "sourceSpan": {
+                    "start": [
+                      6,
+                      21
+                    ],
+                    "end": [
+                      6,
+                      24
+                    ]
+                  }
+                },
+                "value": {
+                  "moduleName": null,
+                  "identifier": "bar"
+                },
+                "type": "Var"
+              },
+              "isGuarded": false
+            },
+            {
+              "binders": [
+                {
+                  "constructorName": {
+                    "moduleName": [
+                      "PureScmTest",
+                      "NamedBinder"
+                    ],
+                    "identifier": "Baz"
+                  },
+                  "annotation": {
+                    "meta": {
+                      "metaType": "IsConstructor",
+                      "identifiers": [],
+                      "constructorType": "SumType"
+                    },
+                    "sourceSpan": {
+                      "start": [
+                        7,
+                        7
+                      ],
+                      "end": [
+                        7,
+                        10
+                      ]
+                    }
+                  },
+                  "typeName": {
+                    "moduleName": [
+                      "PureScmTest",
+                      "NamedBinder"
+                    ],
+                    "identifier": "Foo"
+                  },
+                  "binders": [],
+                  "binderType": "ConstructorBinder"
+                }
+              ],
+              "expression": {
+                "annotation": {
+                  "meta": {
+                    "metaType": "IsConstructor",
+                    "identifiers": [],
+                    "constructorType": "SumType"
+                  },
+                  "sourceSpan": {
+                    "start": [
+                      7,
+                      13
+                    ],
+                    "end": [
+                      7,
+                      16
+                    ]
+                  }
+                },
+                "value": {
+                  "moduleName": [
+                    "PureScmTest",
+                    "NamedBinder"
+                  ],
+                  "identifier": "Baz"
+                },
+                "type": "Var"
+              },
+              "isGuarded": false
+            }
+          ],
+          "type": "Case"
+        },
+        "argument": "v",
+        "type": "Abs"
+      },
+      "bindType": "NonRec"
+    }
+  ],
+  "comments": [],
+  "foreign": [],
+  "sourceSpan": {
+    "start": [
+      1,
+      1
+    ],
+    "end": [
+      7,
+      16
+    ]
+  }
+}
