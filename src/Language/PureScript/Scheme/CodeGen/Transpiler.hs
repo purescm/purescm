@@ -208,12 +208,19 @@ caseToScheme values caseAlternatives =
            (\i b -> (binderToTest (vectorRef (cdr value) (IntegerLiteral i)) b))
            binders)
 
-    -- We have a level of indirection. `value' is bound to `binder' through
-    -- `ident'. For instance in
+    -- Consider the case:
     --     data Foo = Bar Int
     --     match bar@(Bar i) = bar
-    -- `value' is an Identifier referring to (Bar i), ident is an Ident "bar"
-    -- and binder is the ConstructorBinder for (Bar i).
+    -- It get translated to:
+    --    (define Bar (lambda (x) ('Bar . x)))
+    --    (define match (lambda (v) (cond (eq? (car v) 'Bar) v)))
+    -- `bar' (in PureScript) is an alias to `v' (in Scheme). `value' is an
+    -- `Expr.Var "v"', and `ident' is an `Ident.Ident "bar"'.
+    -- So in order to generate the test for the cond in the case of a NamedBinder
+    -- we have to process its binder (with binderToTest) using the actual
+    -- variable name `value' and not with the alias `ìdent'.
+    -- We will have to use ident when we have to deal with the result associated
+    -- to this case though.
     binderToTest value (NamedBinder _ann _ident binder) = binderToTest value binder
 
     -- Emit a cond clause result for multiple values and binders associated to
@@ -247,10 +254,17 @@ caseToScheme values caseAlternatives =
           mapWithIndex (\i b -> (go' b, vectorRef (cdr value) (IntegerLiteral i)))
                        binders
 
-        -- We have to unfold the level of indirection introduced by the
-        -- NamedBinder. We do so by replacing its ident with its value.
-        -- We also have to handle the binder associated to the NamedBinder.
-        -- We do so by recursively calling go against the binder.
+
+        -- Consider the case:
+        --     data Foo = Bar Int
+        --     match bar@(Bar i) = bar
+        -- It get translated to:
+        --    (define Bar (lambda (x) ('Bar . x)))
+        --    (define match (lambda (v) (cond (eq? (car v) 'Bar) v)))
+        -- `value' is an `Expr.Var "v"', and `ident' is an `Ident.Ident "bar"'.
+        -- We have to do multiple replacements here. First, we have to replace
+        -- each each `ident' with `value'. Then, we have to apply other possible
+        -- replacements for the binder associated to the NamedBinder.
         go value (NamedBinder _ann ident binder) =
           (:) (runIdent ident, value)
               (go value binder)
