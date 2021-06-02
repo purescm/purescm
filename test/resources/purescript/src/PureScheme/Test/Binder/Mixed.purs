@@ -1,4 +1,4 @@
-module PureScheme.Test.FunctionMultipleMatch where
+module PureScheme.Test.Binder.Mixed where
 
 import Prelude
 

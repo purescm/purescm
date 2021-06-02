@@ -1,11 +1,6 @@
-module PureScheme.Test.GuardedFunction where
+module PureScheme.Test.Guard.GCD where
 
 import Prelude
-
-min :: Int -> Int -> Int
-min n m
-  | n < m     = n
-  | otherwise = m
 
 gcd :: Int -> Int -> Int
 gcd n 0 = n

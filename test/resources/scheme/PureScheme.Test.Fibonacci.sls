@@ -1,1 +1,0 @@
-(define fib (lambda (v) (cond ((= v 0) 0) ((= v 1) 1) (#t (+ (PureScheme.Test.Fibonacci.fib (- v 1)) (PureScheme.Test.Fibonacci.fib (- v 2)))))))

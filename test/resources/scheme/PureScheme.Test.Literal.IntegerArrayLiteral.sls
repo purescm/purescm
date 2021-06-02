@@ -1,0 +1,1 @@
+(define foo (vector 23 42))

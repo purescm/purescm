@@ -1,4 +1,4 @@
-module PureScheme.Test.NamedBinder where
+module PureScheme.Test.Binder.Named where
 
 data Foo = Bar Int
          | Baz

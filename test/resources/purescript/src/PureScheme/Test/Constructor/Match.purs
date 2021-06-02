@@ -1,4 +1,4 @@
-module PureScheme.Test.Constructor where
+module PureScheme.Test.Constructor.Match where
 
 data Foo = Bar Int Int
          | Baz
