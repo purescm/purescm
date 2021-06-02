@@ -7,7 +7,8 @@ import qualified Turtle                          as Turtle
 import           Test.Hspec                      (Spec, it, shouldBe,
                                                   runIO, beforeAll_)
 import           TestUtil                        (corefnFile, schemeFile,
-                                                  findModules, buildCorefn)
+                                                  findModules,
+                                                  cleanAndBuildCorefn)
 import           Language.PureScript.Scheme.Make (compile)
 
 testModule :: Text -> Spec
@@ -16,8 +17,8 @@ testModule module_ = do
     compilationResult <- compile $ Turtle.encodeString $ corefnFile module_
     expectedResult <- Text.IO.readFile $ Turtle.encodeString $ schemeFile module_
     compilationResult `shouldBe` expectedResult
-  
+
 spec :: Spec
 spec = do
   ms <- runIO findModules
-  beforeAll_ (buildCorefn . removeCorefnFiles) $ mapM_ testModule ms
+  beforeAll_ cleanAndBuildCorefn $ mapM_ testModule ms

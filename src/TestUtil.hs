@@ -86,3 +86,8 @@ removeSchemeFiles :: IO ()
 removeSchemeFiles = do
   xs <- Turtle.fold (Turtle.find (Turtle.ends ".sls") schemePath) Fold.list
   mapM_ Turtle.rm xs
+
+cleanAndBuildCorefn :: IO ()
+cleanAndBuildCorefn = do
+  removeCorefnFiles
+  buildCorefn
