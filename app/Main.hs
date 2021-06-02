@@ -6,14 +6,13 @@ import qualified Turtle                          as Turtle
 import           Language.PureScript.Scheme.Make (compile)
 import           TestUtil                        (corefnFile, schemeFile, toText,
                                                   findModules, removeSchemeFiles,
-                                                  removeCorefnFiles, buildCorefn)
+                                                  cleanAndBuildCorefn)
 
 
 main :: IO ()
 main = do
   removeSchemeFiles
-  removeCorefnFiles
-  buildCorefn
+  cleanAndBuildCorefn
   modules <- findModules
   for_ modules $ \m -> do
     let corefn = corefnFile m
