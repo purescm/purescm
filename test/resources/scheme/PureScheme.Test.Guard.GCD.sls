@@ -1,0 +1,1 @@
+(define gcd (lambda (v) (lambda (v1) (cond ((= v1 0) v) ((= v 0) v1) ((((Data.Ord.greaterThan Data.Ord.ordInt) v) v1) ((PureScheme.Test.Guard.GCD.gcd (- v v1)) v1)) (Data.Boolean.otherwise ((PureScheme.Test.Guard.GCD.gcd v) (- v1 v)))))))

@@ -1,4 +1,4 @@
-module PureScheme.Test.Fibonacci where
+module PureScheme.Test.Recursion.Fibonacci where
 
 import Prelude
 

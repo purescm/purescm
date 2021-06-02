@@ -1,7 +1,6 @@
-module PureScheme.Test.NestedConstructor where
+module PureScheme.Test.Constructor.Nested where
 
 data Foo = Foo Int
-
 data Bar = Bar Foo
 
 match :: Bar -> Int

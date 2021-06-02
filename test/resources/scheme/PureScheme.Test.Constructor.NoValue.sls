@@ -1,0 +1,1 @@
+(define Foo (cons (quote Foo) (vector)))

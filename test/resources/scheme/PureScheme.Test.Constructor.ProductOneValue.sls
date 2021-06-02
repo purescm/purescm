@@ -1,0 +1,1 @@
+(define Bar (lambda (value0) (cons (quote Bar) (vector value0))))

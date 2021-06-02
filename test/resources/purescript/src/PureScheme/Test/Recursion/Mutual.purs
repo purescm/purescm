@@ -1,4 +1,4 @@
-module PureScheme.Test.MutuallyRecursiveFunction where
+module PureScheme.Test.Recursion.Mutual where
 
 foo :: Int -> Int -> Int
 foo 0 n = foo 1 n
