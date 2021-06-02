@@ -1,4 +1,4 @@
-module PureScmTest.NestedConstructor where
+module PureScheme.Test.NestedConstructor where
 
 data Foo = Foo Int
 
