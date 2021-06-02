@@ -1,4 +1,4 @@
-module PureScmTest.Literals where
+module PureScheme.Test.Literals where
 
 integerLiteral1 = 23
 integerLiteral2 = 42

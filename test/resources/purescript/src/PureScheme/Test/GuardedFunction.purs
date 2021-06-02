@@ -1,4 +1,4 @@
-module PureScmTest.GuardedFunction where
+module PureScheme.Test.GuardedFunction where
 
 import Prelude
 

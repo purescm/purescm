@@ -1,4 +1,4 @@
-module PureScmTest.Fib where
+module PureScheme.Test.Fibonacci where
 
 import Prelude
 

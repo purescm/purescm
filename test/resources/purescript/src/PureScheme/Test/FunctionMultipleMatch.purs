@@ -1,4 +1,4 @@
-module PureScmTest.FunctionMultipleMatch where
+module PureScheme.Test.FunctionMultipleMatch where
 
 import Prelude
 

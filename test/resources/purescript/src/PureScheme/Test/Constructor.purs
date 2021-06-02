@@ -1,4 +1,4 @@
-module PureScmTest.Constructor where
+module PureScheme.Test.Constructor where
 
 data Foo = Bar Int Int
          | Baz

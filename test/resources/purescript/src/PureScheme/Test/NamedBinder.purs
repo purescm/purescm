@@ -1,4 +1,4 @@
-module PureScmTest.NamedBinder where
+module PureScheme.Test.NamedBinder where
 
 data Foo = Bar Int
          | Baz
