@@ -1,35 +1,23 @@
 module Language.PureScript.Scheme.MakeSpec (spec) where
 
-import qualified Data.Text.IO                    as T.IO
-import           Test.Hspec                      (Spec, it, shouldBe)
+import qualified Data.Text                       as Text
+import           Data.Text                       (Text)
+import qualified Data.Text.IO                    as Text.IO
+import qualified Turtle                          as Turtle
+import           Test.Hspec                      (Spec, it, shouldBe,
+                                                  runIO, beforeAll_)
+import           TestUtil                        (corefnFile, schemeFile,
+                                                  findModules, buildCorefn)
 import           Language.PureScript.Scheme.Make (compile)
 
-basePath :: String
-basePath = "test/resources"
-  
-modules :: [String]
-modules = [ "PureScmTest.Literals"
-          , "PureScmTest.Fib"
-          , "PureScmTest.FunctionMultipleMatch"
-          , "PureScmTest.MutuallyRecursiveFunction"
-          , "PureScmTest.GuardedFunction"
-          , "PureScmTest.Constructor"
-          , "PureScmTest.NestedConstructor"
-          , "PureScmTest.NamedBinder"
-          ]
-
-coreFnPath :: String -> FilePath
-coreFnPath module_ = basePath <> "/" <> module_ <> ".corefn.json"
-
-schemePath :: String -> FilePath
-schemePath module_ = basePath <> "/" <> module_ <> ".sls"
-
-testModule :: String -> Spec
+testModule :: Text -> Spec
 testModule module_ = do
-  it ("Can compile " <> module_) $ do
-    compilationResult <- compile $ coreFnPath module_
-    expectedResult <- T.IO.readFile $ schemePath module_
+  it ("Can compile " <> Text.unpack module_) $ do
+    compilationResult <- compile $ Turtle.encodeString $ corefnFile module_
+    expectedResult <- Text.IO.readFile $ Turtle.encodeString $ schemeFile module_
     compilationResult `shouldBe` expectedResult
   
 spec :: Spec
-spec = mapM_ testModule modules
+spec = do
+  ms <- runIO findModules
+  beforeAll_ (buildCorefn . removeCorefnFiles) $ mapM_ testModule ms
