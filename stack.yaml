@@ -15,4 +15,4 @@ extra-deps:
     - '.'
 
 nix:
-  packages: [zlib]
+  shell-file: stack-shell.nix
