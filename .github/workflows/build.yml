@@ -19,6 +19,9 @@ jobs:
         enable-stack: true
         stack-no-global: true
         stack-setup-ghc: true
+    - uses: purescript-contrib/setup-purescript@main
+      with:
+        purescript: "0.14.1"
 
     - name: Cache ~/.stack
       uses: actions/cache@v2
