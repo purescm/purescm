@@ -5,14 +5,12 @@ import qualified Data.Text.IO                    as Text.IO
 import qualified Turtle                          as Turtle
 import           Language.PureScript.Scheme.Make (compile)
 import           TestUtil                        (corefnFile, schemeFile, toText,
-                                                  findModules, removeSchemeFiles,
-                                                  cleanAndBuildCorefn)
+                                                  findModules, buildCorefn)
 
 
 main :: IO ()
 main = do
-  removeSchemeFiles
-  cleanAndBuildCorefn
+  buildCorefn
   modules <- findModules
   for_ modules $ \m -> do
     let corefn = corefnFile m

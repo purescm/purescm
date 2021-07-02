@@ -4,7 +4,6 @@ import           Data.Maybe                      (catMaybes)
 import qualified Data.Text                       as Text
 import           Data.Text                       (Text)
 import qualified Control.Foldl                   as Fold
-import           Control.Exception               (IOException, catch)
 import qualified Turtle                          as Turtle
 import           Turtle                          ((</>), (<.>))
 
@@ -75,19 +74,3 @@ buildCorefn = do
   case exitCode of
     Turtle.ExitSuccess -> pure ()
     Turtle.ExitFailure _ -> error $ "spago error: " <> show err
-
-removeCorefnFiles :: IO ()
-removeCorefnFiles = catch (Turtle.rmtree corefnPath) handler
-  where
-    handler :: IOException -> IO ()
-    handler _e = pure () -- No such file or directory
-
-removeSchemeFiles :: IO ()
-removeSchemeFiles = do
-  xs <- Turtle.fold (Turtle.find (Turtle.ends ".sls") schemePath) Fold.list
-  mapM_ Turtle.rm xs
-
-cleanAndBuildCorefn :: IO ()
-cleanAndBuildCorefn = do
-  removeCorefnFiles
-  buildCorefn
