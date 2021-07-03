@@ -13,7 +13,7 @@ import Language.PureScript.Scheme.Util           (mapWithIndex, concatMapWithInd
 import Language.PureScript.Scheme.CodeGen.AST    (AST(..), everywhere)
 import Language.PureScript.Scheme.CodeGen.Scheme (t,
                                                   eq, eqQ, and_, quote,
-                                                  cons, car, cdr,
+                                                  cons, car, cdr, cond',
                                                   vector, vectorRef)
 
 -- TODO: translate a PureScript module to a Scheme library instead.
@@ -116,7 +116,7 @@ straightenCaseExpr values caseAlternatives =
 
 caseToScheme :: [Expr Ann] -> [CaseAlternative Ann] -> AST
 caseToScheme values caseAlternatives =
-  Cond clauses
+  cond' clauses
   where
     clauses = concatMap condClauses caseExpr
     caseExpr = straightenCaseExpr values caseAlternatives
