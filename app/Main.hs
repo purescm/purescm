@@ -1,12 +1,12 @@
 module Main where
 
-import           Data.Foldable                   (for_)
-import qualified Data.Text.IO                    as Text.IO
-import qualified Turtle                          as Turtle
-import           Language.PureScript.Scheme.Make (compile)
-import           TestUtil                        (corefnFile, schemeFile, toText,
-                                                  findModules, buildCorefn)
-
+import           Data.Foldable                       (for_)
+import qualified Data.Text.IO                        as Text.IO
+import qualified Turtle                              as Turtle
+import           Language.PureScript.Scheme.Make     (compile)
+import           Language.PureScript.Scheme.TestUtil (corefnFile, schemeFile,
+                                                      toText, findModules,
+                                                      buildCorefn)
 
 main :: IO ()
 main = do

@@ -1,14 +1,14 @@
 module Language.PureScript.Scheme.MakeSpec (spec) where
 
-import qualified Data.Text                       as Text
-import           Data.Text                       (Text)
-import qualified Data.Text.IO                    as Text.IO
-import qualified Turtle                          as Turtle
-import           Test.Hspec                      (Spec, it, shouldBe,
-                                                  runIO, beforeAll_)
-import           TestUtil                        (corefnFile, schemeFile,
-                                                  findModules, buildCorefn)
-import           Language.PureScript.Scheme.Make (compile)
+import qualified Data.Text                           as Text
+import           Data.Text                           (Text)
+import qualified Data.Text.IO                        as Text.IO
+import qualified Turtle                              as Turtle
+import           Test.Hspec                          (Spec, it, shouldBe,
+                                                      runIO, beforeAll_)
+import           Language.PureScript.Scheme.TestUtil (corefnFile, schemeFile,
+                                                      findModules, buildCorefn)
+import           Language.PureScript.Scheme.Make     (compile)
 
 testModule :: Text -> Spec
 testModule module_ = do
