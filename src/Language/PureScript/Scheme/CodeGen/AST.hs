@@ -25,11 +25,6 @@ data AST
   -- information.
   | Identifier Text
 
-  -- | Cond expression.
-  -- The argument is a list of pairs (clauses) where the first expression is
-  -- the condition and the second expression is the result.
-  | Cond [(AST, AST)]
-
   -- | Procedure application.
   -- The first argument is an expression resulting to a procedure.
   -- The first argument is the list of actual parameters to be applied.
@@ -58,6 +53,9 @@ data AST
   -- information.
   | Define Text AST
 
+  -- | Unquoted list.
+  | List [AST]
+
   deriving (Show)
 
 
@@ -67,7 +65,7 @@ everywhere f = go where
   go :: AST -> AST
   go (IntegerLiteral i) = f (IntegerLiteral i)
   go (Identifier t) = f (Identifier t)
-  go (Cond xs) = f (Cond (map (\(test, expr) -> (go test, go expr)) xs))
   go (Application function args) = f (Application (go function) (map go args))
   go (Lambda arg expr) = f (Lambda arg (go expr))
   go (Define name expr) = f (Define name (go expr))
+  go (List xs) = f (List (map go xs))

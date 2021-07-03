@@ -31,6 +31,7 @@ emit (Cond xs) = cond $ fmap (\(test, expr) -> list [emit test, emit expr]) xs
 emit (Application function args) = application (emit function) (fmap emit args)
 emit (Lambda arg expr) = lambda arg (emit expr)
 emit (Define name expr) = define name (emit expr)
+emit (List xs) = list $ map emit xs
 
 printScheme :: [AST] -> Text
 printScheme xs = intercalate "\n\n" (fmap emit xs)
