@@ -1,4 +1,4 @@
-module TestUtil where
+module Language.PureScript.Scheme.TestUtil where
 
 import           Data.Maybe                      (catMaybes)
 import qualified Data.Text                       as Text
