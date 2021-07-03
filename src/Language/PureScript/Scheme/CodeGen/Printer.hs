@@ -27,7 +27,6 @@ define name expr = list ["define", name, expr]
 emit :: AST -> Text
 emit (IntegerLiteral integer) = tshow integer
 emit (Identifier x) = x
-emit (Cond xs) = cond $ fmap (\(test, expr) -> list [emit test, emit expr]) xs
 emit (Application function args) = application (emit function) (fmap emit args)
 emit (Lambda arg expr) = lambda arg (emit expr)
 emit (Define name expr) = define name (emit expr)

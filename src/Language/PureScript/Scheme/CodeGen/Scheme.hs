@@ -39,6 +39,14 @@ car l = app "car" [l]
 cdr :: AST -> AST
 cdr l = app "cdr" [l]
 
+-- (cond (test expr) ... (else expr))
+cond :: [(AST, AST)] -> AST -> AST
+cond clauses elseExpr = cond' (clauses ++ [(Identifier "else", elseExpr)])
+
+-- (cond (test expr) ...)
+cond' :: [(AST, AST)] -> AST
+cond' clauses = app "cond" $ map (\(test, expr) -> List [test, expr]) clauses
+
 vector :: [AST] -> AST
 vector xs = app "vector" xs
 
