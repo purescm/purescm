@@ -16,6 +16,12 @@ t :: AST
 t = Identifier "#t"
 
 
+-- Scheme special forms --------------------------------------------------------
+
+define :: Text -> AST -> AST
+define name expr = List [Identifier "define", Identifier name, expr]
+
+
 -- Scheme functions ------------------------------------------------------------
 
 eq :: [AST] -> AST
