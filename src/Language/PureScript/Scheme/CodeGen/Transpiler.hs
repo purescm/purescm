@@ -12,6 +12,7 @@ import Language.PureScript.AST.Literals          (Literal(..))
 import Language.PureScript.Scheme.Util           (mapWithIndex, concatMapWithIndex)
 import Language.PureScript.Scheme.CodeGen.AST    (AST(..), everywhere)
 import Language.PureScript.Scheme.CodeGen.Scheme (t,
+                                                  define,
                                                   eq, eqQ, and_, quote,
                                                   cons, car, cdr, cond',
                                                   vector, vectorRef)
@@ -25,9 +26,9 @@ moduleToScheme (Module _sourceSpan _comments _name _path
 
 topLevelBindToScheme :: Bind Ann -> [AST]
 topLevelBindToScheme (NonRec _ann ident expr) =
-  [Define (runIdent ident) (exprToScheme expr)]
+  [define (runIdent ident) (exprToScheme expr)]
 topLevelBindToScheme (Rec xs) =
-  [ Define (runIdent ident) (exprToScheme expr)
+  [ define (runIdent ident) (exprToScheme expr)
   | ((_ann, ident), expr) <- xs ]
 
 

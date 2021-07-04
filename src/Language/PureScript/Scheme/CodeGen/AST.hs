@@ -39,20 +39,6 @@ data AST
   -- information.
   | Lambda Text AST
 
-  -- | Variable definition.
-  -- In Scheme there are two define syntax:
-  --   - Simple variable definition: (define var expr). This expression binds
-  --     var to expr.
-  --   - Unspecified definition: (define var)
-  --   - Procedure definition:
-  --       - (define (var0 var1 ...) body1 body2 ...)
-  --       - (define (var0 . vars) body1 body2 ...)
-  --       - (define (var0 var1 ... . vars) body1 body2)
-  -- This data construtor expresses a simple variable definition.
-  -- Check The Scheme Programming Language Fourth Edition Chapter 4.6 for more
-  -- information.
-  | Define Text AST
-
   -- | Unquoted list.
   | List [AST]
 
@@ -67,5 +53,4 @@ everywhere f = go where
   go (Identifier t) = f (Identifier t)
   go (Application function args) = f (Application (go function) (map go args))
   go (Lambda arg expr) = f (Lambda arg (go expr))
-  go (Define name expr) = f (Define name (go expr))
   go (List xs) = f (List (map go xs))
