@@ -30,15 +30,6 @@ data AST
   -- The first argument is the list of actual parameters to be applied.
   | Application AST [AST]
 
-  -- | Lambda abstraction.
-  -- To match the semantics of PureScript, lambdas with only a single argument
-  -- are allowed for now.
-  -- The first argiment of this data type is the formal parameter of the lambda,
-  -- which is an unbound or bound identifier. We're using Text for simplicity.
-  -- Check The Scheme Programming Language Fourth Edition Chapter 4.2 for more
-  -- information.
-  | Lambda Text AST
-
   -- | Unquoted list.
   | List [AST]
 
@@ -52,5 +43,4 @@ everywhere f = go where
   go (IntegerLiteral i) = f (IntegerLiteral i)
   go (Identifier t) = f (Identifier t)
   go (Application function args) = f (Application (go function) (map go args))
-  go (Lambda arg expr) = f (Lambda arg (go expr))
   go (List xs) = f (List (map go xs))
