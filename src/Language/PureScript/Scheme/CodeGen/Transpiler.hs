@@ -12,7 +12,7 @@ import Language.PureScript.AST.Literals          (Literal(..))
 import Language.PureScript.Scheme.Util           (mapWithIndex, concatMapWithIndex)
 import Language.PureScript.Scheme.CodeGen.AST    (AST(..), everywhere)
 import Language.PureScript.Scheme.CodeGen.Scheme (t,
-                                                  define,
+                                                  define, lambda1,
                                                   eq, eqQ, and_, quote,
                                                   cons, car, cdr, cond',
                                                   vector, vectorRef)
@@ -65,7 +65,7 @@ exprToScheme (Literal _ann literal) =
 exprToScheme (Constructor _ann _typeName constructorName fields) =
   go fields
   where
-    go (x:xs) = Lambda (runIdent x) (go xs)
+    go (x:xs) = lambda1 (runIdent x) (go xs)
     go [] = cons (quote (Identifier (runProperName constructorName)))
                  (vector (fmap (\field -> Identifier (runIdent field)) fields))
 
@@ -81,7 +81,7 @@ exprToScheme (Case _ann values caseAlternatives) =
   caseToScheme values caseAlternatives
 
 exprToScheme (Abs _ann arg expr) =
-  Lambda (runIdent arg) (exprToScheme expr)
+  lambda1 (runIdent arg) (exprToScheme expr)
 
 exprToScheme (App _ann function arg) =
   Application (exprToScheme function) [exprToScheme arg]

@@ -21,6 +21,13 @@ t = Identifier "#t"
 define :: Text -> AST -> AST
 define name expr = List [Identifier "define", Identifier name, expr]
 
+lambda :: [Text] -> AST -> AST
+lambda formals expr =
+  List [Identifier "lambda", List $ map Identifier formals, expr]
+
+lambda1 :: Text -> AST -> AST
+lambda1 formal expr = lambda [formal] expr
+
 
 -- Scheme functions ------------------------------------------------------------
 
