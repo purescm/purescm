@@ -7,23 +7,23 @@ import Language.PureScript.Scheme.CodeGen.AST (AST(..))
 -- Helpers ---------------------------------------------------------------------
 
 app :: Text -> [AST] -> AST
-app name args = List ((Identifier name):args)
+app name args = List ((Symbol name):args)
 
 
 -- Scheme symbols --------------------------------------------------------------
 
 t :: AST
-t = Identifier "#t"
+t = Symbol "#t"
 
 
 -- Scheme special forms --------------------------------------------------------
 
 define :: Text -> AST -> AST
-define name expr = List [Identifier "define", Identifier name, expr]
+define name expr = List [Symbol "define", Symbol name, expr]
 
 lambda :: [Text] -> AST -> AST
 lambda formals expr =
-  List [Identifier "lambda", List $ map Identifier formals, expr]
+  List [Symbol "lambda", List $ map Symbol formals, expr]
 
 lambda1 :: Text -> AST -> AST
 lambda1 formal expr = lambda [formal] expr
@@ -54,7 +54,7 @@ cdr l = app "cdr" [l]
 
 -- (cond (test expr) ... (else expr))
 cond :: [(AST, AST)] -> AST -> AST
-cond clauses elseExpr = cond' (clauses ++ [(Identifier "else", elseExpr)])
+cond clauses elseExpr = cond' (clauses ++ [(Symbol "else", elseExpr)])
 
 -- (cond (test expr) ...)
 cond' :: [(AST, AST)] -> AST

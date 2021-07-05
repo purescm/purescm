@@ -66,11 +66,11 @@ exprToScheme (Constructor _ann _typeName constructorName fields) =
   go fields
   where
     go (x:xs) = lambda1 (runIdent x) (go xs)
-    go [] = cons (quote (Identifier (runProperName constructorName)))
-                 (vector (fmap (\field -> Identifier (runIdent field)) fields))
+    go [] = cons (quote (Symbol (runProperName constructorName)))
+                 (vector (fmap (\field -> Symbol (runIdent field)) fields))
 
 exprToScheme (Var _ann qualifiedIdent) =
-  Identifier (showQualified runIdent qualifiedIdent)
+  Symbol (showQualified runIdent qualifiedIdent)
 
 -- `values' holds the values we're matching against, for instance it could be
 -- a list of Vars where each Var is the LHS of the pattern matching. For instance
@@ -204,7 +204,7 @@ caseToScheme values caseAlternatives =
     --     (= (vector-ref (cdr v) 0) 1)
     binderToTest value (ConstructorBinder _ann _typeName constructorName binders) =
       (:) (eqQ (car value)
-               (quote (Identifier (runProperName (disqualify constructorName)))))
+               (quote (Symbol (runProperName (disqualify constructorName)))))
           (concatMapWithIndex
            (\i b -> (binderToTest (vectorRef (cdr value) (IntegerLiteral i)) b))
            binders)
@@ -277,11 +277,11 @@ caseToScheme values caseAlternatives =
         go' _ = error "Not implemented"
 
 
--- Replace each (Identifier from) into a `to' AST everywhere in ast
+-- Replace each (Symbol from) into a `to' AST everywhere in ast
 replaceVariables :: AST -> [(Text, AST)] -> AST
 replaceVariables ast mapping = everywhere (go mapping) ast
   where
-    go ((from, to):xs) (Identifier i) =
-      if i == from then to else go xs (Identifier i) 
+    go ((from, to):xs) (Symbol i) =
+      if i == from then to else go xs (Symbol i)
     go [] ast' = ast'
     go _xs ast' = ast'
