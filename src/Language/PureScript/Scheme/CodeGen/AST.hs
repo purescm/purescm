@@ -25,11 +25,6 @@ data AST
   -- information.
   | Identifier Text
 
-  -- | Procedure application.
-  -- The first argument is an expression resulting to a procedure.
-  -- The first argument is the list of actual parameters to be applied.
-  | Application AST [AST]
-
   -- | Unquoted list.
   | List [AST]
 
@@ -42,5 +37,4 @@ everywhere f = go where
   go :: AST -> AST
   go (IntegerLiteral i) = f (IntegerLiteral i)
   go (Identifier t) = f (Identifier t)
-  go (Application function args) = f (Application (go function) (map go args))
   go (List xs) = f (List (map go xs))

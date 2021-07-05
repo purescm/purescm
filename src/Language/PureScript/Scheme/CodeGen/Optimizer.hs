@@ -1,6 +1,7 @@
 module Language.PureScript.Scheme.CodeGen.Optimizer where
 
 import Language.PureScript.Scheme.CodeGen.AST (AST(..), everywhere)
+import Language.PureScript.Scheme.CodeGen.Scheme (app)
 
 
 optimizations :: AST -> AST
@@ -16,13 +17,15 @@ runOptimizations xs = map (\x -> everywhere optimizations x) xs
 -- TODO: possibly nasty hack. To review once externs are implemented.
 specializeOperators :: AST -> AST
 
-specializeOperators (Application (Application (Application (Identifier "Data.Semiring.add")
-                                 [Identifier "Data.Semiring.semiringInt"]) [x]) [y])
-  = Application (Identifier "+") [x, y]
+specializeOperators (List [List [List [Identifier "Data.Semiring.add",
+                                       Identifier "Data.Semiring.semiringInt"],
+                           x], y])
+  = app "+" [x, y]
 
-specializeOperators (Application (Application (Application (Identifier "Data.Ring.sub")
-                                 [Identifier "Data.Ring.ringInt"]) [x]) [y])
-  = Application (Identifier "-") [x, y]
+specializeOperators (List [List [List [Identifier "Data.Ring.sub",
+                                       Identifier "Data.Ring.ringInt"],
+                                  x], y])
+  = app "-" [x, y]
 
 specializeOperators ast = ast
 
@@ -32,7 +35,7 @@ specializeOperators ast = ast
 -- Reduce (and x) to x
 -- TODO: write a test
 simplifyLogic :: AST -> AST
-simplifyLogic (Application (Identifier "and") args) =
+simplifyLogic (List ((Identifier "and"):args)) =
   let
     go ((Identifier "#t") : xs) = go xs
     go (x : xs) = (x : go xs)
@@ -41,6 +44,6 @@ simplifyLogic (Application (Identifier "and") args) =
     case go args of
       [] -> Identifier "#t"
       [x]  -> x
-      xs -> (Application (Identifier "and") xs)
+      xs -> app "and" xs
 
 simplifyLogic other = other
