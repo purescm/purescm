@@ -14,7 +14,7 @@ list xs = parens $ intercalate " " xs
 
 emit :: AST -> Text
 emit (IntegerLiteral integer) = tshow integer
-emit (Identifier x) = x
+emit (Symbol x) = x
 emit (List xs) = list $ map emit xs
 
 printScheme :: [AST] -> Text

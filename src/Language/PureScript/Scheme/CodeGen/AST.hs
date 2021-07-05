@@ -18,12 +18,9 @@ data AST
   -- Check Chez Scheme Version 9 User's Guide chapter 8 for more information.
   = IntegerLiteral Integer
 
-  -- | Bound variable reference.
-  -- Any identifier appearing as an expression in a program is a variable if a
-  -- visible variable binding for the identifier exists.
-  -- Check The Scheme Programming Language Fourth Edition Chapter 4.1 for more
-  -- information.
-  | Identifier Text
+  -- | An unquoted symbol.
+  -- E.g. in `(lambda (x) (+ x 1))': `lambda', `x' and `+' are symbols.
+  | Symbol Text
 
   -- | Unquoted list.
   | List [AST]
@@ -36,5 +33,5 @@ everywhere :: (AST -> AST) -> AST -> AST
 everywhere f = go where
   go :: AST -> AST
   go (IntegerLiteral i) = f (IntegerLiteral i)
-  go (Identifier t) = f (Identifier t)
+  go (Symbol t) = f (Symbol t)
   go (List xs) = f (List (map go xs))
