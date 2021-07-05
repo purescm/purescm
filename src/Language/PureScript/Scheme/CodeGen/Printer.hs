@@ -12,16 +12,9 @@ parens x = "(" <> x <> ")"
 list :: [Text] -> Text
 list xs = parens $ intercalate " " xs
 
-cond :: [Text] -> Text
-cond xs = list ("cond" : xs)
-
-application :: Text -> [Text] -> Text
-application function args = list (function : args)
-
 emit :: AST -> Text
 emit (IntegerLiteral integer) = tshow integer
 emit (Identifier x) = x
-emit (Application function args) = application (emit function) (fmap emit args)
 emit (List xs) = list $ map emit xs
 
 printScheme :: [AST] -> Text

@@ -84,7 +84,7 @@ exprToScheme (Abs _ann arg expr) =
   lambda1 (runIdent arg) (exprToScheme expr)
 
 exprToScheme (App _ann function arg) =
-  Application (exprToScheme function) [exprToScheme arg]
+  List [exprToScheme function, exprToScheme arg]
 
 exprToScheme _ = error "Not implemented"
 

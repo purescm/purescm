@@ -7,7 +7,7 @@ import Language.PureScript.Scheme.CodeGen.AST (AST(..))
 -- Helpers ---------------------------------------------------------------------
 
 app :: Text -> [AST] -> AST
-app name args = Application (Identifier name) args
+app name args = List ((Identifier name):args)
 
 
 -- Scheme symbols --------------------------------------------------------------
