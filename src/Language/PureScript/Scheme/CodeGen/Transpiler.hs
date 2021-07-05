@@ -1,30 +1,31 @@
 module Language.PureScript.Scheme.CodeGen.Transpiler where
 
-import Data.Text                                 (Text)
-import Language.PureScript.CoreFn.Module         (Module(..))
-import Language.PureScript.CoreFn.Ann            (Ann)
-import Language.PureScript.CoreFn.Expr           (Expr(..), Bind(..), Guard,
-                                                  CaseAlternative(..))
-import Language.PureScript.CoreFn.Binders        (Binder(..))
-import Language.PureScript.Names                 (runIdent, runProperName,
-                                                  showQualified, disqualify)
-import Language.PureScript.AST.Literals          (Literal(..))
-import Language.PureScript.Scheme.Util           (mapWithIndex, concatMapWithIndex)
-import Language.PureScript.Scheme.CodeGen.AST    (AST(..), everywhere)
-import Language.PureScript.Scheme.CodeGen.Scheme (t,
-                                                  define, lambda1,
-                                                  eq, eqQ, and_, quote,
-                                                  cons, car, cdr, cond',
-                                                  vector, vectorRef)
+import Data.Text (Text)
+
+import Language.PureScript.Names
+       (runIdent, runProperName, showQualified, disqualify)
+import Language.PureScript.CoreFn.Module (Module(..))
+import Language.PureScript.CoreFn.Ann (Ann)
+import Language.PureScript.CoreFn.Expr
+       (Expr(..), Bind(..), Guard, CaseAlternative(..))
+import Language.PureScript.CoreFn.Binders (Binder(..))
+import Language.PureScript.AST.Literals (Literal(..))
+
+import Language.PureScript.Scheme.Util (mapWithIndex, concatMapWithIndex)
+import Language.PureScript.Scheme.CodeGen.SExpr (SExpr(..), everywhere)
+import Language.PureScript.Scheme.CodeGen.Scheme
+       (t, define, lambda1, eq, eqQ, and_, quote, cons, car, cdr, cond',
+        vector, vectorRef)
+
 
 -- TODO: translate a PureScript module to a Scheme library instead.
-moduleToScheme :: Module Ann -> [AST]
+moduleToScheme :: Module Ann -> [SExpr]
 moduleToScheme (Module _sourceSpan _comments _name _path
                        _imports _exports _reExports _foreigns declarations) =
   concatMap topLevelBindToScheme declarations
 
 
-topLevelBindToScheme :: Bind Ann -> [AST]
+topLevelBindToScheme :: Bind Ann -> [SExpr]
 topLevelBindToScheme (NonRec _ann ident expr) =
   [define (runIdent ident) (exprToScheme expr)]
 topLevelBindToScheme (Rec xs) =
@@ -32,7 +33,7 @@ topLevelBindToScheme (Rec xs) =
   | ((_ann, ident), expr) <- xs ]
 
 
-exprToScheme :: Expr Ann -> AST
+exprToScheme :: Expr Ann -> SExpr
 
 exprToScheme (Literal _ann literal) =
   literalToScheme literal
@@ -89,7 +90,7 @@ exprToScheme (App _ann function arg) =
 exprToScheme _ = error "Not implemented"
 
 
-literalToScheme :: Literal (Expr Ann) -> AST
+literalToScheme :: Literal (Expr Ann) -> SExpr
 literalToScheme (NumericLiteral (Left integer)) = IntegerLiteral integer
 literalToScheme (ArrayLiteral xs) = vector $ fmap exprToScheme xs
 literalToScheme _ = error "Not implemented"
@@ -115,7 +116,7 @@ straightenCaseExpr values caseAlternatives =
       caseAlternatives
 
 
-caseToScheme :: [Expr Ann] -> [CaseAlternative Ann] -> AST
+caseToScheme :: [Expr Ann] -> [CaseAlternative Ann] -> SExpr
 caseToScheme values caseAlternatives =
   cond' clauses
   where
@@ -127,7 +128,7 @@ caseToScheme values caseAlternatives =
     -- second element is the result.
     condClauses
       :: ([(Expr Ann, Binder Ann)], Either [(Expr Ann, Expr Ann)] (Expr Ann))
-      -> [(AST, AST)]
+      -> [(SExpr, SExpr)]
 
     -- If there are guards we're provided with multiple results and each result
     -- is associated to a guard. Thus we have to emit multiple cond clauses for
@@ -150,12 +151,12 @@ caseToScheme values caseAlternatives =
     -- In scheme: (cond ((and test1a test1b) result1) ...)
     -- 
     -- Always wrap the test in an `and' form since binderToTest has to return a
-    -- list because when applied to a ConstructorBinder it returns a list of AST
-    -- (while the other cases return a list of AST with a single element only).
+    -- list because when applied to a ConstructorBinder it returns a list of SExpr
+    -- (while the other cases return a list of SExpr with a single element only).
     --
-    -- We could have produced a single AST node instead of a list of AST in
+    -- We could have produced a single SExpr node instead of a list of SExpr in
     -- binderToTest (so that for a ConstructorBinder it would have emitted an
-    -- `and' form and for all other cases a simple AST node) but we would have
+    -- `and' form and for all other cases a simple SExpr node) but we would have
     -- ended up with nested `and's: one coming from `test' and one coming from
     -- `binderToTest' when it handles a ConstructorBinder.
     --
@@ -175,7 +176,7 @@ caseToScheme values caseAlternatives =
 
     -- Emit a cond clause test for each value and binder.
     -- E.g.: (value: 23, binder: 42) -> (= 23 42)
-    binderToTest :: AST -> Binder Ann -> [AST]
+    binderToTest :: SExpr -> Binder Ann -> [SExpr]
     binderToTest _value (NullBinder _ann) = [t]
     binderToTest value (LiteralBinder _ann (NumericLiteral (Left integer))) =
       [eq [value, IntegerLiteral integer]]
@@ -227,13 +228,13 @@ caseToScheme values caseAlternatives =
     -- Emit a cond clause result for multiple values and binders associated to
     -- a single result. This is done by replacing the identifiers in the result
     -- expression according to its VarBinders.
-    bindersToResult :: [(Expr Ann, Binder a)] -> Expr Ann -> AST
+    bindersToResult :: [(Expr Ann, Binder a)] -> Expr Ann -> SExpr
     bindersToResult valuesAndBinders result =
       replaceVariables (exprToScheme result)
                        (variablesToReplace valuesAndBinders)
 
 
-    variablesToReplace :: [(Expr Ann, Binder a)] -> [(Text, AST)]
+    variablesToReplace :: [(Expr Ann, Binder a)] -> [(Text, SExpr)]
     variablesToReplace valuesAndBinders =
       concatMap (\(value, binder) -> go (exprToScheme value) binder)
                 valuesAndBinders
@@ -277,8 +278,8 @@ caseToScheme values caseAlternatives =
         go' _ = error "Not implemented"
 
 
--- Replace each (Symbol from) into a `to' AST everywhere in ast
-replaceVariables :: AST -> [(Text, AST)] -> AST
+-- Replace each (Symbol from) into a `to' SExpr everywhere in ast
+replaceVariables :: SExpr -> [(Text, SExpr)] -> SExpr
 replaceVariables ast mapping = everywhere (go mapping) ast
   where
     go ((from, to):xs) (Symbol i) =

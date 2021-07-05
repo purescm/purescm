@@ -1,21 +1,21 @@
 module Language.PureScript.Scheme.CodeGen.Optimizer where
 
-import Language.PureScript.Scheme.CodeGen.AST (AST(..), everywhere)
+import Language.PureScript.Scheme.CodeGen.SExpr (SExpr(..), everywhere)
 import Language.PureScript.Scheme.CodeGen.Scheme (app)
 
 
-optimizations :: AST -> AST
+optimizations :: SExpr -> SExpr
 optimizations = (simplifyLogic . specializeOperators)
 
 
 -- Single pass optimizer.
--- Run through all the AST expressions and apply the optimizations.
-runOptimizations :: [AST] -> [AST]
+-- Run through all the SExpr expressions and apply the optimizations.
+runOptimizations :: [SExpr] -> [SExpr]
 runOptimizations xs = map (\x -> everywhere optimizations x) xs
 
 
 -- TODO: possibly nasty hack. To review once externs are implemented.
-specializeOperators :: AST -> AST
+specializeOperators :: SExpr -> SExpr
 
 specializeOperators (List [List [List [Symbol "Data.Semiring.add",
                                        Symbol "Data.Semiring.semiringInt"],
@@ -34,7 +34,7 @@ specializeOperators ast = ast
 -- Reduce (and x #t y) to (and x y)
 -- Reduce (and x) to x
 -- TODO: write a test
-simplifyLogic :: AST -> AST
+simplifyLogic :: SExpr -> SExpr
 simplifyLogic (List ((Symbol "and"):args)) =
   let
     go ((Symbol "#t") : xs) = go xs

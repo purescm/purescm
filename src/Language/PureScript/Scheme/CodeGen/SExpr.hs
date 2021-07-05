@@ -1,9 +1,9 @@
-module Language.PureScript.Scheme.CodeGen.AST where
+module Language.PureScript.Scheme.CodeGen.SExpr where
 
 import Data.Text (Text)
 
 -- | Data type for Scheme expression
-data AST
+data SExpr
 
   -- | Integer literal.
   -- Chez Scheme uses two distinct types for integers:
@@ -23,15 +23,15 @@ data AST
   | Symbol Text
 
   -- | Unquoted list.
-  | List [AST]
+  | List [SExpr]
 
   deriving (Show)
 
 
--- | Recursively apply f to each AST.
-everywhere :: (AST -> AST) -> AST -> AST
+-- | Recursively apply f to each SExpr.
+everywhere :: (SExpr -> SExpr) -> SExpr -> SExpr
 everywhere f = go where
-  go :: AST -> AST
+  go :: SExpr -> SExpr
   go (IntegerLiteral i) = f (IntegerLiteral i)
   go (Symbol t) = f (Symbol t)
   go (List xs) = f (List (map go xs))
