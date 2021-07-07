@@ -4,30 +4,25 @@ import Language.PureScript.Scheme.CodeGen.SExpr (SExpr(..), everywhere)
 import Language.PureScript.Scheme.CodeGen.Scheme (app)
 
 
-optimizations :: SExpr -> SExpr
-optimizations = (simplifyLogic . specializeOperators)
-
-
 -- Single pass optimizer.
 -- Run through all the SExpr expressions and apply the optimizations.
 runOptimizations :: [SExpr] -> [SExpr]
 runOptimizations xs = map (\x -> everywhere optimizations x) xs
 
 
--- TODO: possibly nasty hack. To review once externs are implemented.
-specializeOperators :: SExpr -> SExpr
+optimizations :: SExpr -> SExpr
+optimizations = (simplifyLogic . inlineCommonBinaryOperators)
 
-specializeOperators (List [List [List [Symbol "Data.Semiring.add",
-                                       Symbol "Data.Semiring.semiringInt"],
-                           x], y])
-  = app "+" [x, y]
 
-specializeOperators (List [List [List [Symbol "Data.Ring.sub",
-                                       Symbol "Data.Ring.ringInt"],
-                                  x], y])
-  = app "-" [x, y]
+inlineCommonBinaryOperators :: SExpr -> SExpr
 
-specializeOperators ast = ast
+inlineCommonBinaryOperators (List [List [List [Symbol op, Symbol klass], x], y])
+  | op == "Data.Semiring.add" && klass == "Data.Semiring.semiringInt" =
+    app "+" [x, y]
+  | op == "Data.Ring.sub" && klass == "Data.Ring.ringInt" =
+    app "-" [x, y]
+
+inlineCommonBinaryOperators expr = expr
 
 
 -- Reduce (and #t #t #t) to #t
@@ -35,6 +30,7 @@ specializeOperators ast = ast
 -- Reduce (and x) to x
 -- TODO: write a test
 simplifyLogic :: SExpr -> SExpr
+
 simplifyLogic (List ((Symbol "and"):args)) =
   let
     go ((Symbol "#t") : xs) = go xs
