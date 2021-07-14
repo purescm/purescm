@@ -18,6 +18,12 @@ t = Symbol "#t"
 f :: SExpr
 f = Symbol "#f"
 
+stringEqQ' :: SExpr
+stringEqQ' = Symbol "string=?"
+
+stringHash' :: SExpr
+stringHash' = Symbol "string-hash"
+
 
 -- Scheme special forms --------------------------------------------------------
 
