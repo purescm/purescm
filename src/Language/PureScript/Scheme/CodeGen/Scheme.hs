@@ -37,6 +37,12 @@ eq xs = app "=" xs
 eqQ :: SExpr -> SExpr -> SExpr
 eqQ x y = app "eq?" [x, y]
 
+stringEqQ :: [SExpr] -> SExpr
+stringEqQ xs = app "string=?" xs
+
+stringEqQ2 :: SExpr -> SExpr -> SExpr
+stringEqQ2 s1 s2 = stringEqQ [s1, s2]
+
 and_ :: [SExpr] -> SExpr
 and_ xs = app "and" xs
 
