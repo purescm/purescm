@@ -92,6 +92,9 @@ car l = app "car" [l]
 cdr :: SExpr -> SExpr
 cdr l = app "cdr" [l]
 
+stringHash :: SExpr -> SExpr
+stringHash string = app "string-hash" [string]
+
 vector :: [SExpr] -> SExpr
 vector xs = app "vector" xs
 
