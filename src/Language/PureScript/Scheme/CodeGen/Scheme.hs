@@ -110,6 +110,16 @@ vector xs = app "vector" xs
 vectorRef :: SExpr -> SExpr -> SExpr
 vectorRef v i = app "vector-ref" [v, i]
 
+-- | (make-hashtable hash equiv?)
+-- hash and equiv? must be procedures. If size is provided, it must be a
+-- nonnegative exact integer indicating approximately how many elements
+-- the hashtable should initially hold.
+makeHashtable :: SExpr -> SExpr -> SExpr -> SExpr
+makeHashtable hash equivQ size = app "make-hashtable" [hash, equivQ, size]
+
+hashtableSetB :: SExpr -> SExpr -> SExpr -> SExpr
+hashtableSetB hashtable key obj = app "hashtable-set!" [hashtable, key, obj]
+
 errorWithWhoAndIrritants :: SExpr -> SExpr -> [SExpr] -> SExpr
 errorWithWhoAndIrritants who msg irritants
   = app "error" $ [who, msg] <> irritants
