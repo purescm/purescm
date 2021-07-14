@@ -44,7 +44,7 @@ let_ :: [(Text, SExpr)] -> SExpr -> SExpr
 let_ bodies expr = List [Symbol "let", List $ fmap go bodies, expr]
   where
     go :: (Text, SExpr) -> SExpr
-    go (var, expr) = List [Symbol var, expr]
+    go (var, expr') = List [Symbol var, expr']
 
 condWithElse_ :: [(SExpr, SExpr)] -> Maybe SExpr -> SExpr
 condWithElse_ clauses maybeElse

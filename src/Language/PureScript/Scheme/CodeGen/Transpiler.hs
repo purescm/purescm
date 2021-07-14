@@ -4,6 +4,7 @@ import Data.Text (Text)
 
 import Language.PureScript.Names
        (Ident, Qualified(..), runIdent, runProperName, showQualified, disqualify)
+import Language.PureScript.PSString (PSString)
 import Language.PureScript.CoreFn.Module (Module(..))
 import Language.PureScript.CoreFn.Ann (Ann)
 import Language.PureScript.CoreFn.Expr
@@ -14,8 +15,10 @@ import Language.PureScript.AST.Literals (Literal(..))
 import Language.PureScript.Scheme.Util (mapWithIndex, concatMapWithIndex)
 import Language.PureScript.Scheme.CodeGen.SExpr (SExpr(..), everywhere)
 import Language.PureScript.Scheme.CodeGen.Scheme
-       (t, define, lambda1, eq2, eqQ, stringEqQ2, and_, quote, cons, car, cdr,
-        cond, vector, vectorRef)
+       (t, stringEqQ', stringHash',
+        define, quote, lambda1, let_, cond, begin,
+        eq2, eqQ, stringEqQ2, and_, cons, cons, car, cdr,
+        vector, vector, vectorRef, makeHashtable, hashtableSetB)
 import Language.PureScript.Scheme.CodeGen.Case
        ( Alternative(..)
        , GuardedExpr
@@ -63,15 +66,8 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
       = List [exprToScheme function, exprToScheme arg]
     exprToScheme (Var _ann qualifiedIdent)
       = varToScheme qualifiedIdent
-
-    -- `values' holds the values we're matching against, for instance it could be
-    -- a list of Vars where each Var is the LHS of the pattern matching. For instance
-    -- in `foo 1 a = 0', `1' and `a' are values.
-    -- `caseAlternatives' holds the various cases we're matching against such values.
-    -- for each case there is a binder and a possible result if the match holds.
     exprToScheme (Case _ann values caseAlternatives)
       = caseToScheme values caseAlternatives
-
     exprToScheme (Let _ann _binds _expr)
       = error "Not implemented"
 
@@ -85,7 +81,21 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
     literalToScheme (CharLiteral    _x)        = error "Not implemented"
     literalToScheme (BooleanLiteral _x)        = error "Not implemented"
     literalToScheme (ArrayLiteral   xs)        = vector $ map exprToScheme xs
-    literalToScheme (ObjectLiteral  _x)        = error "Not implemented"
+    literalToScheme (ObjectLiteral  xs)        = objectToScheme xs
+
+    ----------------------------------------------------------------------------
+
+    objectToScheme :: [(PSString, Expr Ann)] -> SExpr
+    objectToScheme xs =
+      let_ [("$ht", makeHashtable stringHash'
+                                  stringEqQ'
+                                  (Integer $ toInteger $ length xs))]
+           (begin ((fmap go xs) ++ [Symbol "$ht"]))
+      where
+        go :: (PSString, Expr Ann) -> SExpr
+        go (key, value) = hashtableSetB (Symbol "$ht")
+                                        (psStringToSExpr key)
+                                        (exprToScheme value)
 
     ----------------------------------------------------------------------------
 
@@ -244,6 +254,7 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
           [eq2 value (Integer integer)]
         binderToTest value (LiteralBinder _ann (StringLiteral x)) =
           [stringEqQ2 value (String x)]
+
         binderToTest _value (LiteralBinder _ann _) = error "Not implemented"
         binderToTest _value (VarBinder _ann _ident) = [t]
 
@@ -355,3 +366,7 @@ replaceVariables ast mapping = everywhere (go mapping) ast
       if i == from then to else go xs (Symbol i)
     go [] ast' = ast'
     go _xs ast' = ast'
+
+
+psStringToSExpr :: PSString -> SExpr
+psStringToSExpr x = String x
