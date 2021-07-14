@@ -68,6 +68,9 @@ condWithElse clauses elseExpr = condWithElse_ clauses (Just elseExpr)
 cond :: [(SExpr, SExpr)] -> SExpr
 cond clauses = condWithElse_ clauses Nothing 
 
+begin :: [SExpr] -> SExpr
+begin xs = app "begin" xs
+
 
 -- Scheme functions ------------------------------------------------------------
 
