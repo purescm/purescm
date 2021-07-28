@@ -99,7 +99,7 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
     ----------------------------------------------------------------------------
 
     literalToScheme :: Literal (Expr Ann) -> SExpr
-    literalToScheme (NumericLiteral (Left integer)) = IntegerLiteral integer
+    literalToScheme (NumericLiteral (Left integer)) = Integer integer
     literalToScheme (ArrayLiteral xs) = vector $ fmap exprToScheme xs
     literalToScheme _ = error "Not implemented"
 
@@ -170,7 +170,7 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
         binderToTest :: SExpr -> Binder Ann -> [SExpr]
         binderToTest _value (NullBinder _ann) = [t]
         binderToTest value (LiteralBinder _ann (NumericLiteral (Left integer))) =
-          [eq [value, IntegerLiteral integer]]
+          [eq [value, Integer integer]]
         binderToTest _value (LiteralBinder _ann _) = error "Not implemented"
         binderToTest _value (VarBinder _ann _ident) = [t]
 
@@ -199,7 +199,7 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
           (:) (eqQ (car value)
                    (quote (Symbol (runProperName (disqualify constructorName)))))
               (concatMapWithIndex
-                (\i b -> (binderToTest (vectorRef (cdr value) (IntegerLiteral i))
+                (\i b -> (binderToTest (vectorRef (cdr value) (Integer i))
                                        b))
                 binders)
 
@@ -249,7 +249,7 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
             -- of the tagged pair holding the Constructor values.
             go value (ConstructorBinder _ann _typeName _constructorName binders) =
               mapWithIndex (\i b -> (go' b,
-                                     vectorRef (cdr value) (IntegerLiteral i)))
+                                     vectorRef (cdr value) (Integer i)))
                            binders
 
             -- Consider the case:

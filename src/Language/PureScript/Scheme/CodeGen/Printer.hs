@@ -13,7 +13,7 @@ list :: [Text] -> Text
 list xs = parens $ intercalate " " xs
 
 emit :: SExpr -> Text
-emit (IntegerLiteral integer) = tshow integer
+emit (Integer integer) = tshow integer
 emit (Symbol x) = x
 emit (List xs) = list $ map emit xs
 
