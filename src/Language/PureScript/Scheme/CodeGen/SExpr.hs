@@ -1,6 +1,7 @@
 module Language.PureScript.Scheme.CodeGen.SExpr where
 
 import Data.Text (Text)
+import Language.PureScript.PSString (PSString)
 
 -- | Data type for symbolic expressions.
 data SExpr
@@ -13,6 +14,9 @@ data SExpr
   --   - Bignums represent arbitrary-precision integers outside of the fixnum
   --     range.
   = Integer Integer
+
+  -- | String literal.
+  | String PSString
 
   -- | An unquoted symbol.
   -- E.g. in `(lambda (x) (+ x 1))': `lambda', `x' and `+' are symbols.
@@ -28,6 +32,7 @@ data SExpr
 everywhere :: (SExpr -> SExpr) -> SExpr -> SExpr
 everywhere f = go where
   go :: SExpr -> SExpr
-  go (Integer i) = f (Integer i)
-  go (Symbol t) = f (Symbol t)
+  go (Integer x) = f (Integer x)
+  go (String x) = f (String x)
+  go (Symbol x) = f (Symbol x)
   go (List xs) = f (List (map go xs))
