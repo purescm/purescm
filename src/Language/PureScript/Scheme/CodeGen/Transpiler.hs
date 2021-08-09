@@ -100,6 +100,7 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
 
     literalToScheme :: Literal (Expr Ann) -> SExpr
     literalToScheme (NumericLiteral (Left integer)) = Integer integer
+    literalToScheme (StringLiteral x) = String x
     literalToScheme (ArrayLiteral xs) = vector $ fmap exprToScheme xs
     literalToScheme _ = error "Not implemented"
 
