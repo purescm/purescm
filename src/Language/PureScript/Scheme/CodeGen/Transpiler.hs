@@ -14,8 +14,8 @@ import Language.PureScript.AST.Literals (Literal(..))
 import Language.PureScript.Scheme.Util (mapWithIndex, concatMapWithIndex)
 import Language.PureScript.Scheme.CodeGen.SExpr (SExpr(..), everywhere)
 import Language.PureScript.Scheme.CodeGen.Scheme
-       (t, define, lambda1, eq, eqQ, and_, quote, cons, car, cdr, cond',
-        vector, vectorRef)
+       (t, define, lambda1, eq, eqQ, stringEqQ2, and_, quote, cons, car, cdr,
+        cond', vector, vectorRef)
 
 
 -- TODO: translate a PureScript module to a Scheme library instead.
@@ -172,6 +172,8 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
         binderToTest _value (NullBinder _ann) = [t]
         binderToTest value (LiteralBinder _ann (NumericLiteral (Left integer))) =
           [eq [value, Integer integer]]
+        binderToTest value (LiteralBinder _ann (StringLiteral x)) =
+          [stringEqQ2 value (String x)]
         binderToTest _value (LiteralBinder _ann _) = error "Not implemented"
         binderToTest _value (VarBinder _ann _ident) = [t]
 
