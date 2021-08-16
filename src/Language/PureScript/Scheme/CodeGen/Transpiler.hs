@@ -14,7 +14,7 @@ import Language.PureScript.AST.Literals (Literal(..))
 import Language.PureScript.Scheme.Util (mapWithIndex, concatMapWithIndex)
 import Language.PureScript.Scheme.CodeGen.SExpr (SExpr(..), everywhere)
 import Language.PureScript.Scheme.CodeGen.Scheme
-       (t, define, lambda1, eq, eqQ, stringEqQ2, and_, quote, cons, car, cdr,
+       (t, define, lambda1, eq2, eqQ, stringEqQ2, and_, quote, cons, car, cdr,
         cond', vector, vectorRef)
 
 
@@ -171,7 +171,7 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
         binderToTest :: SExpr -> Binder Ann -> [SExpr]
         binderToTest _value (NullBinder _ann) = [t]
         binderToTest value (LiteralBinder _ann (NumericLiteral (Left integer))) =
-          [eq [value, Integer integer]]
+          [eq2 value (Integer integer)]
         binderToTest value (LiteralBinder _ann (StringLiteral x)) =
           [stringEqQ2 value (String x)]
         binderToTest _value (LiteralBinder _ann _) = error "Not implemented"
