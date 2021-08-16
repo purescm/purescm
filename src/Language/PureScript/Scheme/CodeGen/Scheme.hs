@@ -34,6 +34,9 @@ lambda1 formal expr = lambda [formal] expr
 eq :: [SExpr] -> SExpr
 eq xs = app "=" xs
 
+eq2 :: SExpr -> SExpr -> SExpr
+eq2 x y = eq [x, y]
+
 eqQ :: SExpr -> SExpr -> SExpr
 eqQ x y = app "eq?" [x, y]
 
