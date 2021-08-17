@@ -87,9 +87,7 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
 
     objectToScheme :: [(PSString, Expr Ann)] -> SExpr
     objectToScheme xs =
-      let1 ("$ht", makeHashtable stringHash'
-                                 stringEqQ'
-                                 (Integer $ toInteger $ length xs))
+      let1 ("$ht", makeStringHashtable (toInteger $ length xs))
            (begin ((fmap go xs) ++ [Symbol "$ht"]))
       where
         go :: (PSString, Expr Ann) -> SExpr
@@ -370,3 +368,6 @@ replaceVariables ast mapping = everywhere (go mapping) ast
 
 psStringToSExpr :: PSString -> SExpr
 psStringToSExpr x = String x
+
+makeStringHashtable :: Integer -> SExpr
+makeStringHashtable size = makeHashtable stringHash' stringEqQ' (Integer size)
