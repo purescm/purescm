@@ -42,7 +42,6 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
     ----------------------------------------------------------------------------
 
     exprToScheme :: Expr Ann -> SExpr
-
     exprToScheme (Literal _ann literal) = literalToScheme literal
 
     -- An ADT is translated to a tagged pair. The car of the pair is the tag,
@@ -101,10 +100,13 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
     ----------------------------------------------------------------------------
 
     literalToScheme :: Literal (Expr Ann) -> SExpr
-    literalToScheme (NumericLiteral (Left integer)) = Integer integer
-    literalToScheme (StringLiteral x) = String x
-    literalToScheme (ArrayLiteral xs) = vector $ fmap exprToScheme xs
-    literalToScheme _ = error "Not implemented"
+    literalToScheme (BooleanLiteral _x)        = error "Not implemented"
+    literalToScheme (NumericLiteral (Left  i)) = Integer i
+    literalToScheme (NumericLiteral (Right _)) = error "Not implemented"
+    literalToScheme (CharLiteral _x)           = error "Not implemented"
+    literalToScheme (StringLiteral x)          = String x
+    literalToScheme (ArrayLiteral xs)          = vector $ map exprToScheme xs
+    literalToScheme (ObjectLiteral _x)         = error "Not implemented"
 
     ----------------------------------------------------------------------------
 
