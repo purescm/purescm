@@ -3,7 +3,7 @@ module Language.PureScript.Scheme.CodeGen.Transpiler where
 import Data.Text (Text)
 
 import Language.PureScript.Names
-       (Qualified(..), runIdent, runProperName, showQualified, disqualify)
+       (Ident, Qualified(..), runIdent, runProperName, showQualified, disqualify)
 import Language.PureScript.CoreFn.Module (Module(..))
 import Language.PureScript.CoreFn.Ann (Ann)
 import Language.PureScript.CoreFn.Expr
@@ -21,21 +21,23 @@ import Language.PureScript.Scheme.CodeGen.Scheme
 -- TODO: translate a PureScript module to a Scheme library instead.
 moduleToScheme :: Module Ann -> [SExpr]
 moduleToScheme (Module _sourceSpan _comments moduleName _path
-                       _imports _exports _reExports _foreigns declarations) =
-  concatMap topLevelBindToScheme declarations
-
+                       _imports _exports _reExports _foreigns declarations)
+  = concatMap bindToScheme declarations
   where
 
     ----------------------------------------------------------------------------
 
-    topLevelBindToScheme :: Bind Ann -> [SExpr]
-
-    topLevelBindToScheme (NonRec _ann ident expr) =
-      [define (runIdent ident) (exprToScheme expr)]
-
-    topLevelBindToScheme (Rec xs) =
-      [ define (runIdent ident) (exprToScheme expr)
-      | ((_ann, ident), expr) <- xs ]
+    bindToScheme :: Bind Ann -> [SExpr]
+    bindToScheme bind
+      = case bind of
+          NonRec _ann ident expr
+            -> [ def ident expr ]
+          Rec xs
+            -> map (\((_ann, ident), expr) -> def ident expr)
+                   xs
+      where
+        def :: Ident -> Expr Ann -> SExpr
+        def ident expr = define (runIdent ident) (exprToScheme expr)
 
     ----------------------------------------------------------------------------
 
