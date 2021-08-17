@@ -21,12 +21,23 @@ t = Symbol "#t"
 define :: Text -> SExpr -> SExpr
 define name expr = List [Symbol "define", Symbol name, expr]
 
+quote :: SExpr -> SExpr
+quote x = app "quote" [x]
+
 lambda :: [Text] -> SExpr -> SExpr
 lambda formals expr =
   List [Symbol "lambda", List $ map Symbol formals, expr]
 
 lambda1 :: Text -> SExpr -> SExpr
 lambda1 formal expr = lambda [formal] expr
+
+-- (cond (test expr) ...)
+cond :: [(SExpr, SExpr)] -> SExpr
+cond clauses = app "cond" $ map (\(test, expr) -> List [test, expr]) clauses
+
+-- (cond (test expr) ... (else expr))
+condWithElse :: [(SExpr, SExpr)] -> SExpr -> SExpr
+condWithElse clauses elseExpr = cond (clauses ++ [(Symbol "else", elseExpr)])
 
 
 -- Scheme functions ------------------------------------------------------------
@@ -49,9 +60,6 @@ stringEqQ2 s1 s2 = stringEqQ [s1, s2]
 and_ :: [SExpr] -> SExpr
 and_ xs = app "and" xs
 
-quote :: SExpr -> SExpr
-quote x = app "quote" [x]
-
 cons :: SExpr -> SExpr -> SExpr
 cons x y = app "cons" [x, y]
 
@@ -60,14 +68,6 @@ car l = app "car" [l]
 
 cdr :: SExpr -> SExpr
 cdr l = app "cdr" [l]
-
--- (cond (test expr) ... (else expr))
-cond :: [(SExpr, SExpr)] -> SExpr -> SExpr
-cond clauses elseExpr = cond' (clauses ++ [(Symbol "else", elseExpr)])
-
--- (cond (test expr) ...)
-cond' :: [(SExpr, SExpr)] -> SExpr
-cond' clauses = app "cond" $ map (\(test, expr) -> List [test, expr]) clauses
 
 vector :: [SExpr] -> SExpr
 vector xs = app "vector" xs
