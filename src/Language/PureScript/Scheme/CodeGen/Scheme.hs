@@ -74,3 +74,9 @@ vector xs = app "vector" xs
 
 vectorRef :: SExpr -> SExpr -> SExpr
 vectorRef v i = app "vector-ref" [v, i]
+
+errorWithIrritants :: SExpr -> SExpr -> [SExpr] -> SExpr
+errorWithIrritants who msg irritants = app "error" $ [who, msg] <> irritants
+
+error_ :: SExpr -> SExpr -> SExpr
+error_ who msg = errorWithIrritants who msg []
