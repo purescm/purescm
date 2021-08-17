@@ -42,39 +42,10 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
     ----------------------------------------------------------------------------
 
     exprToScheme :: Expr Ann -> SExpr
-    exprToScheme (Literal _ann literal) = literalToScheme literal
-
-    -- An ADT is translated to a tagged pair. The car of the pair is the tag,
-    -- holding the name of the Constructor as a quoted symbol. The cdr of the
-    -- pair is a vector, holding the values of the Constructor, if any.
-    --
-    -- A Constructor is either a pair literal in the case of a simple sum type
-    -- (e.g. data Foo = Bar | Baz) or a a function that produces a tagged pair
-    -- holding the values for the constructed ADT.
-    --
-    -- A product type with N fields results into a curried function of N arguments.
-    --     data Foo = Bar Int Int
-    --     (lambda (v0) (lambda (v1) (cons 'Bar (vector v0 v1)))) ; defined as Bar
-    --
-    -- A sum type results into multiple Constructor. If the sum type is `simple'
-    -- we just emit a constant representing that constructed value.
-    --     data Foo = Bar | Baz
-    --     (cons (quote Bar) (vector)) ; defined as Bar
-    --     (cons (quote Baz) (vector)) ; defined as Baz
-    -- TODO: maybe we could remove that empty vector?
-    --
-    -- If the sum type is not simple, so its constructors could be product types
-    -- we emit multiple functions.
-    --     data Foo = Bar Int Int
-    --              | Baz
-    --     (lambda (v0) (lambda (v1)) (cons 'Bar (vector v0 v1))) ; defined as Bar
-    --     (cons (quote Baz) (vector))                            ; defined as Baz
-    exprToScheme (Constructor _ann _typeName constructorName fields) =
-      go fields
-      where
-        go (x:xs) = lambda1 (runIdent x) (go xs)
-        go [] = cons (quote (Symbol (runProperName constructorName)))
-                     (vector (fmap (\field -> Symbol (runIdent field)) fields))
+    exprToScheme (Literal _ann literal)
+      = literalToScheme literal
+    exprToScheme (Constructor _ann _typeName constructorName fields)
+      = constructorToScheme constructorName fields
 
     exprToScheme (Var _ann (Qualified Nothing ident)) = Symbol (runIdent ident)
     exprToScheme (Var _ann q@(Qualified (Just moduleName') ident))
@@ -107,6 +78,84 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
     literalToScheme (StringLiteral x)          = String x
     literalToScheme (ArrayLiteral xs)          = vector $ map exprToScheme xs
     literalToScheme (ObjectLiteral _x)         = error "Not implemented"
+
+    ----------------------------------------------------------------------------
+
+    -- An algebraic data type can have one or more constructors.
+    --
+    -- E.g.:
+    --   data Foo1 = Foo1
+    --   data Foo2 = Foo2 | Bar2
+    --   data Foo3 = Foo3 | Bar3 | Baz3
+    --
+    -- A constructor for an algebraic data type can take zero or more values
+    -- whose type is provided to the constructor.
+    --
+    -- E.g.:
+    --   data Foo1 = Foo1 Int String
+    --   data Foo2 = Foo2 Int | Bar2 String
+    --
+    -- The constructed data structure is translated into a pair.
+    --
+    --   - The car of the pair is the tag. It is used to determine which
+    --     constructor produced a given data structure. The tag is a quoted
+    --     symbol of the Constructor name.
+    --     TODO: maybe don't use a pair if the ADT has a single constructor?
+    --   - The cdr of the pair is a vector, holding the values of the
+    --     constructed data structure. If the constructor doesn't take any value
+    --     the vector will be empty.
+    --     TODO: maybe use something else instead of an empty vector?
+    --
+    -- If the constructor takes one or more values it is translated into a
+    -- function taking such values and returning the constructed data structure.
+    --
+    -- E.g.:
+    --   The following code
+    --     data Foo = Bar Int
+    --   Is translated into
+    --     (define Foo (lambda (v0) (cons 'Bar v0)))
+    --
+    -- If the constructor takes no values it is translated into a constructed
+    -- data structure.
+    --
+    -- E.g.:
+    --   The following code
+    --     data Foo = Bar
+    --   Is translated into
+    --     (define Foo (cons 'Bar (vector)))
+    --
+    -- Keep in mind that data types usually have multiple constructors.
+    --
+    -- E.g.:
+    --   The following code
+    --     data Foo = Bar Int | Baz String | Qux
+    --   Is translated into
+    --     (define Bar (lambda (v0) (cons 'Bar (vector v0))))
+    --     (define Baz (lambda (v0) (cons 'Baz (vector v0))))
+    --     (define Qux (cons 'Qux (vector)))
+    --
+    -- Keep in mind that in PureScript functions with more than one arguments
+    -- actually are multiple nested curried single argument functions. The same
+    -- holds for data constructors: a product type with N fields results into a
+    -- curried function of N arguments.
+    --
+    -- E.g.:
+    --   The following code
+    --     data Foo = Bar Int Int
+    --   Is translated into
+    --     (define Bar (lambda (v0) (lambda (v1) (cons 'Bar (vector v0 v1)))))
+    constructorToScheme constructorName fields =
+      go fields
+      where
+        -- Here we build the nested curried lambda expressions.
+        go (x:xs) = lambda1 (runIdent x) (go xs)
+        -- Here we build the body if the most inner lambda expresison that
+        -- returns the constructed data structure.
+        -- If the data type doesn't take values then fields is an empty
+        -- and only this branch is executed.
+        go [] = cons (quote (Symbol (runProperName constructorName)))
+                     (vector (map (\field -> Symbol (runIdent field))
+                                  fields))
 
     ----------------------------------------------------------------------------
 
