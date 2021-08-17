@@ -16,7 +16,7 @@ import Language.PureScript.Scheme.Util (mapWithIndex, concatMapWithIndex)
 import Language.PureScript.Scheme.CodeGen.SExpr (SExpr(..), everywhere)
 import Language.PureScript.Scheme.CodeGen.Scheme
        (t, stringEqQ', stringHash',
-        define, quote, lambda1, let_, cond, begin,
+        define, quote, lambda1, let1, cond, begin,
         eq2, eqQ, stringEqQ2, and_, cons, cons, car, cdr,
         vector, vector, vectorRef, makeHashtable, hashtableSetB)
 import Language.PureScript.Scheme.CodeGen.Case
@@ -87,9 +87,9 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
 
     objectToScheme :: [(PSString, Expr Ann)] -> SExpr
     objectToScheme xs =
-      let_ [("$ht", makeHashtable stringHash'
-                                  stringEqQ'
-                                  (Integer $ toInteger $ length xs))]
+      let1 ("$ht", makeHashtable stringHash'
+                                 stringEqQ'
+                                 (Integer $ toInteger $ length xs))
            (begin ((fmap go xs) ++ [Symbol "$ht"]))
       where
         go :: (PSString, Expr Ann) -> SExpr

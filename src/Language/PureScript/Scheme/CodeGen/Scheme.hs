@@ -46,6 +46,9 @@ let_ bodies expr = List [Symbol "let", List $ fmap go bodies, expr]
     go :: (Text, SExpr) -> SExpr
     go (var, expr') = List [Symbol var, expr']
 
+let1 :: (Text, SExpr) -> SExpr -> SExpr
+let1 body expr = let_ [body] expr
+
 condWithElse_ :: [(SExpr, SExpr)] -> Maybe SExpr -> SExpr
 condWithElse_ clauses maybeElse
   = app "cond" clausesWithElse
