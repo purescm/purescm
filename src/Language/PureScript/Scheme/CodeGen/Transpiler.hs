@@ -28,6 +28,7 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
     ----------------------------------------------------------------------------
 
     bindToScheme :: Bind Ann -> [SExpr]
+
     bindToScheme bind
       = case bind of
           NonRec _ann ident expr
@@ -42,42 +43,44 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
     ----------------------------------------------------------------------------
 
     exprToScheme :: Expr Ann -> SExpr
+
     exprToScheme (Literal _ann literal)
       = literalToScheme literal
     exprToScheme (Constructor _ann _typeName constructorName fields)
       = constructorToScheme constructorName fields
+    exprToScheme (Accessor _ann _property _obj)
+      = error "Not implemented"
+    exprToScheme (ObjectUpdate _ann _obj _keysAndValues)
+      = error "Not implemented"
+    exprToScheme (Abs _ann arg expr)
+      = lambda1 (runIdent arg) (exprToScheme expr)
+    exprToScheme (App _ann function arg)
+      = List [exprToScheme function, exprToScheme arg]
+    exprToScheme (Var _ann qualifiedIdent)
+      = varToScheme qualifiedIdent
 
-    exprToScheme (Var _ann (Qualified Nothing ident)) = Symbol (runIdent ident)
-    exprToScheme (Var _ann q@(Qualified (Just moduleName') ident))
-      | moduleName == moduleName' = Symbol (runIdent ident)
-      | otherwise = Symbol (showQualified runIdent q)
-      
     -- `values' holds the values we're matching against, for instance it could be
     -- a list of Vars where each Var is the LHS of the pattern matching. For instance
     -- in `foo 1 a = 0', `1' and `a' are values.
     -- `caseAlternatives' holds the various cases we're matching against such values.
     -- for each case there is a binder and a possible result if the match holds.
-    exprToScheme (Case _ann values caseAlternatives) =
-      caseToScheme values caseAlternatives
+    exprToScheme (Case _ann values caseAlternatives)
+      = caseToScheme values caseAlternatives
 
-    exprToScheme (Abs _ann arg expr) =
-      lambda1 (runIdent arg) (exprToScheme expr)
-
-    exprToScheme (App _ann function arg) =
-      List [exprToScheme function, exprToScheme arg]
-
-    exprToScheme _ = error "Not implemented"
+    exprToScheme (Let _ann _binds _expr)
+      = error "Not implemented"
 
     ----------------------------------------------------------------------------
 
     literalToScheme :: Literal (Expr Ann) -> SExpr
-    literalToScheme (BooleanLiteral _x)        = error "Not implemented"
+
     literalToScheme (NumericLiteral (Left  i)) = Integer i
     literalToScheme (NumericLiteral (Right _)) = error "Not implemented"
-    literalToScheme (CharLiteral _x)           = error "Not implemented"
-    literalToScheme (StringLiteral x)          = String x
-    literalToScheme (ArrayLiteral xs)          = vector $ map exprToScheme xs
-    literalToScheme (ObjectLiteral _x)         = error "Not implemented"
+    literalToScheme (StringLiteral  x)         = String x
+    literalToScheme (CharLiteral    _x)        = error "Not implemented"
+    literalToScheme (BooleanLiteral _x)        = error "Not implemented"
+    literalToScheme (ArrayLiteral   xs)        = vector $ map exprToScheme xs
+    literalToScheme (ObjectLiteral  _x)        = error "Not implemented"
 
     ----------------------------------------------------------------------------
 
@@ -156,6 +159,15 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
         go [] = cons (quote (Symbol (runProperName constructorName)))
                      (vector (map (\field -> Symbol (runIdent field))
                                   fields))
+
+    ----------------------------------------------------------------------------
+
+    varToScheme qualifiedIdent@(Qualified maybeModuleName ident) =
+      case maybeModuleName of
+        Nothing -> Symbol (runIdent ident)
+        Just moduleName'
+          | moduleName == moduleName' -> Symbol (runIdent ident)
+          | otherwise -> Symbol (showQualified runIdent qualifiedIdent)
 
     ----------------------------------------------------------------------------
 
