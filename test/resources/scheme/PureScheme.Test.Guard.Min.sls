@@ -1,1 +1,1 @@
-(define min (lambda (n) (lambda (m) (cond (#t (cond ((((Data.Ord.lessThan Data.Ord.ordInt) n) m) n) (Data.Boolean.otherwise m) (else (error (quote cond) "Failed pattern match")))) (else (error (quote cond) "Failed pattern match"))))))
+(define min (lambda (n) (lambda (m) (cond (#t (cond ((((Data.Ord.lessThan Data.Ord.ordInt) n) m) n) (Data.Boolean.otherwise m) (else (error #f "Failed pattern match")))) (else (error #f "Failed pattern match"))))))

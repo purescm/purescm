@@ -47,7 +47,8 @@ condWithElse_ clauses maybeElse
     elseExpr :: SExpr
     elseExpr = case maybeElse of
       Just elseExpr' -> elseExpr'
-      Nothing -> error_ (quote (Symbol "cond")) (String "Failed pattern match")
+                        -- TODO: add sourcespan
+      Nothing -> error_ (String "Failed pattern match")
 
 condWithElse :: [(SExpr, SExpr)] -> SExpr -> SExpr
 condWithElse clauses elseExpr = condWithElse_ clauses (Just elseExpr)
@@ -91,8 +92,9 @@ vector xs = app "vector" xs
 vectorRef :: SExpr -> SExpr -> SExpr
 vectorRef v i = app "vector-ref" [v, i]
 
-errorWithIrritants :: SExpr -> SExpr -> [SExpr] -> SExpr
-errorWithIrritants who msg irritants = app "error" $ [who, msg] <> irritants
+errorWithWhoAndIrritants :: SExpr -> SExpr -> [SExpr] -> SExpr
+errorWithWhoAndIrritants who msg irritants
+  = app "error" $ [who, msg] <> irritants
 
-error_ :: SExpr -> SExpr -> SExpr
-error_ who msg = errorWithIrritants who msg []
+error_ :: SExpr -> SExpr
+error_ msg = errorWithWhoAndIrritants f msg []
