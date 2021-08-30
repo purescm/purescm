@@ -1,0 +1,1 @@
+(define match (lambda (dictPartial) (lambda (v) (lambda (a) (cond ((= v 1) (cond ((((Data.Eq.eq Data.Eq.eqInt) a) 2) 3) ((((Data.Eq.eq Data.Eq.eqInt) a) 4) 5) (Data.Boolean.otherwise 6))))))))
