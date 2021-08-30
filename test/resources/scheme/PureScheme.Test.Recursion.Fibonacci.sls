@@ -1,1 +1,1 @@
-(define fib (lambda (v) (cond ((= v 0) 0) ((= v 1) 1) (#t (+ (fib (- v 1)) (fib (- v 2)))))))
+(define fib (lambda (v) (cond ((= v 0) 0) ((= v 1) 1) (#t (+ (fib (- v 1)) (fib (- v 2)))) (else (error (quote cond) "Failed pattern match")))))
