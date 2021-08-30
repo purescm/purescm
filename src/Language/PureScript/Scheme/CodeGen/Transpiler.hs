@@ -7,7 +7,7 @@ import Language.PureScript.Names
 import Language.PureScript.CoreFn.Module (Module(..))
 import Language.PureScript.CoreFn.Ann (Ann)
 import Language.PureScript.CoreFn.Expr
-       (Expr(..), Bind(..), Guard, CaseAlternative(..))
+       (Expr(..), Bind(..), CaseAlternative(..))
 import Language.PureScript.CoreFn.Binders (Binder(..))
 import Language.PureScript.AST.Literals (Literal(..))
 
@@ -16,6 +16,11 @@ import Language.PureScript.Scheme.CodeGen.SExpr (SExpr(..), everywhere)
 import Language.PureScript.Scheme.CodeGen.Scheme
        (t, define, lambda1, eq2, eqQ, stringEqQ2, and_, quote, cons, car, cdr,
         cond, vector, vectorRef)
+import Language.PureScript.Scheme.CodeGen.Case
+       ( Alternative(..)
+       , GuardedExpr
+       , toAlternatives
+       )
 
 
 -- TODO: translate a PureScript module to a Scheme library instead.
@@ -175,33 +180,32 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
     caseToScheme values caseAlternatives =
       cond clauses
       where
-        clauses = map condClause caseExpr
-        caseExpr = straightenCaseExpr values caseAlternatives
+        clauses = map condClause alternatives
+        alternatives = toAlternatives values caseAlternatives
 
         -- Emit a pair (condition, result) for each case alternative to be used
         -- by cond.
-        condClause
-          :: ([(Expr Ann, Binder Ann)], Either [(Expr Ann, Expr Ann)] (Expr Ann))
-          -> (SExpr, SExpr)
+        condClause :: Alternative -> (SExpr, SExpr)
 
         -- If the result is a guarded expression then the result of the clause
         -- is a nested cond expression.
-        condClause (valuesAndBinders, Left guardsAndResults)
-          = (test valuesAndBinders, cond schemeGuards)
+        condClause (Alternative boundValues (Left guardedExprs))
+          = ( test boundValues
+            , cond $ map guardedExprToClause guardedExprs
+            )
           where
-            schemeGuards =
-              map (\(guard, result) ->
-                     ( replaceVariables (exprToScheme guard)
-                                        (variablesToReplace valuesAndBinders)
-                     , replaceVariables (exprToScheme result)
-                                        (variablesToReplace valuesAndBinders)
-                     ))
-                  guardsAndResults
+            guardedExprToClause :: GuardedExpr -> (SExpr, SExpr)
+            guardedExprToClause (guard, result)
+              = ( replaceVariables (exprToScheme guard)
+                                   (variablesToReplace boundValues)
+                , replaceVariables (exprToScheme result)
+                                   (variablesToReplace boundValues)
+                )
 
         -- If the result is a simple expression then the result is just the
         -- expression.
-        condClause (valuesAndBinders, Right result) =
-          (test valuesAndBinders, bindersToResult valuesAndBinders result)
+        condClause (Alternative boundValues (Right result))
+          = (test boundValues, bindersToResult boundValues result)
 
         -- Emit the test for a cond clause.
         -- In scheme: (cond ((and test1a test1b) result1) ...)
@@ -342,27 +346,6 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
             -- hold then it will explode here.
             go' (VarBinder _ann ident) = runIdent ident
             go' _ = error "Not implemented"
-
-
--- From:
--- [Value1, Value2, Value3]
--- [CaseAlternativeA{binders=[BinderA1, BinderA2, BinderA3],
---                   result=ResA},
---  CaseAlternativeB{binders=[BinderB1, BinderB2, BinderB3],
---                  result=ResB}]
---
--- To:
--- [([(Value1, BinderA1), (Value2, BinderA2), (Value3, BinderA3)], ResA),
---  ([(Value1, BinderB1), (Value2, BinderB2), (Value3, BinderB3)], ResB)]
-straightenCaseExpr
-  :: [Expr Ann]
-  -> [CaseAlternative Ann]
-  -> [([(Expr Ann, Binder Ann)], Either [(Guard Ann, Expr Ann)] (Expr Ann))]
-  --     ^Value^^  ^Binder^^^    ^Res^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-straightenCaseExpr values caseAlternatives =
-  map (\(CaseAlternative binders result) -> (zip values binders, result))
-      caseAlternatives
-
 
 -- Replace each (Symbol from) into a `to' SExpr everywhere in ast
 replaceVariables :: SExpr -> [(Text, SExpr)] -> SExpr
