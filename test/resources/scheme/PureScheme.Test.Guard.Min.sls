@@ -1,1 +1,1 @@
-(define min (lambda (n) (lambda (m) (cond ((((Data.Ord.lessThan Data.Ord.ordInt) n) m) n) (Data.Boolean.otherwise m)))))
+(define min (lambda (n) (lambda (m) (cond (#t (cond ((((Data.Ord.lessThan Data.Ord.ordInt) n) m) n) (Data.Boolean.otherwise m)))))))

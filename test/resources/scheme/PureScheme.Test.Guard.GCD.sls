@@ -1,1 +1,1 @@
-(define gcd (lambda (v) (lambda (v1) (cond ((= v1 0) v) ((= v 0) v1) ((((Data.Ord.greaterThan Data.Ord.ordInt) v) v1) ((gcd (- v v1)) v1)) (Data.Boolean.otherwise ((gcd v) (- v1 v)))))))
+(define gcd (lambda (v) (lambda (v1) (cond ((= v1 0) v) ((= v 0) v1) (#t (cond ((((Data.Ord.greaterThan Data.Ord.ordInt) v) v1) ((gcd (- v v1)) v1)) (Data.Boolean.otherwise ((gcd v) (- v1 v)))))))))
