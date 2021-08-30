@@ -15,7 +15,7 @@ import Language.PureScript.Scheme.Util (mapWithIndex, concatMapWithIndex)
 import Language.PureScript.Scheme.CodeGen.SExpr (SExpr(..), everywhere)
 import Language.PureScript.Scheme.CodeGen.Scheme
        (t, define, lambda1, eq2, eqQ, stringEqQ2, and_, quote, cons, car, cdr,
-        cond', vector, vectorRef)
+        cond, vector, vectorRef)
 
 
 -- TODO: translate a PureScript module to a Scheme library instead.
@@ -173,7 +173,7 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
 
     caseToScheme :: [Expr Ann] -> [CaseAlternative Ann] -> SExpr
     caseToScheme values caseAlternatives =
-      cond' clauses
+      cond clauses
       where
         clauses = concatMap condClauses caseExpr
         caseExpr = straightenCaseExpr values caseAlternatives
@@ -190,7 +190,7 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
         -- result is associated to a guard. Thus we have to emit multiple cond
         -- clauses for each result.
         condClauses (valuesAndBinders, Left guardsAndResults)
-          = [(test valuesAndBinders, cond' schemeGuards)]
+          = [(test valuesAndBinders, cond schemeGuards)]
           where
             schemeGuards =
               map (\(guard, result) ->
