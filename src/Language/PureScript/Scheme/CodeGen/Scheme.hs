@@ -127,6 +127,9 @@ hashtableRef :: SExpr -> SExpr -> SExpr -> SExpr
 hashtableRef hashtable key default_
   = app "hashtable-ref" [hashtable, key, default_]
 
+hashtableCopy :: SExpr -> SExpr
+hashtableCopy hashtable = app "hashtable-copy" [hashtable]
+
 errorWithWhoAndIrritants :: SExpr -> SExpr -> [SExpr] -> SExpr
 errorWithWhoAndIrritants who msg irritants
   = app "error" $ [who, msg] <> irritants
