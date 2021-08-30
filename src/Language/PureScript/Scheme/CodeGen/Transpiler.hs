@@ -19,7 +19,7 @@ import Language.PureScript.Scheme.CodeGen.Scheme
         define, quote, lambda1, let_, let1, cond, begin,
         eq2, eqQ, stringEqQ2, and_, cons, cons, car, cdr,
         vector, vector, vectorRef,
-        makeHashtable, hashtableSetB, hashtableRef,
+        makeHashtable, hashtableSetB, hashtableRef, hashtableCopy,
         error_)
 import Language.PureScript.Scheme.CodeGen.Case
        ( Alternative(..)
@@ -60,8 +60,8 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
       = constructorToScheme constructorName fields
     exprToScheme (Accessor _ann property object)
       = accessorToScheme object property
-    exprToScheme (ObjectUpdate _ann _obj _keysAndValues)
-      = error "Not implemented"
+    exprToScheme (ObjectUpdate _ann object keysAndValues)
+      = objectUpdateToScheme object keysAndValues
     exprToScheme (Abs _ann arg expr)
       = lambda1 (runIdent arg) (exprToScheme expr)
     exprToScheme (App _ann function arg)
@@ -182,6 +182,18 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
       = hashtableRef (exprToScheme object)
                      (psStringToSExpr property)
                      (error_ $ String "Key not found") -- TODO: add sourcespan
+
+    ----------------------------------------------------------------------------
+
+    objectUpdateToScheme :: Expr Ann -> [(PSString, Expr Ann)] -> SExpr
+    objectUpdateToScheme object keysAndValues
+      = let1 ("$ht", hashtableCopy (exprToScheme object))
+             (begin ((fmap go keysAndValues) ++ [Symbol "$ht"]))
+      where
+        go :: (PSString, Expr Ann) -> SExpr
+        go (key, value) = hashtableSetB (Symbol "$ht")
+                                        (psStringToSExpr key)
+                                        (exprToScheme value)
 
     ----------------------------------------------------------------------------
 
