@@ -16,7 +16,7 @@ import Language.PureScript.Scheme.Util (mapWithIndex, concatMapWithIndex)
 import Language.PureScript.Scheme.CodeGen.SExpr (SExpr(..), everywhere)
 import Language.PureScript.Scheme.CodeGen.Scheme
        (t, stringEqQ', stringHash',
-        define, quote, lambda1, let1, cond, begin,
+        define, quote, lambda1, let_, let1, cond, begin,
         eq2, eqQ, stringEqQ2, and_, cons, cons, car, cdr,
         vector, vector, vectorRef,
         makeHashtable, hashtableSetB, hashtableRef,
@@ -32,14 +32,14 @@ import Language.PureScript.Scheme.CodeGen.Case
 moduleToScheme :: Module Ann -> [SExpr]
 moduleToScheme (Module _sourceSpan _comments moduleName _path
                        _imports _exports _reExports _foreigns declarations)
-  = concatMap bindToScheme declarations
+  = concatMap topBindToScheme declarations
   where
 
     ----------------------------------------------------------------------------
 
-    bindToScheme :: Bind Ann -> [SExpr]
+    topBindToScheme :: Bind Ann -> [SExpr]
 
-    bindToScheme bind
+    topBindToScheme bind
       = case bind of
           NonRec _ann ident expr
             -> [ def ident expr ]
@@ -70,8 +70,8 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
       = varToScheme qualifiedIdent
     exprToScheme (Case _ann values caseAlternatives)
       = caseToScheme values caseAlternatives
-    exprToScheme (Let _ann _binds _expr)
-      = error "Not implemented"
+    exprToScheme (Let _ann binds expr)
+      = letToScheme binds expr
 
     ----------------------------------------------------------------------------
 
@@ -365,6 +365,23 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
             -- hold then it will explode here.
             go' (VarBinder _ann ident) = runIdent ident
             go' _ = error "Not implemented"
+
+    ----------------------------------------------------------------------------
+
+    letToScheme :: [Bind Ann] -> Expr Ann -> SExpr
+    letToScheme binds body
+      = let_ (concatMap bindToScheme binds) (exprToScheme body)
+      where
+        bindToScheme :: Bind Ann -> [(Text, SExpr)]
+        bindToScheme bind
+          = case bind of
+              NonRec _ann ident expr -> [ binding ident expr ]
+              Rec xs -> map (\((_ann, ident), expr) -> binding ident expr) xs
+
+        binding :: Ident -> Expr Ann -> (Text, SExpr)
+        binding ident expr = (runIdent ident, exprToScheme expr)
+
+    ----------------------------------------------------------------------------
 
 -- Replace each (Symbol from) into a `to' SExpr everywhere in ast
 replaceVariables :: SExpr -> [(Text, SExpr)] -> SExpr
