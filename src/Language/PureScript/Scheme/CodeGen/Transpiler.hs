@@ -189,13 +189,16 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
         -- If there are guards we're provided with multiple results and each
         -- result is associated to a guard. Thus we have to emit multiple cond
         -- clauses for each result.
-        condClauses (valuesAndBinders, Left guardsAndResults) =
-          map (\(guard, result) ->
-                (replaceVariables (exprToScheme guard)
-                                  (variablesToReplace valuesAndBinders),
-                replaceVariables (exprToScheme result)
-                                 (variablesToReplace valuesAndBinders)))
-              guardsAndResults
+        condClauses (valuesAndBinders, Left guardsAndResults)
+          = [(test valuesAndBinders, cond' schemeGuards)]
+          where
+            schemeGuards =
+              map (\(guard, result) ->
+                    (replaceVariables (exprToScheme guard)
+                                      (variablesToReplace valuesAndBinders),
+                    replaceVariables (exprToScheme result)
+                                     (variablesToReplace valuesAndBinders)))
+                  guardsAndResults
 
         -- If there are no guards we're provided with a single result. In this
         -- case we can emit a single cond clause for the single result associated
@@ -226,6 +229,7 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
         --     (cond ((and (eq? (car v) 'Foo) cond1)  result1)
         --           ((and (eq? (car v) 'Foo) cond2)) result2)
         -- TODO: Maybe we should avoid the repeating of the first check.
+        test :: [(Expr Ann, Binder Ann)] -> SExpr
         test valueAndBinders =
           and_ (concatMap (\(value, binder) -> binderToTest (exprToScheme value)
                                                             binder)
