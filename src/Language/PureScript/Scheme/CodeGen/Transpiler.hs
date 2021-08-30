@@ -18,7 +18,9 @@ import Language.PureScript.Scheme.CodeGen.Scheme
        (t, stringEqQ', stringHash',
         define, quote, lambda1, let1, cond, begin,
         eq2, eqQ, stringEqQ2, and_, cons, cons, car, cdr,
-        vector, vector, vectorRef, makeHashtable, hashtableSetB)
+        vector, vector, vectorRef,
+        makeHashtable, hashtableSetB, hashtableRef,
+        error_)
 import Language.PureScript.Scheme.CodeGen.Case
        ( Alternative(..)
        , GuardedExpr
@@ -56,8 +58,8 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
       = literalToScheme literal
     exprToScheme (Constructor _ann _typeName constructorName fields)
       = constructorToScheme constructorName fields
-    exprToScheme (Accessor _ann _property _obj)
-      = error "Not implemented"
+    exprToScheme (Accessor _ann property object)
+      = accessorToScheme object property
     exprToScheme (ObjectUpdate _ann _obj _keysAndValues)
       = error "Not implemented"
     exprToScheme (Abs _ann arg expr)
@@ -172,6 +174,14 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
         go [] = cons (quote (Symbol (runProperName constructorName)))
                      (vector (map (\field -> Symbol (runIdent field))
                                   fields))
+
+    ----------------------------------------------------------------------------
+
+    accessorToScheme :: (Expr Ann) -> PSString -> SExpr
+    accessorToScheme object property
+      = hashtableRef (exprToScheme object)
+                     (psStringToSExpr property)
+                     (error_ $ String "Key not found") -- TODO: add sourcespan
 
     ----------------------------------------------------------------------------
 
