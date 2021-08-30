@@ -31,13 +31,26 @@ lambda formals expr =
 lambda1 :: Text -> SExpr -> SExpr
 lambda1 formal expr = lambda [formal] expr
 
--- (cond (test expr) ...)
-cond :: [(SExpr, SExpr)] -> SExpr
-cond clauses = app "cond" $ map (\(test, expr) -> List [test, expr]) clauses
+condWithElse_ :: [(SExpr, SExpr)] -> Maybe SExpr -> SExpr
+condWithElse_ clauses maybeElse
+  = app "cond" clausesWithElse
+  where
+    clauses' :: [SExpr]
+    clauses' = map (\(test, expr) -> List [test, expr]) clauses
 
--- (cond (test expr) ... (else expr))
+    clausesWithElse :: [SExpr]
+    clausesWithElse = clauses' <> [List [Symbol "else", elseExpr]]
+
+    elseExpr :: SExpr
+    elseExpr = case maybeElse of
+      Just elseExpr' -> elseExpr'
+      Nothing -> error_ (quote (Symbol "cond")) (String "Failed pattern match")
+
 condWithElse :: [(SExpr, SExpr)] -> SExpr -> SExpr
-condWithElse clauses elseExpr = cond (clauses ++ [(Symbol "else", elseExpr)])
+condWithElse clauses elseExpr = condWithElse_ clauses (Just elseExpr)
+
+cond :: [(SExpr, SExpr)] -> SExpr
+cond clauses = condWithElse_ clauses Nothing 
 
 
 -- Scheme functions ------------------------------------------------------------
