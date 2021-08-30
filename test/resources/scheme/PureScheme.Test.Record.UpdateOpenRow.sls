@@ -1,0 +1,1 @@
+(define foo (lambda (v) (let (($ht (hashtable-copy v))) (begin (hashtable-set! $ht "bar" 42) $ht))))
