@@ -175,36 +175,33 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
     caseToScheme values caseAlternatives =
       cond clauses
       where
-        clauses = concatMap condClauses caseExpr
+        clauses = map condClause caseExpr
         caseExpr = straightenCaseExpr values caseAlternatives
 
-        -- Emit clauses for a cond expression.
-        -- In scheme: (cond clause1 clause2 ...)
-        -- Return a list of pairs where the first element is the condition and
-        -- the second element is the result.
-        condClauses
+        -- Emit a pair (condition, result) for each case alternative to be used
+        -- by cond.
+        condClause
           :: ([(Expr Ann, Binder Ann)], Either [(Expr Ann, Expr Ann)] (Expr Ann))
-          -> [(SExpr, SExpr)]
+          -> (SExpr, SExpr)
 
-        -- If there are guards we're provided with multiple results and each
-        -- result is associated to a guard. Thus we have to emit multiple cond
-        -- clauses for each result.
-        condClauses (valuesAndBinders, Left guardsAndResults)
-          = [(test valuesAndBinders, cond schemeGuards)]
+        -- If the result is a guarded expression then the result of the clause
+        -- is a nested cond expression.
+        condClause (valuesAndBinders, Left guardsAndResults)
+          = (test valuesAndBinders, cond schemeGuards)
           where
             schemeGuards =
               map (\(guard, result) ->
-                    (replaceVariables (exprToScheme guard)
-                                      (variablesToReplace valuesAndBinders),
-                    replaceVariables (exprToScheme result)
-                                     (variablesToReplace valuesAndBinders)))
+                     ( replaceVariables (exprToScheme guard)
+                                        (variablesToReplace valuesAndBinders)
+                     , replaceVariables (exprToScheme result)
+                                        (variablesToReplace valuesAndBinders)
+                     ))
                   guardsAndResults
 
-        -- If there are no guards we're provided with a single result. In this
-        -- case we can emit a single cond clause for the single result associated
-        -- to multiple values and binders.
-        condClauses (valuesAndBinders, Right result) =
-          [(test valuesAndBinders, bindersToResult valuesAndBinders result)]
+        -- If the result is a simple expression then the result is just the
+        -- expression.
+        condClause (valuesAndBinders, Right result) =
+          (test valuesAndBinders, bindersToResult valuesAndBinders result)
 
         -- Emit the test for a cond clause.
         -- In scheme: (cond ((and test1a test1b) result1) ...)
