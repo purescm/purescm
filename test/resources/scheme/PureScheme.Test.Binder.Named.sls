@@ -2,4 +2,4 @@
 
 (define Baz (cons (quote Baz) (vector)))
 
-(define match (lambda (v) (cond ((eq? (car v) (quote Bar)) v) ((eq? (car v) (quote Baz)) Baz))))
+(define match (lambda (v) (cond ((eq? (car v) (quote Bar)) v) ((eq? (car v) (quote Baz)) Baz) (else (error (quote cond) "Failed pattern match")))))
