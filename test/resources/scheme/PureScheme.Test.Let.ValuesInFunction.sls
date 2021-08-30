@@ -1,0 +1,1 @@
+(define foo (lambda (x) (lambda (y) (let ((b 2) (a 1)) (- (+ x a) (+ y b))))))
