@@ -15,6 +15,9 @@ app name args = List ((Symbol name):args)
 t :: SExpr
 t = Symbol "#t"
 
+f :: SExpr
+f = Symbol "#f"
+
 
 -- Scheme special forms --------------------------------------------------------
 
