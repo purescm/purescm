@@ -123,6 +123,10 @@ makeHashtable hash equivQ size = app "make-hashtable" [hash, equivQ, size]
 hashtableSetB :: SExpr -> SExpr -> SExpr -> SExpr
 hashtableSetB hashtable key obj = app "hashtable-set!" [hashtable, key, obj]
 
+hashtableRef :: SExpr -> SExpr -> SExpr -> SExpr
+hashtableRef hashtable key default_
+  = app "hashtable-ref" [hashtable, key, default_]
+
 errorWithWhoAndIrritants :: SExpr -> SExpr -> [SExpr] -> SExpr
 errorWithWhoAndIrritants who msg irritants
   = app "error" $ [who, msg] <> irritants
