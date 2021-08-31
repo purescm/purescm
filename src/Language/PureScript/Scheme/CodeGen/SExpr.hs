@@ -15,6 +15,8 @@ data SExpr
   --     range.
   = Integer Integer
 
+  | Float Double
+
   -- | String literal.
   | String PSString
 
@@ -33,6 +35,7 @@ everywhere :: (SExpr -> SExpr) -> SExpr -> SExpr
 everywhere f = go where
   go :: SExpr -> SExpr
   go (Integer x) = f (Integer x)
+  go (Float x) = f (Float x)
   go (String x) = f (String x)
   go (Symbol x) = f (Symbol x)
   go (List xs) = f (List (map go xs))

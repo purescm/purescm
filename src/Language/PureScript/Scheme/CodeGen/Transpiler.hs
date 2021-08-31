@@ -78,7 +78,7 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
     literalToScheme :: Literal (Expr Ann) -> SExpr
 
     literalToScheme (NumericLiteral (Left  i)) = Integer i
-    literalToScheme (NumericLiteral (Right _)) = error "Not implemented"
+    literalToScheme (NumericLiteral (Right f)) = Float f
     literalToScheme (StringLiteral  x)         = String x
     literalToScheme (CharLiteral    _x)        = error "Not implemented"
     literalToScheme (BooleanLiteral _x)        = error "Not implemented"
