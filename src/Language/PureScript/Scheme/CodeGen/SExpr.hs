@@ -20,6 +20,8 @@ data SExpr
   -- | String literal.
   | String PSString
 
+  | Character Char
+
   -- | An unquoted symbol.
   -- E.g. in `(lambda (x) (+ x 1))': `lambda', `x' and `+' are symbols.
   | Symbol Text
@@ -37,5 +39,6 @@ everywhere f = go where
   go (Integer x) = f (Integer x)
   go (Float x) = f (Float x)
   go (String x) = f (String x)
+  go (Character x) = f (Character x)
   go (Symbol x) = f (Symbol x)
   go (List xs) = f (List (map go xs))

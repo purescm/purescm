@@ -7,6 +7,9 @@ import Language.PureScript.Scheme.CodeGen.SExpr (SExpr(..))
 tshow :: Show a => a -> Text
 tshow = pack . show
 
+char :: Char -> Text
+char x = "#\\" <> pack [x]
+
 parens :: Text -> Text
 parens x = "(" <> x <> ")"
 
@@ -17,6 +20,7 @@ emit :: SExpr -> Text
 emit (Integer x) = tshow x
 emit (Float x) = tshow x
 emit (String x) = prettyPrintStringJS x
+emit (Character x) = char x
 emit (Symbol x) = x
 emit (List xs) = list $ map emit xs
 
