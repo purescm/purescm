@@ -39,11 +39,12 @@ import Language.PureScript.Scheme.CodeGen.Library ( Library(..) )
 
 moduleToLibrary :: Module Ann -> Library
 moduleToLibrary (Module _sourceSpan _comments moduleName _path
-                        _imports exports _reExports _foreigns
+                        imports exports _reExports _foreigns
                         declarations)
   = Library
     { libraryName = runModuleName moduleName
     , libraryExports = map runIdent exports
+    , libraryImports = map (runModuleName . snd) imports
     , libraryBody = libraryBody
     }
   where
