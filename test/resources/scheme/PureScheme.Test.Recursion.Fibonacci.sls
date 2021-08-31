@@ -1,1 +1,1 @@
-(define fib (lambda (v) (cond ((= v 0) 0) ((= v 1) 1) (#t (+ (fib (- v 1)) (fib (- v 2)))) (else (error #f "Failed pattern match")))))
+(library (PureScheme.Test.Recursion.Fibonacci lib) (export fib) (import (rnrs)) (define fib (lambda (v) (cond ((= v 0) 0) ((= v 1) 1) (#t (+ (fib (- v 1)) (fib (- v 2)))) (else (error #f "Failed pattern match"))))))
