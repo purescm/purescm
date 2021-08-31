@@ -1,0 +1,1 @@
+(library (PureScheme.Test.Import.Bar lib) (export bar) (import (rnrs) (prefix (Prim lib) Prim.)) (define bar 2))
