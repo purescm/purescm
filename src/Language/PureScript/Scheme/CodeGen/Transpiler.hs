@@ -3,7 +3,14 @@ module Language.PureScript.Scheme.CodeGen.Transpiler where
 import Data.Text (Text)
 
 import Language.PureScript.Names
-       (Ident, Qualified(..), runIdent, runProperName, showQualified, disqualify)
+       ( Ident
+       , Qualified(..)
+       , disqualify
+       , runIdent
+       , runModuleName
+       , runProperName
+       , showQualified
+       )
 import Language.PureScript.PSString (PSString)
 import Language.PureScript.CoreFn.Module (Module(..))
 import Language.PureScript.CoreFn.Ann (Ann)
@@ -27,13 +34,20 @@ import Language.PureScript.Scheme.CodeGen.Case
        , toAlternatives
        )
 
+import Language.PureScript.Scheme.CodeGen.Library ( Library(..) )
 
--- TODO: translate a PureScript module to a Scheme library instead.
-moduleToScheme :: Module Ann -> [SExpr]
-moduleToScheme (Module _sourceSpan _comments moduleName _path
-                       _imports _exports _reExports _foreigns declarations)
-  = concatMap topBindToScheme declarations
+
+moduleToLibrary :: Module Ann -> Library
+moduleToLibrary (Module _sourceSpan _comments moduleName _path
+                        _imports exports _reExports _foreigns
+                        declarations)
+  = Library
+    { libraryName = runModuleName moduleName
+    , libraryExports = map runIdent exports
+    , libraryBody = libraryBody
+    }
   where
+    libraryBody = concatMap topBindToScheme declarations
 
     ----------------------------------------------------------------------------
 
