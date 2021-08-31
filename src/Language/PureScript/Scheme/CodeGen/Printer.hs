@@ -10,6 +10,10 @@ tshow = pack . show
 char :: Char -> Text
 char x = "#\\" <> pack [x]
 
+bool :: Bool -> Text
+bool True = "#t"
+bool False = "#f"
+
 parens :: Text -> Text
 parens x = "(" <> x <> ")"
 
@@ -21,6 +25,7 @@ emit (Integer x) = tshow x
 emit (Float x) = tshow x
 emit (String x) = prettyPrintStringJS x
 emit (Character x) = char x
+emit (Boolean x) = bool x
 emit (Symbol x) = x
 emit (List xs) = list $ map emit xs
 
