@@ -15,6 +15,7 @@ list xs = parens $ intercalate " " xs
 
 emit :: SExpr -> Text
 emit (Integer x) = tshow x
+emit (Float x) = tshow x
 emit (String x) = prettyPrintStringJS x
 emit (Symbol x) = x
 emit (List xs) = list $ map emit xs
