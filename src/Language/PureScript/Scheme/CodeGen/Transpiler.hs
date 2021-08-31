@@ -80,7 +80,7 @@ moduleToScheme (Module _sourceSpan _comments moduleName _path
     literalToScheme (NumericLiteral (Left  i)) = Integer i
     literalToScheme (NumericLiteral (Right f)) = Float f
     literalToScheme (StringLiteral  x)         = String x
-    literalToScheme (CharLiteral    _x)        = error "Not implemented"
+    literalToScheme (CharLiteral    x)         = Character x
     literalToScheme (BooleanLiteral _x)        = error "Not implemented"
     literalToScheme (ArrayLiteral   xs)        = vector $ map exprToScheme xs
     literalToScheme (ObjectLiteral  xs)        = objectToScheme xs
