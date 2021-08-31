@@ -1,1 +1,1 @@
-(library (PureScheme.Test.Literal.Float lib) (export foo) (import (rnrs)) (define foo 23.42))
+(library (PureScheme.Test.Literal.Float lib) (export foo) (import (rnrs) (prefix (Prim lib) Prim.)) (define foo 23.42))

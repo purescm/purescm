@@ -1,4 +1,4 @@
-(library (PureScheme.Test.Binder.Named lib) (export Bar Baz match) (import (rnrs)) (define Bar (lambda (value0) (cons (quote Bar) (vector value0))))
+(library (PureScheme.Test.Binder.Named lib) (export Bar Baz match) (import (rnrs) (prefix (Prim lib) Prim.) (prefix (PureScheme.Test.Binder.Named lib) PureScheme.Test.Binder.Named.)) (define Bar (lambda (value0) (cons (quote Bar) (vector value0))))
 
 (define Baz (cons (quote Baz) (vector)))
 
