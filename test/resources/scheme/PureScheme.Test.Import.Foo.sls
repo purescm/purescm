@@ -1,0 +1,1 @@
+(library (PureScheme.Test.Import.Foo lib) (export foo) (import (rnrs) (prefix (Prim lib) Prim.)) (define foo 1))

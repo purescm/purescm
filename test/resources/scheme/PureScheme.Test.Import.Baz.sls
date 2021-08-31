@@ -1,0 +1,1 @@
+(library (PureScheme.Test.Import.Baz lib) (export baz) (import (rnrs) (prefix (Prim lib) Prim.)) (define baz 3))
