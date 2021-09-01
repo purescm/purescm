@@ -1,1 +1,1 @@
-(library (PureScheme.Test.ReExport.Bar lib) (export bar) (import (rnrs) (prefix (Prim lib) Prim.)) (define bar 2))
+(library (PureScheme.Test.ReExport.Bar lib) (export bar) (import (rnrs)) (define bar 2))
