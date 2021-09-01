@@ -34,15 +34,22 @@ printSExprs :: [SExpr] -> Text
 printSExprs exprs = intercalate "\n\n" (fmap emit exprs)
 
 printLibrary :: Library -> Text
-printLibrary (Library name exports imports body)
+printLibrary (Library name exports imports foreigns body)
   = list [ "library"
          , list [ name, "lib" ]
          , list $ "export" : exports
          , list $ [ "import"
-                  , list [ "rnrs" ]
-                  ] ++ map (\n -> (list [ "prefix"
-                                        , list [ n, "lib" ]
-                                        , n <> "."]))
-                           imports
+                  , rnrsImport
+                  ] ++ foreignImports ++ otherImports
          , printSExprs body
          ]
+  where
+    rnrsImport = list [ "rnrs" ]
+    foreignImports' = list $ [ "only"
+                             , list [ name, "foreign" ]
+                             ] ++ foreigns
+    foreignImports = if null foreigns then [] else [ foreignImports' ]
+    otherImports = map (\n -> (list [ "prefix"
+                                    , list [ n, "lib" ]
+                                    , n <> "."]))
+                       imports
