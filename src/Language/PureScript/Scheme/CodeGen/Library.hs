@@ -7,5 +7,6 @@ data Library = Library
   { libraryName :: Text
   , libraryExports :: [Text]
   , libraryImports :: [Text]
+  , libraryForeigns :: [Text]
   , libraryBody :: [SExpr]
   }
