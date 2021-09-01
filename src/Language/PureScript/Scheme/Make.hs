@@ -12,11 +12,23 @@ import           Language.PureScript.Scheme.CodeGen.Optimizer  (runOptimizations
 import           Language.PureScript.Scheme.CodeGen.Library    (Library(..))
 
 compile :: FilePath -> IO Text
-compile path = (printLibrary . optimize . moduleToLibrary)
-           <$> readModuleFromJSON path
+compile path
+   = ( printLibrary
+     . optimize
+     . removePrimImports
+     . moduleToLibrary
+     )
+ <$> readModuleFromJSON path
 
 optimize :: Library -> Library
 optimize library = library { libraryBody = runOptimizations $ libraryBody library }
+
+removePrimImports :: Library -> Library
+removePrimImports library
+  = library { libraryImports = filter go $ libraryImports library }
+  where
+    go "Prim" = False
+    go _ = True
 
 readModuleFromJSON :: FilePath -> IO (Module Ann)
 readModuleFromJSON path = do
