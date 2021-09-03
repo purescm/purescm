@@ -18,6 +18,7 @@ pkgs.mkShell {
     pkgs.stack
     easy-ps.purs-0_14_4
     easy-ps.spago
+    pkgs.python39
   ];
   shellHook = ''
     alias stack='stack --nix'
