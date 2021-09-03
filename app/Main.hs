@@ -1,7 +1,11 @@
 module Main where
 
+import qualified System.IO as IO
+import System.Environment (getArgs)
 import Data.Foldable (for_)
 import qualified Data.Text as Text
+import Options (Options(..))
+import qualified Options as Options
 import Language.PureScript.CoreFn.Module (Module(..))
 import Language.PureScript.Scheme.IOUtil (print')
 import qualified Language.PureScript.Scheme.IOUtil as IOUtil
@@ -11,8 +15,15 @@ import Language.PureScript.Scheme.CodeGen.Library (Library(..))
 
 main :: IO ()
 main = do
-  let outputPath = "test/resources/purescript/output"
-  corefnFiles <- Make.findCorefnFiles outputPath
+  IO.hSetEncoding IO.stdout IO.utf8
+  IO.hSetEncoding IO.stderr IO.utf8
+  IO.hSetBuffering IO.stdout IO.LineBuffering
+  IO.hSetBuffering IO.stderr IO.LineBuffering
+
+  Options { optionOutput } <- Options.runParser =<< getArgs
+  print' $ "Output directory is " <> optionOutput
+
+  corefnFiles <- Make.findCorefnFiles optionOutput
 
   for_ corefnFiles $ \corefnFile -> do
     print' $ "Processing " <> corefnFile
@@ -28,7 +39,7 @@ main = do
     let library = Make.compile module_
     print' $ "    Module compiled successfully"
 
-    let libraryDir = outputPath <> "/" <> (libraryName library) 
+    let libraryDir = optionOutput <> "/" <> (libraryName library) 
     print' $ "    Destination directory is " <> libraryDir
 
     let libraryPath = libraryDir <> "/lib.sls"
