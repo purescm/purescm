@@ -24,8 +24,8 @@ import Language.PureScript.Scheme.CodeGen.SExpr (SExpr(..), everywhere)
 import Language.PureScript.Scheme.CodeGen.Scheme
        (t, stringEqQ', stringHash',
         define, quote, lambda1, let_, let1, cond, begin,
-        eq2, eqQ, stringEqQ2, and_, cons, cons, car, cdr,
-        vector, vector, vectorRef,
+        eq2, eqQ, charEqQ2, stringEqQ2, and_, cons, cons, car, cdr,
+        vector, vector, vectorLength, vectorRef,
         makeHashtable, hashtableSetB, hashtableRef, hashtableCopy,
         error_)
 import Language.PureScript.Scheme.CodeGen.Case
@@ -194,9 +194,7 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
 
     accessorToScheme :: (Expr Ann) -> PSString -> SExpr
     accessorToScheme object property
-      = hashtableRef (exprToScheme object)
-                     (psStringToSExpr property)
-                     (error_ $ String "Key not found") -- TODO: add sourcespan
+      = accessorToScheme' (exprToScheme object) property
 
     ----------------------------------------------------------------------------
 
@@ -285,12 +283,31 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
         -- E.g.: (value: 23, binder: 42) -> (= 23 42)
         binderToTest :: SExpr -> Binder Ann -> [SExpr]
         binderToTest _value (NullBinder _ann) = [t]
-        binderToTest value (LiteralBinder _ann (NumericLiteral (Left integer))) =
-          [eq2 value (Integer integer)]
-        binderToTest value (LiteralBinder _ann (StringLiteral x)) =
-          [stringEqQ2 value (String x)]
+        binderToTest value (LiteralBinder _ann (NumericLiteral (Left i)))
+          = [eq2 value (Integer i)]
+        binderToTest value (LiteralBinder _ann (NumericLiteral (Right f)))
+          = [eq2 value (Float f)]
+        binderToTest value (LiteralBinder _ann (StringLiteral x))
+          = [stringEqQ2 value (String x)]
+        binderToTest value (LiteralBinder _ann (CharLiteral x))
+          = [charEqQ2 value (Character x)]
+        binderToTest value (LiteralBinder _ann (BooleanLiteral x))
+          = [eqQ value (Boolean x)]
 
-        binderToTest _value (LiteralBinder _ann _) = error "Not implemented"
+        binderToTest value (LiteralBinder _ann (ArrayLiteral binders))
+          = (:) (eq2 (vectorLength value)
+                     (Integer (toInteger $ length binders)))
+                (concatMapWithIndex
+                  (\i b -> (binderToTest (vectorRef value (Integer i))
+                                         b))
+                  binders)
+
+        binderToTest value (LiteralBinder _ann (ObjectLiteral binders))
+          = (concatMap
+              (\(key, binder) -> (binderToTest (accessorToScheme' value key)
+                                               binder))
+              binders)
+
         binderToTest _value (VarBinder _ann _ident) = [t]
 
         -- For a ConstructorBinder we have to emit at least one test, but more likely
@@ -425,3 +442,10 @@ psStringToSExpr x = String x
 
 makeStringHashtable :: Integer -> SExpr
 makeStringHashtable size = makeHashtable stringHash' stringEqQ' (Integer size)
+
+
+accessorToScheme' :: SExpr -> PSString -> SExpr
+accessorToScheme' object property
+  = hashtableRef object
+                 (psStringToSExpr property)
+                 (error_ $ String "Key not found") -- TODO: add sourcespan
