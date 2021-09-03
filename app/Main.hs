@@ -2,6 +2,7 @@ module Main where
 
 import qualified System.IO as IO
 import System.Environment (getArgs)
+import Control.Exception (SomeException, try)
 import Data.Foldable (for_)
 import qualified Data.Text as Text
 import Options (Options(..))
@@ -61,7 +62,9 @@ main = do
       print' $ "    Destination Foreign path is " <> foreignPath
 
       print' $ "    Copying foreign library"
-      IOUtil.cp foreignSourcePath foreignPath
-      print' $ "    Foreign library copied successfully"
+      try (IOUtil.cp foreignSourcePath foreignPath) >>= \case
+        Left (_err :: SomeException)
+          -> print' "    Could not copy foreign library"
+        Right _ -> print' "    Foreign library copied successfully"
 
     print' ""
