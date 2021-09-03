@@ -30,6 +30,7 @@ dependencies:
 - aeson
 - directory
 - foldl
+- optparse-applicative
 - purescript
 - purescript-ast
 - text
