@@ -8,9 +8,8 @@ extra-deps:
 - language-javascript-0.7.0.0
 
 - github: purescript/purescript
-  commit: v0.14.1
+  commit: v0.14.4
   subdirs:
-    - lib/purescript-ast
     - lib/purescript-cst
     - '.'
 

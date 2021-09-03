@@ -32,7 +32,7 @@ dependencies:
 - foldl
 - optparse-applicative
 - purescript
-- purescript-ast
+- purescript-cst
 - text
 - turtle
 
