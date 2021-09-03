@@ -1,24 +1,26 @@
 module Language.PureScript.Scheme.Make where
 
-import           Data.Text                                     (Text)
-import qualified Data.Aeson                                    as JSON
-import qualified Data.Aeson.Types                              as JSON.T
-import qualified Language.PureScript.CoreFn.FromJSON           as CoreFn
-import           Language.PureScript.CoreFn.Module             (Module)
-import           Language.PureScript.CoreFn.Ann                (Ann)
-import           Language.PureScript.Scheme.CodeGen.Transpiler (moduleToLibrary)
-import           Language.PureScript.Scheme.CodeGen.Printer    (printLibrary)
-import           Language.PureScript.Scheme.CodeGen.Optimizer  (runOptimizations)
-import           Language.PureScript.Scheme.CodeGen.Library    (Library(..))
+import Data.Text (Text)
+import Language.PureScript.CoreFn.FromJSON (moduleFromJSON)
+import Language.PureScript.CoreFn.Module (Module(..))
+import Language.PureScript.CoreFn.Ann (Ann)
+import Language.PureScript.Scheme.IOUtil (readJSONFile)
+import Language.PureScript.Scheme.CodeGen.Transpiler (moduleToLibrary)
+import Language.PureScript.Scheme.CodeGen.Printer (printLibrary)
+import Language.PureScript.Scheme.CodeGen.Optimizer (runOptimizations)
+import Language.PureScript.Scheme.CodeGen.Library (Library(..))
 
-compile :: FilePath -> IO Text
-compile path
-   = ( printLibrary
-     . optimize
+readModuleFromJSON :: Text -> IO (Module Ann)
+readModuleFromJSON path = do
+  (_version, module_) <- readJSONFile path moduleFromJSON
+  return module_
+
+compile :: Module Ann -> Library
+compile module_
+   = ( optimize
      . removePrimImports
      . moduleToLibrary
-     )
- <$> readModuleFromJSON path
+     ) module_
 
 optimize :: Library -> Library
 optimize library = library { libraryBody = runOptimizations $ libraryBody library }
@@ -30,10 +32,3 @@ removePrimImports library
     go "Prim" = False
     go _ = True
 
-readModuleFromJSON :: FilePath -> IO (Module Ann)
-readModuleFromJSON path = do
-  r <- JSON.decodeFileStrict' path
-  let res = r >>= JSON.T.parseMaybe CoreFn.moduleFromJSON
-  case res of
-    Nothing -> error "Error reading CoreFn file."
-    Just (_version, module_) -> return module_
