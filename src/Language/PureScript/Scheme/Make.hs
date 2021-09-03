@@ -20,16 +20,17 @@ readModuleFromJSON path = do
 compile :: Module Ann -> Library
 compile module_
    = optimize
-   $ removePrimImports
+   $ filterImports
    $ moduleToLibrary
    $ module_
 
 optimize :: Library -> Library
 optimize library = library { libraryBody = runOptimizations $ libraryBody library }
 
-removePrimImports :: Library -> Library
-removePrimImports library
-  = library { libraryImports = filter go $ libraryImports library }
+filterImports :: Library -> Library
+filterImports library@Library{libraryName, libraryImports}
+  = library { libraryImports = filter filterModule libraryImports }
   where
-    go "Prim" = False
-    go _ = True
+    filterModule "Prim" = False
+    filterModule m | m == libraryName = False
+    filterModule _ = True
