@@ -12,7 +12,7 @@ import Language.PureScript.Scheme.CodeGen.Library (Library(..))
 main :: IO ()
 main = do
   let outputPath = "test/resources/purescript/output"
-  corefnFiles <- IOUtil.findCorefnFiles outputPath
+  corefnFiles <- Make.findCorefnFiles outputPath
 
   for_ corefnFiles $ \corefnFile -> do
     print' $ "Processing " <> corefnFile

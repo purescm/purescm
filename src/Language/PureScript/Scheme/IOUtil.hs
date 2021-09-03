@@ -24,8 +24,8 @@ find basePath pattern = do
   paths <- find' (Turtle.fromText basePath) pattern
   return $ fmap filePathToText paths
 
-findCorefnFiles :: Text -> IO [Text]
-findCorefnFiles outputDir = find outputDir (Turtle.ends "corefn.json")
+findEnds :: Text -> Turtle.Pattern Text -> IO [Text]
+findEnds basePath endsWith = find basePath (Turtle.ends endsWith)
 
 readJSONFile
   :: Aeson.Types.FromJSON a
