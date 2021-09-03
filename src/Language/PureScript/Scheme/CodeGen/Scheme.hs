@@ -86,6 +86,12 @@ eq2 x y = eq [x, y]
 eqQ :: SExpr -> SExpr -> SExpr
 eqQ x y = app "eq?" [x, y]
 
+charEqQ :: [SExpr] -> SExpr
+charEqQ xs = app "char=?" xs
+
+charEqQ2 :: SExpr -> SExpr -> SExpr
+charEqQ2 x y = charEqQ [x, y]
+
 stringEqQ :: [SExpr] -> SExpr
 stringEqQ xs = app "string=?" xs
 
@@ -109,6 +115,9 @@ stringHash string = app "string-hash" [string]
 
 vector :: [SExpr] -> SExpr
 vector xs = app "vector" xs
+
+vectorLength :: SExpr -> SExpr
+vectorLength x = app "vector-length" [x]
 
 vectorRef :: SExpr -> SExpr -> SExpr
 vectorRef v i = app "vector-ref" [v, i]
