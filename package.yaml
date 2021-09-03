@@ -84,3 +84,7 @@ tests:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+
+    # Make purescm binary available in test runner PATH
+    build-tools:
+    - purescm

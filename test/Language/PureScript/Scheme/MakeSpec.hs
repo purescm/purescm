@@ -1,23 +1,23 @@
 module Language.PureScript.Scheme.MakeSpec (spec) where
 
-import qualified Data.Text                           as Text
-import           Data.Text                           (Text)
-import qualified Data.Text.IO                        as Text.IO
-import qualified Turtle                              as Turtle
-import           Test.Hspec                          (Spec, it, shouldBe,
-                                                      runIO, beforeAll_)
-import           Language.PureScript.Scheme.TestUtil (corefnFile, schemeFile,
-                                                      findModules, buildCorefn)
-import           Language.PureScript.Scheme.Make     (compile)
+import Data.Text (Text)
+import Test.Hspec (Spec, it, shouldBe, runIO, beforeAll_)
+
+import qualified Data.Text as Text
+import qualified Data.Text.IO as Text.IO
+import qualified Language.PureScript.Scheme.TestUtil as TestUtil
 
 testModule :: Text -> Spec
-testModule module_ = do
-  it ("Can compile " <> Text.unpack module_) $ do
-    compilationResult <- compile $ Turtle.encodeString $ corefnFile module_
-    expectedResult <- Text.IO.readFile $ Turtle.encodeString $ schemeFile module_
+testModule fixturePath = do
+  it ("Can compile " <> Text.unpack fixturePath) $ do
+    compilationResult
+      <- Text.IO.readFile
+       $ Text.unpack
+       $ TestUtil.schemeOutput fixturePath
+    expectedResult <- Text.IO.readFile (Text.unpack fixturePath)
     compilationResult `shouldBe` expectedResult
 
 spec :: Spec
 spec = do
-  ms <- runIO findModules
-  beforeAll_ buildCorefn $ mapM_ testModule ms
+  fixturePaths <- runIO TestUtil.findSchemeFixtures
+  beforeAll_ TestUtil.spagoBuild $ mapM_ testModule fixturePaths
