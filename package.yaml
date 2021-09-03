@@ -61,7 +61,7 @@ library:
   source-dirs: src
 
 executables:
-  purescm-exe:
+  purescm:
     main: Main.hs
     source-dirs: app
 
