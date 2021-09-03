@@ -19,7 +19,7 @@ import Language.PureScript.CoreFn.Expr
 import Language.PureScript.CoreFn.Binders (Binder(..))
 import Language.PureScript.AST.Literals (Literal(..))
 
-import Language.PureScript.Scheme.Util (mapWithIndex, concatMapWithIndex)
+import Language.PureScript.Scheme.Util (concatMapWithIndex)
 import Language.PureScript.Scheme.CodeGen.SExpr (SExpr(..), everywhere)
 import Language.PureScript.Scheme.CodeGen.Scheme
        (t, stringEqQ', stringHash',
@@ -352,18 +352,19 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
         -- the actual variable name `value' and not with the alias `ìdent'.
         -- We will have to use ident when we have to deal with the result associated
         -- to this case though.
-        binderToTest value (NamedBinder _ann _ident binder) = binderToTest value binder
+        binderToTest value (NamedBinder _ann _ident binder)
+          = binderToTest value binder
 
         -- Emit a cond clause result for multiple values and binders associated to
         -- a single result. This is done by replacing the identifiers in the result
         -- expression according to its VarBinders.
-        bindersToResult :: [(Expr Ann, Binder a)] -> Expr Ann -> SExpr
+        bindersToResult :: [(Expr Ann, Binder Ann)] -> Expr Ann -> SExpr
         bindersToResult valuesAndBinders result =
           replaceVariables (exprToScheme result)
                            (variablesToReplace valuesAndBinders)
 
 
-        variablesToReplace :: [(Expr Ann, Binder a)] -> [(Text, SExpr)]
+        variablesToReplace :: [(Expr Ann, Binder Ann)] -> [(Text, SExpr)]
         variablesToReplace valuesAndBinders =
           concatMap (\(value, binder) -> go (exprToScheme value) binder)
                     valuesAndBinders
@@ -383,10 +384,10 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
             -- For a ConstructorBinder we have to replace each identifier in its
             -- binders with an access to the right index of the vector in the cdr
             -- of the tagged pair holding the Constructor values.
-            go value (ConstructorBinder _ann _typeName _constructorName binders) =
-              mapWithIndex (\i b -> (go' b,
-                                     vectorRef (cdr value) (Integer i)))
-                           binders
+            go value (ConstructorBinder _ann _typeName _constructorName binders)
+              = concatMapWithIndex
+                  (\i b -> (go (vectorRef (cdr value) (Integer i)) b))
+                  binders
 
             -- Consider the case:
             --     data Foo = Bar Int
@@ -403,12 +404,6 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
             go value (NamedBinder _ann ident binder) =
               (:) (runIdent ident, value)
                   (go value binder)
-
-            -- TODO: possible fire hazard. So far I've met no ConstructorBinder
-            -- whose binders are anything but VarBinders. But if that doesn't
-            -- hold then it will explode here.
-            go' (VarBinder _ann ident) = runIdent ident
-            go' _ = error "Not implemented"
 
     ----------------------------------------------------------------------------
 
@@ -436,13 +431,11 @@ replaceVariables ast mapping = everywhere (go mapping) ast
     go [] ast' = ast'
     go _xs ast' = ast'
 
-
 psStringToSExpr :: PSString -> SExpr
 psStringToSExpr x = String x
 
 makeStringHashtable :: Integer -> SExpr
 makeStringHashtable size = makeHashtable stringHash' stringEqQ' (Integer size)
-
 
 accessorToScheme' :: SExpr -> PSString -> SExpr
 accessorToScheme' object property
