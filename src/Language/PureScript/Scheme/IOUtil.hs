@@ -34,11 +34,11 @@ readJSONFile
   -> IO b
 readJSONFile path fromJSON = do
   let path' = Text.unpack path
-  json <- Aeson.decodeFileStrict' path'
-  let result = Aeson.Types.parseMaybe fromJSON =<< json
+  json <- Aeson.eitherDecodeFileStrict' path'
+  let result = Aeson.Types.parseEither fromJSON =<< json
   case result of
-    Just x -> return x
-    Nothing -> error' $ "Could not read " <> path
+    Left err -> error err
+    Right x -> return x
 
 error' :: Text -> a
 error' text = error $ Text.unpack text
