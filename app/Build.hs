@@ -58,3 +58,5 @@ build outputPath = do
         Right _ -> print' "    Foreign library copied successfully"
 
     print' ""
+
+    return ()
