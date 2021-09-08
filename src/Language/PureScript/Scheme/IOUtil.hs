@@ -11,6 +11,9 @@ import qualified Turtle as Turtle
 import qualified System.Directory as Directory
 import qualified System.Directory.Internal.Prelude as Directory.Internal
 
+tshow :: Show a => a -> Text
+tshow = Text.pack . show
+
 filePathToText :: Turtle.FilePath -> Text
 filePathToText path = case Turtle.toText path of
   Left  _ -> error "Could not convert FilePath to Text"
