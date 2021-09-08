@@ -32,5 +32,12 @@ filterImports library@Library{libraryName, libraryImports}
   = library { libraryImports = filter filterModule libraryImports }
   where
     filterModule "Prim" = False
+    filterModule "Prim.Boolean" = False
+    filterModule "Prim.Coerce" = False
+    filterModule "Prim.Ordering" = False
+    filterModule "Prim.Row" = False
+    filterModule "Prim.RowList" = False
+    filterModule "Prim.Symbol" = False
+    filterModule "Prim.TypeError" = False
     filterModule m | m == libraryName = False
     filterModule _ = True
