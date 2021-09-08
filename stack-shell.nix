@@ -21,9 +21,11 @@ in
 pkgs.haskell.lib.buildStackProject {
   inherit ghc;
   name = "purescm-stack";
-  buildInputs = [ pkgs.zlib
-                  pkgs.git
-                  easy-ps.purs-0_14_4
-                  easy-ps.spago
-                ];
+  buildInputs = [
+    pkgs.zlib
+    pkgs.git
+    easy-ps.purs-0_14_4
+    easy-ps.spago
+    pkgs.chez
+  ];
 }
