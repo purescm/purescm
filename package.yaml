@@ -32,6 +32,7 @@ dependencies:
 - foldl
 - optparse-applicative
 - prettyprinter
+- process
 - purescript
 - purescript-cst
 - text

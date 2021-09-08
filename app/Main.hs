@@ -1,8 +1,11 @@
 module Main where
 
+import Data.Maybe (fromJust, isJust)
+import Control.Monad (when)
 import System.Environment (getArgs)
 import Options (Options(..))
 import Build (build)
+import Run (run)
 import Language.PureScript.Scheme.IOUtil (print', tshow)
 
 import qualified System.IO as IO
@@ -22,3 +25,6 @@ main = do
   print' ""
 
   build optionOutput
+
+  when (isJust optionRunModule)
+    $ run optionOutput (fromJust optionRunModule)
