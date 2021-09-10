@@ -1,55 +1,63 @@
-module Language.PureScript.Scheme.CodeGen.Printer where
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+module Language.PureScript.Scheme.CodeGen.Printer (printLibrary) where
 
-import Data.Text (Text, pack, intercalate)
+import Data.Text (Text)
 import Language.PureScript.PSString (prettyPrintStringJS)
 import Language.PureScript.Scheme.CodeGen.SExpr (SExpr(..))
 import Language.PureScript.Scheme.CodeGen.Library (Library(..))
+import Prettyprinter (Pretty(..))
 
-tshow :: Show a => a -> Text
-tshow = pack . show
+import qualified Data.Text as Text
+import qualified Prettyprinter as Pretty
 
-char :: Char -> Text
-char x = "#\\" <> pack [x]
+list :: forall a. [Pretty.Doc a] -> Pretty.Doc a
+list [] = tpretty "()"
+list [x] = Pretty.enclose Pretty.lparen Pretty.rparen x
+list (x:xs) = Pretty.nest 2
+            $ Pretty.sep ([Pretty.lparen <> x] <> xs) <> Pretty.rparen 
 
-bool :: Bool -> Text
-bool True = "#t"
-bool False = "#f"
+tpretty :: Text -> Pretty.Doc a
+tpretty = pretty
 
-parens :: Text -> Text
-parens x = "(" <> x <> ")"
+instance Pretty SExpr where
+  pretty (Integer x) = pretty x
+  pretty (Float x) = pretty x
+  pretty (String x) = pretty (prettyPrintStringJS x)
+  pretty (Character x) = pretty ("#\\" <> Text.pack [x])
+  pretty (Boolean x) = tpretty (if x then "#t" else "#f")
+  pretty (Symbol x) = pretty x
+  pretty (List xs) = list (map pretty xs)
 
-list :: [Text] -> Text
-list xs = parens $ intercalate " " xs
+instance Pretty Library where
+  pretty Library{..} = list $
+    [ tpretty "library"
+    , list [ name, tpretty "lib" ]
+    , list (tpretty "export" : exports)
+    , list $
+      [ tpretty "import"
+      , list [ tpretty "rnrs"]
+      ] <> foreignImports <> otherImports
+    , Pretty.hardline
+    ] <> fmap (\e -> pretty e <> Pretty.hardline) libraryBody
 
-emit :: SExpr -> Text
-emit (Integer x) = tshow x
-emit (Float x) = tshow x
-emit (String x) = prettyPrintStringJS x
-emit (Character x) = char x
-emit (Boolean x) = bool x
-emit (Symbol x) = x
-emit (List xs) = list $ map emit xs
+    where
+      name = pretty libraryName
+      exports = map pretty libraryExports
 
-printSExprs :: [SExpr] -> Text
-printSExprs exprs = intercalate "\n\n" (fmap emit exprs)
+      foreignImports = case libraryForeigns of
+        [] -> []
+        fs ->
+          [ list $
+              [ tpretty "only"
+              , list [ name, tpretty "foreign" ]
+              ] <> map pretty fs
+          ]
+
+      otherImports = map
+        (\n -> list [ tpretty "prefix"
+                    , list [ pretty n, tpretty "lib" ]
+                    , pretty n <> tpretty "."])
+        libraryImports
 
 printLibrary :: Library -> Text
-printLibrary (Library name exports imports foreigns body)
-  = list [ "library"
-         , list [ name, "lib" ]
-         , list $ "export" : exports
-         , list $ [ "import"
-                  , rnrsImport
-                  ] ++ foreignImports ++ otherImports
-         , printSExprs body
-         ]
-  where
-    rnrsImport = list [ "rnrs" ]
-    foreignImports' = list $ [ "only"
-                             , list [ name, "foreign" ]
-                             ] ++ foreigns
-    foreignImports = if null foreigns then [] else [ foreignImports' ]
-    otherImports = map (\n -> (list [ "prefix"
-                                    , list [ n, "lib" ]
-                                    , n <> "."]))
-                       imports
+printLibrary = Text.pack . show . Pretty.pretty
