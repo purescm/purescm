@@ -1,7 +1,10 @@
 #!/usr/bin/env nix-shell
 
-{ pkgs ? import <nixpkgs> { } }:
 let
+  pkgs = import (builtins.fetchTarball {
+    url = "https://github.com/NixOS/nixpkgs/archive/21.05.tar.gz";
+  }) {};
+
   easy-ps = import
     (pkgs.fetchFromGitHub {
       owner = "justinwoo";
