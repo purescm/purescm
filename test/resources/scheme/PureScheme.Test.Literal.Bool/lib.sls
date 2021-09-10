@@ -1,3 +1,10 @@
-(library (PureScheme.Test.Literal.Bool lib) (export t f) (import (rnrs)) (define t #t)
+(library
+  (PureScheme.Test.Literal.Bool lib)
+  (export t f)
+  (import (rnrs))
 
-(define f #f))
+
+  (define t #t)
+
+  (define f #f)
+  )
