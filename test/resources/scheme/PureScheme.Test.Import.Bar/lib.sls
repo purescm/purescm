@@ -1,1 +1,8 @@
-(library (PureScheme.Test.Import.Bar lib) (export bar) (import (rnrs)) (define bar 2))
+(library
+  (PureScheme.Test.Import.Bar lib)
+  (export bar)
+  (import (rnrs))
+
+
+  (define bar 2)
+  )
