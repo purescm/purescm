@@ -1,0 +1,1 @@
+(library (PureScheme.RunnableTest.ConsoleLog.Main lib) (export main) (import (rnrs) (prefix (Effect.Console lib) Effect.Console.)) (define main (Effect.Console.log "foo")))
