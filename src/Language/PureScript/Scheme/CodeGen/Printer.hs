@@ -1,5 +1,8 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-module Language.PureScript.Scheme.CodeGen.Printer (printLibrary) where
+module Language.PureScript.Scheme.CodeGen.Printer
+  ( printLibrary
+  , printSExpr
+  ) where
 
 import Data.Text (Text)
 import Language.PureScript.PSString (prettyPrintStringJS)
@@ -61,3 +64,6 @@ instance Pretty Library where
 
 printLibrary :: Library -> Text
 printLibrary = Text.pack . show . Pretty.pretty
+
+printSExpr :: SExpr -> Text
+printSExpr = Text.pack . show . Pretty.pretty

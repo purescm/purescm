@@ -2,7 +2,7 @@ module Language.PureScript.Scheme.CodeGen.PrinterSpec (spec) where
 
 import Test.Hspec (Spec, describe, it, shouldBe)
 import Language.PureScript.Scheme.CodeGen.SExpr (SExpr(..))
-import Language.PureScript.Scheme.CodeGen.Printer (emit)
+import Language.PureScript.Scheme.CodeGen.Printer (printSExpr)
 
 spec :: Spec
 spec = do
@@ -11,6 +11,6 @@ spec = do
 stringSpec :: Spec
 stringSpec = do
   it "can print simple string" $ do
-    emit (String "foo") `shouldBe` "\"foo\""
+    printSExpr (String "foo") `shouldBe` "\"foo\""
   it "can print quoted string" $ do
-    emit (String "\"foo\"") `shouldBe` "\"\\\"foo\\\"\""
+    printSExpr (String "\"foo\"") `shouldBe` "\"\\\"foo\\\"\""
