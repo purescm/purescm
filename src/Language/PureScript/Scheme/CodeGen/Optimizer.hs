@@ -18,9 +18,9 @@ inlineCommonBinaryOperators :: SExpr -> SExpr
 
 inlineCommonBinaryOperators (List [List [List [Symbol op, Symbol klass], x], y])
   | op == "Data.Semiring.add" && klass == "Data.Semiring.semiringInt" =
-    app "+" [x, y]
+    app "scm:+" [x, y]
   | op == "Data.Ring.sub" && klass == "Data.Ring.ringInt" =
-    app "-" [x, y]
+    app "scm:-" [x, y]
 
 inlineCommonBinaryOperators expr = expr
 

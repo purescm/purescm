@@ -38,7 +38,7 @@ instance Pretty Library where
     , list (tpretty "export" : exports)
     , list $
       [ tpretty "import"
-      , list [ tpretty "rnrs"]
+      , rnrsImport
       ] <> foreignImports <> otherImports
     , Pretty.hardline
     ] <> fmap (\e -> pretty e <> Pretty.hardline) libraryBody
@@ -46,6 +46,11 @@ instance Pretty Library where
     where
       name = pretty libraryName
       exports = map pretty libraryExports
+
+      rnrsImport = list [ tpretty "prefix"
+                        , list [ tpretty "rnrs"]
+                        , tpretty "scm:"
+                        ]
 
       foreignImports = case libraryForeigns of
         [] -> []
