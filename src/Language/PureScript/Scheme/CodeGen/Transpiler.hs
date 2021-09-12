@@ -225,11 +225,15 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
 
     ----------------------------------------------------------------------------
 
+    varToScheme :: Qualified Ident -> SExpr
     varToScheme qualifiedIdent@(Qualified maybeModuleName ident) =
       case maybeModuleName of
         Nothing -> Symbol (runIdent ident)
         Just moduleName'
           | moduleName == moduleName' -> Symbol (runIdent ident)
+          | (runModuleName moduleName') == "Prim"
+            && (runIdent ident) == "undefined"
+            -> (error_ $ String "undefined")
           | otherwise -> Symbol (showQualified runIdent qualifiedIdent)
 
     ----------------------------------------------------------------------------
