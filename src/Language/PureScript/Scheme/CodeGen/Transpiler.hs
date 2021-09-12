@@ -19,6 +19,7 @@ import Language.PureScript.CoreFn.Expr
        (Expr(..), Bind(..), CaseAlternative(..))
 import Language.PureScript.CoreFn.Binders (Binder(..))
 import Language.PureScript.AST.Literals (Literal(..))
+import Language.PureScript.CodeGen.JS.Common (identToJs)
 
 import Language.PureScript.Scheme.Util (concatMapWithIndex)
 import Language.PureScript.Scheme.CodeGen.SExpr (SExpr(..), everywhere)
@@ -44,9 +45,9 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
                         declarations)
   = Library
     { libraryName = runModuleName moduleName
-    , libraryExports = map runIdent exports
+    , libraryExports = map identToJs exports
     , libraryImports = map (runModuleName . snd) imports
-    , libraryForeigns = map runIdent foreigns
+    , libraryForeigns = map identToJs foreigns
     , libraryBody = libraryBody
     }
   where
@@ -65,7 +66,7 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
                    xs
       where
         def :: Ident -> Expr Ann -> SExpr
-        def ident expr = define (runIdent ident) (exprToScheme expr)
+        def ident expr = define (identToJs ident) (exprToScheme expr)
 
     ----------------------------------------------------------------------------
 
@@ -80,7 +81,7 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
     exprToScheme (ObjectUpdate _ann object keysAndValues)
       = objectUpdateToScheme object keysAndValues
     exprToScheme (Abs _ann arg expr)
-      = lambda1 (runIdent arg) (exprToScheme expr)
+      = lambda1 (identToJs arg) (exprToScheme expr)
     exprToScheme (App _ann function arg)
       = appToScheme function arg
     exprToScheme (Var _ann qualifiedIdent)
@@ -183,13 +184,13 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
       go fields
       where
         -- Here we build the nested curried lambda expressions.
-        go (x:xs) = lambda1 (runIdent x) (go xs)
+        go (x:xs) = lambda1 (identToJs x) (go xs)
         -- Here we build the body if the most inner lambda expresison that
         -- returns the constructed data structure.
         -- If the data type doesn't take values then fields is an empty
         -- and only this branch is executed.
         go [] = cons (quote (Symbol (runProperName constructorName)))
-                     (vector (map (\field -> Symbol (runIdent field))
+                     (vector (map (\field -> Symbol (identToJs field))
                                   fields))
 
     ----------------------------------------------------------------------------
@@ -228,13 +229,13 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
     varToScheme :: Qualified Ident -> SExpr
     varToScheme qualifiedIdent@(Qualified maybeModuleName ident) =
       case maybeModuleName of
-        Nothing -> Symbol (runIdent ident)
+        Nothing -> Symbol (identToJs ident)
         Just moduleName'
-          | moduleName == moduleName' -> Symbol (runIdent ident)
+          | moduleName == moduleName' -> Symbol (identToJs ident)
           | (runModuleName moduleName') == "Prim"
             && (runIdent ident) == "undefined"
             -> (error_ $ String "undefined")
-          | otherwise -> Symbol (showQualified runIdent qualifiedIdent)
+          | otherwise -> Symbol (showQualified identToJs qualifiedIdent)
 
     ----------------------------------------------------------------------------
 
@@ -398,7 +399,7 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
             -- variable.
             -- We have to replace each occurrence of `m' with `v' and each
             -- occurrence of `n' with `v0'.
-            go value (VarBinder _ann ident) = [(runIdent ident, value)]
+            go value (VarBinder _ann ident) = [(identToJs ident, value)]
 
             -- For a ConstructorBinder we have to replace each identifier in its
             -- binders with an access to the right index of the vector in the cdr
@@ -421,7 +422,7 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
             -- other possible replacements for the binder associated to the
             -- NamedBinder.
             go value (NamedBinder _ann ident binder) =
-              (:) (runIdent ident, value)
+              (:) (identToJs ident, value)
                   (go value binder)
 
     ----------------------------------------------------------------------------
@@ -437,7 +438,7 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
               Rec xs -> map (\((_ann, ident), expr) -> binding ident expr) xs
 
         binding :: Ident -> Expr Ann -> (Text, SExpr)
-        binding ident expr = (runIdent ident, exprToScheme expr)
+        binding ident expr = (identToJs ident, exprToScheme expr)
 
     ----------------------------------------------------------------------------
 
