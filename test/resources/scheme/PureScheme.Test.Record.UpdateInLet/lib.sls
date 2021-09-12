@@ -6,17 +6,17 @@
 
   (scm:define
     antani
-    (scm:let*
+    (scm:letrec*
       ((foo
-        (scm:let*
+        (scm:letrec*
           (($ht (scm:make-hashtable scm:string-hash scm:string=? 2)))
           (scm:begin
             (scm:hashtable-set! $ht "bar" 23)
             (scm:hashtable-set! $ht "baz" 42)
             $ht))))
-      (scm:let*
+      (scm:letrec*
         ((v foo))
-        (scm:let*
+        (scm:letrec*
           (($ht (scm:make-hashtable scm:string-hash scm:string=? 2)))
           (scm:begin
             (scm:hashtable-set! $ht "bar" 69)

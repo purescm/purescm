@@ -4,5 +4,5 @@
   (import (prefix (rnrs) scm:) (prefix (Effect.Console lib) Effect.Console.))
 
 
-  (scm:define main (Effect.Console.log "foo"))
+  (scm:define main (Effect.Console.log "Hello world from PureScheme!"))
   )

@@ -12,5 +12,7 @@
     foo
     (scm:lambda
       (x)
-      (scm:lambda (y) (scm:let* ((b 2) (a 1)) (- (+ x a) (+ y b))))))
+      (scm:lambda
+        (y)
+        (scm:letrec* ((b 2) (a 1)) (scm:- (scm:+ x a) (scm:+ y b))))))
   )
