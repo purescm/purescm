@@ -12,7 +12,7 @@
 
   (scm:define
     main
-    (+
-      (+ PureScheme.Test.Import.Foo.foo PureScheme.Test.Import.Bar.bar)
+    (scm:+
+      (scm:+ PureScheme.Test.Import.Foo.foo PureScheme.Test.Import.Bar.bar)
       PureScheme.Test.Import.Baz.baz))
   )

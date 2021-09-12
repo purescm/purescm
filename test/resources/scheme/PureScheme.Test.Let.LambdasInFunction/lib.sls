@@ -16,7 +16,7 @@
         (x)
         (scm:lambda
           (y)
-          (scm:let*
+          (scm:letrec*
             ((sub
                 (scm:lambda
                   (a)
@@ -31,7 +31,7 @@
                               dictRing
                               "Semiring0"
                               (scm:error #f "Key not found"))
-                            Prim.undefined))
+                            (scm:error #f "undefined")))
                         x)
                       y)))))
             ((add ((sub x) y)) ((add x) y)))))))

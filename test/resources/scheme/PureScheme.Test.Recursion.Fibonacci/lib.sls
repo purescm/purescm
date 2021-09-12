@@ -15,6 +15,6 @@
       (scm:cond
         ((scm:and (scm:= v 0)) 0)
         ((scm:and (scm:= v 1)) 1)
-        ((scm:and #t) (+ (fib (- v 1)) (fib (- v 2))))
+        ((scm:and #t) (scm:+ (fib (scm:- v 1)) (fib (scm:- v 2))))
         (scm:else (scm:error #f "Failed pattern match")))))
   )

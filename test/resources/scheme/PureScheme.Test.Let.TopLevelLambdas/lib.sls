@@ -10,8 +10,8 @@
 
   (scm:define
     foo
-    (scm:let*
-      ((sub (scm:lambda (x) (scm:lambda (y) (- x y))))
-        (add (scm:lambda (x) (scm:lambda (y) (+ x y)))))
+    (scm:letrec*
+      ((sub (scm:lambda (x) (scm:lambda (y) (scm:- x y))))
+        (add (scm:lambda (x) (scm:lambda (y) (scm:+ x y)))))
       ((add ((sub 1) 2)) ((add 3) 4))))
   )

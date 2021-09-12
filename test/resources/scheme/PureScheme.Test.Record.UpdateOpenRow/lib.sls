@@ -8,7 +8,7 @@
     foo
     (scm:lambda
       (v)
-      (scm:let*
+      (scm:letrec*
         (($ht (scm:hashtable-copy v)))
         (scm:begin (scm:hashtable-set! $ht "bar" 42) $ht))))
   )

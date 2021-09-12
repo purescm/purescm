@@ -21,6 +21,6 @@
           ((scm:and (scm:= v 3) #t) 30)
           ((scm:and (scm:= v 4) #t) v1)
           ((scm:and #t (scm:= v1 5)) v)
-          ((scm:and #t #t) (+ v v1))
+          ((scm:and #t #t) (scm:+ v v1))
           (scm:else (scm:error #f "Failed pattern match"))))))
   )

@@ -6,7 +6,7 @@
 
   (scm:define
     foo
-    (scm:let*
+    (scm:letrec*
       (($ht (scm:make-hashtable scm:string-hash scm:string=? 2)))
       (scm:begin
         (scm:hashtable-set! $ht "bar" 23)
