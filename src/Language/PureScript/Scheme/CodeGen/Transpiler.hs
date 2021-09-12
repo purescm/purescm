@@ -24,7 +24,7 @@ import Language.PureScript.Scheme.Util (concatMapWithIndex)
 import Language.PureScript.Scheme.CodeGen.SExpr (SExpr(..), everywhere)
 import Language.PureScript.Scheme.CodeGen.Scheme
        (t, stringEqQ', stringHash',
-        define, quote, lambda1, let_, let1, cond, begin,
+        define, quote, lambda1, letRecS, letRecS1, cond, begin,
         eq2, eqQ, charEqQ2, stringEqQ2, and_, cons, cons, car, cdr,
         vector, vector, vectorLength, vectorRef,
         makeHashtable, hashtableSetB, hashtableRef, hashtableCopy,
@@ -106,8 +106,8 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
 
     objectToScheme :: [(PSString, Expr Ann)] -> SExpr
     objectToScheme xs =
-      let1 ("$ht", makeStringHashtable (toInteger $ length xs))
-           (begin ((fmap go xs) ++ [Symbol "$ht"]))
+      letRecS1 ("$ht", makeStringHashtable (toInteger $ length xs))
+               (begin ((fmap go xs) ++ [Symbol "$ht"]))
       where
         go :: (PSString, Expr Ann) -> SExpr
         go (key, value) = hashtableSetB (Symbol "$ht")
@@ -202,8 +202,8 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
 
     objectUpdateToScheme :: Expr Ann -> [(PSString, Expr Ann)] -> SExpr
     objectUpdateToScheme object keysAndValues
-      = let1 ("$ht", hashtableCopy (exprToScheme object))
-             (begin ((fmap go keysAndValues) ++ [Symbol "$ht"]))
+      = letRecS1 ("$ht", hashtableCopy (exprToScheme object))
+                 (begin ((fmap go keysAndValues) ++ [Symbol "$ht"]))
       where
         go :: (PSString, Expr Ann) -> SExpr
         go (key, value) = hashtableSetB (Symbol "$ht")
@@ -424,7 +424,7 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
 
     letToScheme :: [Bind Ann] -> Expr Ann -> SExpr
     letToScheme binds body
-      = let_ (concatMap bindToScheme binds) (exprToScheme body)
+      = letRecS (concatMap bindToScheme binds) (exprToScheme body)
       where
         bindToScheme :: Bind Ann -> [(Text, SExpr)]
         bindToScheme bind
