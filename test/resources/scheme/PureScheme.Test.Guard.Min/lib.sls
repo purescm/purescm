@@ -2,23 +2,23 @@
   (PureScheme.Test.Guard.Min lib)
   (export min)
   (import
-    (rnrs)
+    (prefix (rnrs) scm:)
     (prefix (Data.Boolean lib) Data.Boolean.)
     (prefix (Data.Ord lib) Data.Ord.)
     (prefix (Prelude lib) Prelude.))
 
 
-  (define
+  (scm:define
     min
-    (lambda
+    (scm:lambda
       (n)
-      (lambda
+      (scm:lambda
         (m)
-        (cond
-          (#t
-            (cond
+        (scm:cond
+          ((scm:and #t #t)
+            (scm:cond
               ((((Data.Ord.lessThan Data.Ord.ordInt) n) m) n)
               (Data.Boolean.otherwise m)
-              (else (error #f "Failed pattern match"))))
-          (else (error #f "Failed pattern match"))))))
+              (scm:else (scm:error #f "Failed pattern match"))))
+          (scm:else (scm:error #f "Failed pattern match"))))))
   )

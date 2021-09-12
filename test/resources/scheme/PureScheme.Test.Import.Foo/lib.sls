@@ -1,8 +1,8 @@
 (library
   (PureScheme.Test.Import.Foo lib)
   (export foo)
-  (import (rnrs))
+  (import (prefix (rnrs) scm:))
 
 
-  (define foo 1)
+  (scm:define foo 1)
   )

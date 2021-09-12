@@ -1,8 +1,8 @@
 (library
   (PureScheme.Test.Import.Baz lib)
   (export baz)
-  (import (rnrs))
+  (import (prefix (rnrs) scm:))
 
 
-  (define baz 3)
+  (scm:define baz 3)
   )

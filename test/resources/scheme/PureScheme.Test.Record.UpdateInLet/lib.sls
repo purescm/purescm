@@ -1,28 +1,28 @@
 (library
   (PureScheme.Test.Record.UpdateInLet lib)
   (export antani)
-  (import (rnrs))
+  (import (prefix (rnrs) scm:))
 
 
-  (define
+  (scm:define
     antani
-    (let
+    (scm:let*
       ((foo
-        (let
-          (($ht (make-hashtable string-hash string=? 2)))
-          (begin
-            (hashtable-set! $ht "bar" 23)
-            (hashtable-set! $ht "baz" 42)
+        (scm:let*
+          (($ht (scm:make-hashtable scm:string-hash scm:string=? 2)))
+          (scm:begin
+            (scm:hashtable-set! $ht "bar" 23)
+            (scm:hashtable-set! $ht "baz" 42)
             $ht))))
-      (let
+      (scm:let*
         ((v foo))
-        (let
-          (($ht (make-hashtable string-hash string=? 2)))
-          (begin
-            (hashtable-set! $ht "bar" 69)
-            (hashtable-set!
+        (scm:let*
+          (($ht (scm:make-hashtable scm:string-hash scm:string=? 2)))
+          (scm:begin
+            (scm:hashtable-set! $ht "bar" 69)
+            (scm:hashtable-set!
               $ht
               "baz"
-              (hashtable-ref v "baz" (error #f "Key not found")))
+              (scm:hashtable-ref v "baz" (scm:error #f "Key not found")))
             $ht)))))
   )

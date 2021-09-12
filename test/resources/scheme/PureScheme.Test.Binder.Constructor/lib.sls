@@ -1,18 +1,24 @@
 (library
   (PureScheme.Test.Binder.Constructor lib)
   (export Qux foo)
-  (import (rnrs))
+  (import (prefix (rnrs) scm:))
 
 
-  (define Qux (lambda (value0) (cons (quote Qux) (vector value0))))
+  (scm:define
+    Qux
+    (scm:lambda (value0) (scm:cons (scm:quote Qux) (scm:vector value0))))
 
-  (define
+  (scm:define
     foo
-    (lambda
+    (scm:lambda
       (v)
-      (cond
-        ((and (eq? (car v) (quote Qux)) (= (vector-ref (cdr v) 0) 1)) (Qux 2))
-        ((eq? (car v) (quote Qux)) (Qux (vector-ref (cdr v) 0)))
-        ((eq? (car v) (quote Qux)) (Qux 3))
-        (else (error #f "Failed pattern match")))))
+      (scm:cond
+        ((scm:and
+            (scm:eq? (scm:car v) (scm:quote Qux))
+            (scm:= (scm:vector-ref (scm:cdr v) 0) 1))
+          (Qux 2))
+        ((scm:and (scm:eq? (scm:car v) (scm:quote Qux)) #t)
+          (Qux (scm:vector-ref (scm:cdr v) 0)))
+        ((scm:and (scm:eq? (scm:car v) (scm:quote Qux)) #t) (Qux 3))
+        (scm:else (scm:error #f "Failed pattern match")))))
   )

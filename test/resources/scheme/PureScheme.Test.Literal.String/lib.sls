@@ -1,8 +1,8 @@
 (library
   (PureScheme.Test.Literal.String lib)
   (export foo)
-  (import (rnrs))
+  (import (prefix (rnrs) scm:))
 
 
-  (define foo "foo")
+  (scm:define foo "foo")
   )

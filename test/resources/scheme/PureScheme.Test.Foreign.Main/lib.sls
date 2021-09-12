@@ -2,7 +2,7 @@
   (PureScheme.Test.Foreign.Main lib)
   (export main)
   (import
-    (rnrs)
+    (prefix (rnrs) scm:)
     (prefix
       (PureScheme.Test.Foreign.Constant lib)
       PureScheme.Test.Foreign.Constant.)
@@ -11,7 +11,7 @@
       PureScheme.Test.Foreign.Function.))
 
 
-  (define
+  (scm:define
     main
     (PureScheme.Test.Foreign.Function.inc PureScheme.Test.Foreign.Constant.one))
   )

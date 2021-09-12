@@ -1,8 +1,8 @@
 (library
   (PureScheme.Test.Import.Bar lib)
   (export bar)
-  (import (rnrs))
+  (import (prefix (rnrs) scm:))
 
 
-  (define bar 2)
+  (scm:define bar 2)
   )

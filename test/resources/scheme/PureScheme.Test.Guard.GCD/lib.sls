@@ -2,27 +2,27 @@
   (PureScheme.Test.Guard.GCD lib)
   (export gcd)
   (import
-    (rnrs)
+    (prefix (rnrs) scm:)
     (prefix (Data.Boolean lib) Data.Boolean.)
     (prefix (Data.Ord lib) Data.Ord.)
     (prefix (Data.Ring lib) Data.Ring.)
     (prefix (Prelude lib) Prelude.))
 
 
-  (define
+  (scm:define
     gcd
-    (lambda
+    (scm:lambda
       (v)
-      (lambda
+      (scm:lambda
         (v1)
-        (cond
-          ((= v1 0) v)
-          ((= v 0) v1)
-          (#t
-            (cond
+        (scm:cond
+          ((scm:and #t (scm:= v1 0)) v)
+          ((scm:and (scm:= v 0) #t) v1)
+          ((scm:and #t #t)
+            (scm:cond
               ((((Data.Ord.greaterThan Data.Ord.ordInt) v) v1)
                 ((gcd (- v v1)) v1))
               (Data.Boolean.otherwise ((gcd v) (- v1 v)))
-              (else (error #f "Failed pattern match"))))
-          (else (error #f "Failed pattern match"))))))
+              (scm:else (scm:error #f "Failed pattern match"))))
+          (scm:else (scm:error #f "Failed pattern match"))))))
   )

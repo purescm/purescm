@@ -1,8 +1,8 @@
 (library
   (PureScheme.Test.Literal.Float lib)
   (export foo)
-  (import (rnrs))
+  (import (prefix (rnrs) scm:))
 
 
-  (define foo 23.42)
+  (scm:define foo 23.42)
   )

@@ -2,10 +2,10 @@
   (PureScheme.Test.Let.TopLevelValues lib)
   (export foo)
   (import
-    (rnrs)
+    (prefix (rnrs) scm:)
     (prefix (Data.Semiring lib) Data.Semiring.)
     (prefix (Prelude lib) Prelude.))
 
 
-  (define foo (let ((b 2) (a 1)) (+ a b)))
+  (scm:define foo (scm:let* ((b 2) (a 1)) (+ a b)))
   )

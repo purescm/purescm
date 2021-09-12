@@ -1,19 +1,21 @@
 (library
   (PureScheme.Test.Binder.Named lib)
   (export Bar Baz match)
-  (import (rnrs))
+  (import (prefix (rnrs) scm:))
 
 
-  (define Bar (lambda (value0) (cons (quote Bar) (vector value0))))
+  (scm:define
+    Bar
+    (scm:lambda (value0) (scm:cons (scm:quote Bar) (scm:vector value0))))
 
-  (define Baz (cons (quote Baz) (vector)))
+  (scm:define Baz (scm:cons (scm:quote Baz) (scm:vector)))
 
-  (define
+  (scm:define
     match
-    (lambda
+    (scm:lambda
       (v)
-      (cond
-        ((eq? (car v) (quote Bar)) v)
-        ((eq? (car v) (quote Baz)) Baz)
-        (else (error #f "Failed pattern match")))))
+      (scm:cond
+        ((scm:and (scm:eq? (scm:car v) (scm:quote Bar)) #t) v)
+        ((scm:and (scm:eq? (scm:car v) (scm:quote Baz))) Baz)
+        (scm:else (scm:error #f "Failed pattern match")))))
   )
