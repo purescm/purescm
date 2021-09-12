@@ -14,6 +14,7 @@ import Language.PureScript.Names
 import Language.PureScript.PSString (PSString)
 import Language.PureScript.CoreFn.Module (Module(..))
 import Language.PureScript.CoreFn.Ann (Ann)
+import Language.PureScript.CoreFn.Meta (Meta(..))
 import Language.PureScript.CoreFn.Expr
        (Expr(..), Bind(..), CaseAlternative(..))
 import Language.PureScript.CoreFn.Binders (Binder(..))
@@ -81,7 +82,7 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
     exprToScheme (Abs _ann arg expr)
       = lambda1 (runIdent arg) (exprToScheme expr)
     exprToScheme (App _ann function arg)
-      = List [exprToScheme function, exprToScheme arg]
+      = appToScheme function arg
     exprToScheme (Var _ann qualifiedIdent)
       = varToScheme qualifiedIdent
     exprToScheme (Case _ann values caseAlternatives)
@@ -208,6 +209,19 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
         go (key, value) = hashtableSetB (Symbol "$ht")
                                         (psStringToSExpr key)
                                         (exprToScheme value)
+
+    ----------------------------------------------------------------------------
+
+    appToScheme :: Expr Ann -> Expr Ann -> SExpr
+    appToScheme function arg
+      = case function of
+          -- When Var is newtype we have to drop the application and
+          -- just return the applied value.
+          -- The newtype definition is alway (lambda (x) x).
+          Var (_sourceSpan, _comments, _maybeSourceType, Just IsNewtype)
+              _qualifiedIdent
+            -> exprToScheme arg
+          _ -> List [exprToScheme function, exprToScheme arg]
 
     ----------------------------------------------------------------------------
 
