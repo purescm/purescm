@@ -40,14 +40,14 @@ lambda formals expr =
 lambda1 :: Text -> SExpr -> SExpr
 lambda1 formal expr = lambda [formal] expr
 
-let_ :: [(Text, SExpr)] -> SExpr -> SExpr
-let_ bodies expr = List [Symbol "scm:let", List $ fmap go bodies, expr]
+letRecS :: [(Text, SExpr)] -> SExpr -> SExpr
+letRecS bodies expr = List [Symbol "scm:letrec*", List $ fmap go bodies, expr]
   where
     go :: (Text, SExpr) -> SExpr
     go (var, expr') = List [Symbol var, expr']
 
-let1 :: (Text, SExpr) -> SExpr -> SExpr
-let1 body expr = let_ [body] expr
+letRecS1 :: (Text, SExpr) -> SExpr -> SExpr
+letRecS1 body expr = letRecS [body] expr
 
 condWithElse_ :: [(SExpr, SExpr)] -> Maybe SExpr -> SExpr
 condWithElse_ clauses maybeElse
