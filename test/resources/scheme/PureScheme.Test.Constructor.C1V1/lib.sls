@@ -1,8 +1,10 @@
 (library
   (PureScheme.Test.Constructor.C1V1 lib)
   (export Bar)
-  (import (rnrs))
+  (import (prefix (rnrs) scm:))
 
 
-  (define Bar (lambda (value0) (cons (quote Bar) (vector value0))))
+  (scm:define
+    Bar
+    (scm:lambda (value0) (scm:cons (scm:quote Bar) (scm:vector value0))))
   )

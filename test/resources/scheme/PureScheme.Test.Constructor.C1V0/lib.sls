@@ -1,8 +1,8 @@
 (library
   (PureScheme.Test.Constructor.C1V0 lib)
   (export Foo)
-  (import (rnrs))
+  (import (prefix (rnrs) scm:))
 
 
-  (define Foo (cons (quote Foo) (vector)))
+  (scm:define Foo (scm:cons (scm:quote Foo) (scm:vector)))
   )

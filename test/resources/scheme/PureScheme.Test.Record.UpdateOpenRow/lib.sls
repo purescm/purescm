@@ -1,14 +1,14 @@
 (library
   (PureScheme.Test.Record.UpdateOpenRow lib)
   (export foo)
-  (import (rnrs))
+  (import (prefix (rnrs) scm:))
 
 
-  (define
+  (scm:define
     foo
-    (lambda
+    (scm:lambda
       (v)
-      (let
-        (($ht (hashtable-copy v)))
-        (begin (hashtable-set! $ht "bar" 42) $ht))))
+      (scm:let*
+        (($ht (scm:hashtable-copy v)))
+        (scm:begin (scm:hashtable-set! $ht "bar" 42) $ht))))
   )

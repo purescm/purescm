@@ -1,8 +1,8 @@
 (library
   (PureScheme.Test.Literal.IntegerArray lib)
   (export foo)
-  (import (rnrs))
+  (import (prefix (rnrs) scm:))
 
 
-  (define foo (vector 23 42))
+  (scm:define foo (scm:vector 23 42))
   )

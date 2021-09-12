@@ -1,16 +1,16 @@
 (library
   (PureScheme.Test.Binder.String lib)
   (export match)
-  (import (rnrs))
+  (import (prefix (rnrs) scm:))
 
 
-  (define
+  (scm:define
     match
-    (lambda
+    (scm:lambda
       (v)
-      (cond
-        ((string=? v "foo") 0)
-        ((string=? v "bar") 1)
-        (#t 2)
-        (else (error #f "Failed pattern match")))))
+      (scm:cond
+        ((scm:and (scm:string=? v "foo")) 0)
+        ((scm:and (scm:string=? v "bar")) 1)
+        ((scm:and #t) 2)
+        (scm:else (scm:error #f "Failed pattern match")))))
   )

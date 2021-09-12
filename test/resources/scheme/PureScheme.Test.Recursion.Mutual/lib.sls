@@ -1,32 +1,32 @@
 (library
   (PureScheme.Test.Recursion.Mutual lib)
   (export foo bar)
-  (import (rnrs))
+  (import (prefix (rnrs) scm:))
 
 
-  (define
+  (scm:define
     foo
-    (lambda
+    (scm:lambda
       (v)
-      (lambda
+      (scm:lambda
         (v1)
-        (cond
-          ((= v 0) ((foo 1) v1))
-          ((= v 1) ((bar 2) v1))
-          ((= v 2) v1)
-          (#t 0)
-          (else (error #f "Failed pattern match"))))))
+        (scm:cond
+          ((scm:and (scm:= v 0) #t) ((foo 1) v1))
+          ((scm:and (scm:= v 1) #t) ((bar 2) v1))
+          ((scm:and (scm:= v 2) #t) v1)
+          ((scm:and #t #t) 0)
+          (scm:else (scm:error #f "Failed pattern match"))))))
 
-  (define
+  (scm:define
     bar
-    (lambda
+    (scm:lambda
       (v)
-      (lambda
+      (scm:lambda
         (v1)
-        (cond
-          ((= v 0) ((bar 1) v1))
-          ((= v 1) ((foo 2) v1))
-          ((= v 2) v1)
-          (#t 0)
-          (else (error #f "Failed pattern match"))))))
+        (scm:cond
+          ((scm:and (scm:= v 0) #t) ((bar 1) v1))
+          ((scm:and (scm:= v 1) #t) ((foo 2) v1))
+          ((scm:and (scm:= v 2) #t) v1)
+          ((scm:and #t #t) 0)
+          (scm:else (scm:error #f "Failed pattern match"))))))
   )

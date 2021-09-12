@@ -2,25 +2,25 @@
   (PureScheme.Test.Binder.Mixed lib)
   (export foo)
   (import
-    (rnrs)
+    (prefix (rnrs) scm:)
     (prefix (Data.Semiring lib) Data.Semiring.)
     (prefix (Prelude lib) Prelude.))
 
 
-  (define
+  (scm:define
     foo
-    (lambda
+    (scm:lambda
       (v)
-      (lambda
+      (scm:lambda
         (v1)
-        (cond
-          ((and (= v 0) (= v1 0)) 0)
-          ((and (= v 0) (= v1 1)) 1)
-          ((and (= v 1) (= v1 0)) 10)
-          ((= v1 2) 2)
-          ((= v 3) 30)
-          ((= v 4) v1)
-          ((= v1 5) v)
-          (#t (+ v v1))
-          (else (error #f "Failed pattern match"))))))
+        (scm:cond
+          ((scm:and (scm:= v 0) (scm:= v1 0)) 0)
+          ((scm:and (scm:= v 0) (scm:= v1 1)) 1)
+          ((scm:and (scm:= v 1) (scm:= v1 0)) 10)
+          ((scm:and #t (scm:= v1 2)) 2)
+          ((scm:and (scm:= v 3) #t) 30)
+          ((scm:and (scm:= v 4) #t) v1)
+          ((scm:and #t (scm:= v1 5)) v)
+          ((scm:and #t #t) (+ v v1))
+          (scm:else (scm:error #f "Failed pattern match"))))))
   )

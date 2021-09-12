@@ -1,10 +1,10 @@
 (library
   (PureScheme.Test.Literal.Bool lib)
   (export t f)
-  (import (rnrs))
+  (import (prefix (rnrs) scm:))
 
 
-  (define t #t)
+  (scm:define t #t)
 
-  (define f #f)
+  (scm:define f #f)
   )

@@ -2,32 +2,35 @@
   (PureScheme.Test.Let.LambdasInFunction lib)
   (export foo)
   (import
-    (rnrs)
+    (prefix (rnrs) scm:)
     (prefix (Data.Ring lib) Data.Ring.)
     (prefix (Data.Semiring lib) Data.Semiring.)
     (prefix (Prelude lib) Prelude.))
 
 
-  (define
+  (scm:define
     foo
-    (lambda
+    (scm:lambda
       (dictRing)
-      (lambda
+      (scm:lambda
         (x)
-        (lambda
+        (scm:lambda
           (y)
-          (let
-            ((sub (lambda (a) (lambda (b) (((Data.Ring.sub dictRing) x) y))))
-              (add
-                (lambda
+          (scm:let*
+            ((sub
+                (scm:lambda
                   (a)
-                  (lambda
+                  (scm:lambda (b) (((Data.Ring.sub dictRing) x) y))))
+              (add
+                (scm:lambda
+                  (a)
+                  (scm:lambda
                     (b)
                     (((Data.Semiring.add
-                          ((hashtable-ref
+                          ((scm:hashtable-ref
                               dictRing
                               "Semiring0"
-                              (error #f "Key not found"))
+                              (scm:error #f "Key not found"))
                             Prim.undefined))
                         x)
                       y)))))

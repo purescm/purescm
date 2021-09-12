@@ -2,7 +2,7 @@
   (PureScheme.Test.ReExport.Main lib)
   (export main)
   (import
-    (rnrs)
+    (prefix (rnrs) scm:)
     (prefix (Data.Semiring lib) Data.Semiring.)
     (prefix (Prelude lib) Prelude.)
     (prefix (PureScheme.Test.ReExport.Bar lib) PureScheme.Test.ReExport.Bar.)
@@ -12,7 +12,7 @@
     (prefix (PureScheme.Test.ReExport.Foo lib) PureScheme.Test.ReExport.Foo.))
 
 
-  (define
+  (scm:define
     main
     (+ PureScheme.Test.ReExport.Foo.foo PureScheme.Test.ReExport.Bar.bar))
   )

@@ -1,23 +1,26 @@
 (library
   (PureScheme.Test.Record.UpdateClosedRow lib)
   (export foo foo')
-  (import (rnrs))
+  (import (prefix (rnrs) scm:))
 
 
-  (define
+  (scm:define
     foo
-    (let
-      (($ht (make-hashtable string-hash string=? 2)))
-      (begin (hashtable-set! $ht "bar" 23) (hashtable-set! $ht "baz" 42) $ht)))
+    (scm:let*
+      (($ht (scm:make-hashtable scm:string-hash scm:string=? 2)))
+      (scm:begin
+        (scm:hashtable-set! $ht "bar" 23)
+        (scm:hashtable-set! $ht "baz" 42)
+        $ht)))
 
-  (define
+  (scm:define
     foo'
-    (let
+    (scm:let*
       ((v foo))
-      (let
-        (($ht (make-hashtable string-hash string=? 2)))
-        (begin
-          (hashtable-set! $ht "bar" 69)
-          (hashtable-set! $ht "baz" 420)
+      (scm:let*
+        (($ht (scm:make-hashtable scm:string-hash scm:string=? 2)))
+        (scm:begin
+          (scm:hashtable-set! $ht "bar" 69)
+          (scm:hashtable-set! $ht "baz" 420)
           $ht))))
   )

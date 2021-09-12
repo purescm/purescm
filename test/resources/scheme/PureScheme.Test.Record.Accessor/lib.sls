@@ -1,16 +1,19 @@
 (library
   (PureScheme.Test.Record.Accessor lib)
   (export foo bar baz)
-  (import (rnrs))
+  (import (prefix (rnrs) scm:))
 
 
-  (define
+  (scm:define
     foo
-    (let
-      (($ht (make-hashtable string-hash string=? 2)))
-      (begin (hashtable-set! $ht "bar" 23) (hashtable-set! $ht "baz" 42) $ht)))
+    (scm:let*
+      (($ht (scm:make-hashtable scm:string-hash scm:string=? 2)))
+      (scm:begin
+        (scm:hashtable-set! $ht "bar" 23)
+        (scm:hashtable-set! $ht "baz" 42)
+        $ht)))
 
-  (define baz (hashtable-ref foo "baz" (error #f "Key not found")))
+  (scm:define baz (scm:hashtable-ref foo "baz" (scm:error #f "Key not found")))
 
-  (define bar (hashtable-ref foo "bar" (error #f "Key not found")))
+  (scm:define bar (scm:hashtable-ref foo "bar" (scm:error #f "Key not found")))
   )

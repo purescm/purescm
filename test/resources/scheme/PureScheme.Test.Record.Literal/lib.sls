@@ -1,12 +1,15 @@
 (library
   (PureScheme.Test.Record.Literal lib)
   (export foo)
-  (import (rnrs))
+  (import (prefix (rnrs) scm:))
 
 
-  (define
+  (scm:define
     foo
-    (let
-      (($ht (make-hashtable string-hash string=? 2)))
-      (begin (hashtable-set! $ht "bar" 23) (hashtable-set! $ht "baz" 42) $ht)))
+    (scm:let*
+      (($ht (scm:make-hashtable scm:string-hash scm:string=? 2)))
+      (scm:begin
+        (scm:hashtable-set! $ht "bar" 23)
+        (scm:hashtable-set! $ht "baz" 42)
+        $ht)))
   )
