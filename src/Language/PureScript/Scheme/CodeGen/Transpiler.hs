@@ -382,6 +382,11 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
                     valuesAndBinders
           where
             go _value (NullBinder _ann) = []
+
+            go value (LiteralBinder _ann (ArrayLiteral binders))
+              = concatMapWithIndex
+                  (\i b -> (go (vectorRef value (Integer i)) b))
+                  binders
             go _value (LiteralBinder _ann _literal) = []
 
             -- Each identifier in a VarBinder will be replaced by its
