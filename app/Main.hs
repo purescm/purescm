@@ -1,7 +1,5 @@
 module Main where
 
-import Data.Maybe (fromJust, isJust)
-import Control.Monad (when)
 import System.Environment (getArgs)
 import Options (Options(..))
 import Build (build)
@@ -18,13 +16,14 @@ main = do
   IO.hSetBuffering IO.stdout IO.LineBuffering
   IO.hSetBuffering IO.stderr IO.LineBuffering
 
-  Options { optionOutput, optionRunModule } <- Options.runParser =<< getArgs
+  Options { optionOutput, optionRunFunction } <- Options.runParser =<< getArgs
   print' $ "Options: " <> optionOutput
   print' $ "    output: " <> optionOutput
-  print' $ "    runModule: " <> tshow optionRunModule
+  print' $ "    runFunction: " <> tshow optionRunFunction
   print' ""
 
   build optionOutput
 
-  when (isJust optionRunModule)
-    $ run optionOutput (fromJust optionRunModule)
+  case optionRunFunction of
+    Nothing -> pure ()
+    Just moduleAndFunction -> run optionOutput moduleAndFunction
