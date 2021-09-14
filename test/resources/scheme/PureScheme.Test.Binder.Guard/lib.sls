@@ -17,7 +17,7 @@
         (scm:lambda
           (a)
           (scm:cond
-            ((scm:and (scm:= v 1) #t)
+            ((scm:= v 1)
               (scm:cond
                 ((((Data.Eq.eq Data.Eq.eqInt) a) 2) 3)
                 ((((Data.Eq.eq Data.Eq.eqInt) a) 4) 5)

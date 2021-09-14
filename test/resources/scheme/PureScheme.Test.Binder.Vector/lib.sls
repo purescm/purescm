@@ -22,6 +22,6 @@
               (scm:= (scm:vector-ref v 0) 5)
               (scm:= (scm:vector-ref v 1) 6))
             7)
-          ((scm:and (scm:= (scm:vector-length v) 0)) 8)
+          ((scm:= (scm:vector-length v) 0) 8)
           (scm:else (scm:error #f "Failed pattern match"))))))
   )

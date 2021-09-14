@@ -15,7 +15,7 @@
       (scm:lambda
         (m)
         (scm:cond
-          ((scm:and #t #t)
+          (#t
             (scm:cond
               ((((Data.Ord.lessThan Data.Ord.ordInt) n) m) n)
               (Data.Boolean.otherwise m)

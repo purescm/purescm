@@ -18,6 +18,6 @@
             (scm:= (scm:hashtable-ref v "d" (scm:error #f "Key not found")) 5)
             (scm:= (scm:hashtable-ref v "e" (scm:error #f "Key not found")) 6))
           7)
-        ((scm:and) 8)
+        (#t 8)
         (scm:else (scm:error #f "Failed pattern match")))))
   )

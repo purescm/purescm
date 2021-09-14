@@ -31,7 +31,7 @@ inlineCommonBinaryOperators expr = expr
 -- TODO: write a test
 simplifyLogic :: SExpr -> SExpr
 
-simplifyLogic (List ((Symbol "and"):args)) =
+simplifyLogic (List ((Symbol "scm:and") : args)) =
   let
     go ((Symbol "#t") : xs) = go xs
     go (x : xs) = (x : go xs)
@@ -40,6 +40,6 @@ simplifyLogic (List ((Symbol "and"):args)) =
     case go args of
       [] -> Symbol "#t"
       [x]  -> x
-      xs -> app "and" xs
+      xs -> app "scm:and" xs
 
 simplifyLogic other = other

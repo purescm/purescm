@@ -15,7 +15,7 @@
     (scm:lambda
       (v)
       (scm:cond
-        ((scm:and (scm:eq? (scm:car v) (scm:quote Bar)) #t) v)
-        ((scm:and (scm:eq? (scm:car v) (scm:quote Baz))) Baz)
+        ((scm:eq? (scm:car v) (scm:quote Bar)) v)
+        ((scm:eq? (scm:car v) (scm:quote Baz)) Baz)
         (scm:else (scm:error #f "Failed pattern match")))))
   )
