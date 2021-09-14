@@ -16,9 +16,9 @@
       (scm:lambda
         (v1)
         (scm:cond
-          ((scm:and #t (scm:= v1 0)) v)
-          ((scm:and (scm:= v 0) #t) v1)
-          ((scm:and #t #t)
+          ((scm:= v1 0) v)
+          ((scm:= v 0) v1)
+          (#t
             (scm:cond
               ((((Data.Ord.greaterThan Data.Ord.ordInt) v) v1)
                 ((gcd (scm:- v v1)) v1))
