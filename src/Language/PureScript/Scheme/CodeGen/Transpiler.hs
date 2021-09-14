@@ -3,14 +3,8 @@ module Language.PureScript.Scheme.CodeGen.Transpiler where
 import Data.Text (Text)
 
 import Language.PureScript.Names
-       ( Ident
-       , Qualified(..)
-       , disqualify
-       , runIdent
-       , runModuleName
-       , runProperName
-       , showQualified
-       )
+       (Ident(..), Qualified(..),
+        disqualify, runModuleName, runProperName, showQualified)
 import Language.PureScript.PSString (PSString)
 import Language.PureScript.CoreFn.Module (Module(..))
 import Language.PureScript.CoreFn.Ann (Ann)
@@ -19,7 +13,6 @@ import Language.PureScript.CoreFn.Expr
        (Expr(..), Bind(..), CaseAlternative(..))
 import Language.PureScript.CoreFn.Binders (Binder(..))
 import Language.PureScript.AST.Literals (Literal(..))
-import Language.PureScript.CodeGen.JS.Common (identToJs)
 
 import Language.PureScript.Scheme.Util (concatMapWithIndex)
 import Language.PureScript.Scheme.CodeGen.SExpr (SExpr(..), everywhere)
@@ -31,12 +24,11 @@ import Language.PureScript.Scheme.CodeGen.Scheme
         makeHashtable, hashtableSetB, hashtableRef, hashtableCopy,
         error_)
 import Language.PureScript.Scheme.CodeGen.Case
-       ( Alternative(..)
-       , GuardedExpr
-       , toAlternatives
-       )
+       (Alternative(..), GuardedExpr, toAlternatives)
 
-import Language.PureScript.Scheme.CodeGen.Library ( Library(..) )
+import Language.PureScript.Scheme.CodeGen.Library (Library(..))
+
+import qualified Data.Text as Text
 
 
 moduleToLibrary :: Module Ann -> Library
@@ -45,9 +37,9 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
                         declarations)
   = Library
     { libraryName = runModuleName moduleName
-    , libraryExports = map identToJs exports
+    , libraryExports = map identToScheme exports
     , libraryImports = map (runModuleName . snd) imports
-    , libraryForeigns = map identToJs foreigns
+    , libraryForeigns = map identToScheme foreigns
     , libraryBody = libraryBody
     }
   where
@@ -66,7 +58,7 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
                    xs
       where
         def :: Ident -> Expr Ann -> SExpr
-        def ident expr = define (identToJs ident) (exprToScheme expr)
+        def ident expr = define (identToScheme ident) (exprToScheme expr)
 
     ----------------------------------------------------------------------------
 
@@ -81,7 +73,7 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
     exprToScheme (ObjectUpdate _ann object keysAndValues)
       = objectUpdateToScheme object keysAndValues
     exprToScheme (Abs _ann arg expr)
-      = lambda1 (identToJs arg) (exprToScheme expr)
+      = lambda1 (identToScheme arg) (exprToScheme expr)
     exprToScheme (App _ann function arg)
       = appToScheme function arg
     exprToScheme (Var _ann qualifiedIdent)
@@ -184,13 +176,13 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
       go fields
       where
         -- Here we build the nested curried lambda expressions.
-        go (x:xs) = lambda1 (identToJs x) (go xs)
+        go (x:xs) = lambda1 (identToScheme x) (go xs)
         -- Here we build the body if the most inner lambda expresison that
         -- returns the constructed data structure.
         -- If the data type doesn't take values then fields is an empty
         -- and only this branch is executed.
         go [] = cons (quote (Symbol (runProperName constructorName)))
-                     (vector (map (\field -> Symbol (identToJs field))
+                     (vector (map (\field -> Symbol (identToScheme field))
                                   fields))
 
     ----------------------------------------------------------------------------
@@ -229,13 +221,13 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
     varToScheme :: Qualified Ident -> SExpr
     varToScheme qualifiedIdent@(Qualified maybeModuleName ident) =
       case maybeModuleName of
-        Nothing -> Symbol (identToJs ident)
+        Nothing -> Symbol (identToScheme ident)
         Just moduleName'
-          | moduleName == moduleName' -> Symbol (identToJs ident)
+          | moduleName == moduleName' -> Symbol (identToScheme ident)
           | (runModuleName moduleName') == "Prim"
-            && (runIdent ident) == "undefined"
+            && (identToScheme ident) == "undefined"
             -> (error_ $ String "undefined")
-          | otherwise -> Symbol (showQualified identToJs qualifiedIdent)
+          | otherwise -> Symbol (showQualified identToScheme qualifiedIdent)
 
     ----------------------------------------------------------------------------
 
@@ -399,7 +391,7 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
             -- variable.
             -- We have to replace each occurrence of `m' with `v' and each
             -- occurrence of `n' with `v0'.
-            go value (VarBinder _ann ident) = [(identToJs ident, value)]
+            go value (VarBinder _ann ident) = [(identToScheme ident, value)]
 
             -- For a ConstructorBinder we have to replace each identifier in its
             -- binders with an access to the right index of the vector in the cdr
@@ -422,7 +414,7 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
             -- other possible replacements for the binder associated to the
             -- NamedBinder.
             go value (NamedBinder _ann ident binder) =
-              (:) (identToJs ident, value)
+              (:) (identToScheme ident, value)
                   (go value binder)
 
     ----------------------------------------------------------------------------
@@ -438,7 +430,7 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
               Rec xs -> map (\((_ann, ident), expr) -> binding ident expr) xs
 
         binding :: Ident -> Expr Ann -> (Text, SExpr)
-        binding ident expr = (identToJs ident, exprToScheme expr)
+        binding ident expr = (identToScheme ident, exprToScheme expr)
 
     ----------------------------------------------------------------------------
 
@@ -462,3 +454,12 @@ accessorToScheme' object property
   = hashtableRef object
                  (psStringToSExpr property)
                  (error_ $ String "Key not found") -- TODO: add sourcespan
+
+identToScheme :: Ident -> Text
+identToScheme (Ident name) = Text.concatMap identCharToText name
+identToScheme (GenIdent _ _) = error "GenIdent in identToScheme"
+identToScheme UnusedIdent = "$__unused"
+
+identCharToText :: Char -> Text
+identCharToText '\'' = "$prime"
+identCharToText c = Text.singleton c
