@@ -6,13 +6,13 @@ import Options.Applicative (Parser)
 
 data Options = Options
   { optionOutput :: Text
-  , optionRunModule :: Maybe Text
+  , optionRunFunction :: Maybe Text
   }
 
 parser :: Parser Options
 parser = Options
      <$> outputOption
-     <*> runModuleOption
+     <*> runFunctionOption
 
 outputOption :: Parser Text
 outputOption = Opts.strOption
@@ -21,12 +21,12 @@ outputOption = Opts.strOption
             <> Opts.metavar "PATH"
             <> Opts.value "output"
 
-runModuleOption :: Parser (Maybe Text)
-runModuleOption = Opts.optional
-                $ Opts.strOption
-                $ Opts.long "run"
-               <> Opts.help "Run a module"
-               <> Opts.metavar "MODULE"
+runFunctionOption :: Parser (Maybe Text)
+runFunctionOption = Opts.optional
+                  $ Opts.strOption
+                  $ Opts.long "run"
+                 <> Opts.help "Run a fully qualified function"
+                 <> Opts.metavar "FUNCTION"
 
 runParser :: [String] -> IO Options
 runParser = Opts.handleParseResult . execParserPure opts
