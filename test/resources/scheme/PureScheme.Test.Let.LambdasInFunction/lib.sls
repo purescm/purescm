@@ -30,7 +30,7 @@
                           ((scm:hashtable-ref
                               dictRing
                               "Semiring0"
-                              (scm:error #f "Key not found"))
+                              (scm:quote "Key not found: Semiring0"))
                             (scm:error #f "undefined")))
                         x)
                       y)))))
