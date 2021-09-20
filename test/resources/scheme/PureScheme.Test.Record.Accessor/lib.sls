@@ -13,7 +13,11 @@
         (scm:hashtable-set! $ht "baz" 42)
         $ht)))
 
-  (scm:define baz (scm:hashtable-ref foo "baz" (scm:error #f "Key not found")))
+  (scm:define
+    baz
+    (scm:hashtable-ref foo "baz" (scm:quote "Key not found: baz")))
 
-  (scm:define bar (scm:hashtable-ref foo "bar" (scm:error #f "Key not found")))
+  (scm:define
+    bar
+    (scm:hashtable-ref foo "bar" (scm:quote "Key not found: bar")))
   )
