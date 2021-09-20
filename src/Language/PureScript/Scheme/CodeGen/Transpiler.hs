@@ -322,6 +322,10 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
 
         binderToTest _value (VarBinder _ann _ident) = [t]
 
+        binderToTest value (ConstructorBinder (_, _, _, Just IsNewtype)
+                            _typeName _constructorName [binder])
+          = binderToTest value binder
+
         -- For a ConstructorBinder we have to emit at least one test, but more likely
         -- multiple tests.
         --
@@ -398,6 +402,10 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
             -- occurrence of `n' with `v0'.
             go value (VarBinder _ann ident) = [(identToScheme ident, value)]
 
+            go value (ConstructorBinder (_, _, _, Just IsNewtype)
+                      _typeName _constructorName [binder])
+              = go value binder
+
             -- For a ConstructorBinder we have to replace each identifier in its
             -- binders with an access to the right index of the vector in the cdr
             -- of the tagged pair holding the Constructor values.
@@ -458,7 +466,7 @@ accessorToScheme' :: SExpr -> PSString -> SExpr
 accessorToScheme' object property
   = hashtableRef object
                  (psStringToSExpr property)
-                 (error_ $ String "Key not found") -- TODO: add sourcespan
+                 (quote (String $ "Key not found: " <> property))
 
 identToScheme :: Ident -> Text
 identToScheme (Ident name) = Text.concatMap identCharToText name
