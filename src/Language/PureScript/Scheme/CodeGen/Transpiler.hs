@@ -398,6 +398,12 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
               = concatMapWithIndex
                   (\i b -> (go (vectorRef value (Integer i)) b))
                   binders
+
+            go value (LiteralBinder _ann (ObjectLiteral binders))
+              = concatMap
+                  (\(k, b) -> (go (accessorToScheme' value k) b))
+                  binders
+  
             go _value (LiteralBinder _ann _literal) = []
 
             -- Each identifier in a VarBinder will be replaced by its
