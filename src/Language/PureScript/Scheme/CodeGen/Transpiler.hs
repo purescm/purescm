@@ -476,7 +476,7 @@ accessorToScheme' :: SExpr -> PSString -> SExpr
 accessorToScheme' object property
   = hashtableRef object
                  (psStringToSExpr property)
-                 (quote (String $ "Key not found: " <> property))
+                 (String $ "Key not found: " <> property)
 
 identToScheme :: Ident -> Text
 identToScheme (Ident name) = Text.concatMap identCharToText name
