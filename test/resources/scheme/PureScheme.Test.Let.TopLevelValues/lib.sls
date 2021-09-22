@@ -7,5 +7,5 @@
     (prefix (Prelude lib) Prelude.))
 
 
-  (scm:define foo (scm:letrec* ((b 2) (a 1)) (scm:+ a b)))
+  (scm:define foo (scm:letrec* ((b 2) (a 1)) (scm:fx+ a b)))
   )

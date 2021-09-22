@@ -16,7 +16,7 @@
       (scm:cond
         ((scm:= v 0) 0)
         ((scm:= v 1) 1)
-        (#t (scm:+ (fibonacci (scm:- v 1)) (fibonacci (scm:- v 2))))
+        (#t (scm:fx+ (fibonacci (scm:fx- v 1)) (fibonacci (scm:fx- v 2))))
         (scm:else (scm:error #f "Failed pattern match")))))
 
   (scm:define main (Performance.Minibench.bench (scm:lambda (v) (fibonacci 5))))
