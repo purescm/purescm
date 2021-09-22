@@ -22,10 +22,6 @@
     (scm:lambda
       (dict)
       (scm:cond
-        (#t
-          (scm:hashtable-ref
-            dict
-            "compose"
-            (scm:quote "Key not found: compose")))
+        (#t (scm:hashtable-ref dict "compose" "Key not found: compose"))
         (scm:else (scm:error #f "Failed pattern match")))))
   )

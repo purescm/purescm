@@ -14,5 +14,5 @@
 
   (scm:define
     main
-    (scm:+ PureScheme.Test.ReExport.Foo.foo PureScheme.Test.ReExport.Bar.bar))
+    (scm:fx+ PureScheme.Test.ReExport.Foo.foo PureScheme.Test.ReExport.Bar.bar))
   )

@@ -23,6 +23,6 @@
             (scm:hashtable-set!
               $ht
               "baz"
-              (scm:hashtable-ref v "baz" (scm:quote "Key not found: baz")))
+              (scm:hashtable-ref v "baz" "Key not found: baz"))
             $ht)))))
   )

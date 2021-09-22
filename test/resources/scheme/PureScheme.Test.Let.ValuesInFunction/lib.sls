@@ -14,5 +14,5 @@
       (x)
       (scm:lambda
         (y)
-        (scm:letrec* ((b 2) (a 1)) (scm:- (scm:+ x a) (scm:+ y b))))))
+        (scm:letrec* ((b 2) (a 1)) (scm:fx- (scm:fx+ x a) (scm:fx+ y b))))))
   )

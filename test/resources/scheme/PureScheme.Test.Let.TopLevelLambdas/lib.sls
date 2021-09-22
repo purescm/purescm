@@ -11,7 +11,7 @@
   (scm:define
     foo
     (scm:letrec*
-      ((sub (scm:lambda (x) (scm:lambda (y) (scm:- x y))))
-        (add (scm:lambda (x) (scm:lambda (y) (scm:+ x y)))))
+      ((sub (scm:lambda (x) (scm:lambda (y) (scm:fx- x y))))
+        (add (scm:lambda (x) (scm:lambda (y) (scm:fx+ x y)))))
       ((add ((sub 1) 2)) ((add 3) 4))))
   )
