@@ -18,20 +18,20 @@ inlineCommonBinaryOperators :: SExpr -> SExpr
 
 inlineCommonBinaryOperators (List [List [List [Symbol op, Symbol klass], x], y])
   | klass == "Data.Semiring.semiringInt" && op == "Data.Semiring.add"
-  = app "scm:+" [x, y]
+  = app "scm:fx+" [x, y]
   | klass == "Data.Ring.ringInt" && op == "Data.Ring.sub"
-  = app "scm:-" [x, y]
+  = app "scm:fx-" [x, y]
   | klass == "Data.Ring.ringNumber" && op == "Data.Ring.sub"
-  = app "scm:-" [x, y]
+  = app "scm:fl-" [x, y]
   | klass == "Data.Semiring.semiringNumber" && op == "Data.Semiring.add"
-  = app "scm:+" [x, y]
+  = app "scm:fl+" [x, y]
   | klass == "Data.Semiring.semiringNumber" && op == "Data.Semiring.mul"
-  = app "scm:*" [x, y]
+  = app "scm:fl*" [x, y]
   | klass == "Data.EuclideanRing.euclideanRingNumber"
     && op == "Data.EuclideanRing.div"
-  = app "scm:/" [x, y]
+  = app "scm:fl/" [x, y]
   | klass == "Data.Ord.ordNumber" && op == "Data.Ord.lessThan"
-  = app "scm:<" [x, y]
+  = app "scm:fl<?" [x, y]
 
 inlineCommonBinaryOperators expr = expr
 
