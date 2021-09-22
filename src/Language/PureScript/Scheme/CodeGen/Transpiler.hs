@@ -322,6 +322,13 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
 
         binderToTest _value (VarBinder _ann _ident) = [t]
 
+        -- When the constructor is a newtype we're not provided with the usual
+        -- structure we're using for constructors (pair . [vals]). Instead we
+        -- are handed with just the inner type.
+        -- There are guarantees that there will be just a single binder but this
+        -- is unfortunately not encoded in the CoreFn data type. The official
+        -- PureScript backend is doing exactly the same and who should we trust
+        -- otherwise?
         binderToTest value (ConstructorBinder (_, _, _, Just IsNewtype)
                             _typeName _constructorName [binder])
           = binderToTest value binder
@@ -402,6 +409,9 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
             -- occurrence of `n' with `v0'.
             go value (VarBinder _ann ident) = [(identToScheme ident, value)]
 
+            -- When the constructor is a newtype we have to analyze just the
+            -- binder. Check the comment for binderToTest about the same case
+            -- for more information.
             go value (ConstructorBinder (_, _, _, Just IsNewtype)
                       _typeName _constructorName [binder])
               = go value binder
