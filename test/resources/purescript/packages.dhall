@@ -34,5 +34,11 @@ in  upstream
     with unsafe-coerce.repo = "https://github.com/purescm/purescript-unsafe-coerce"
     with unsafe-coerce.version = "8e077884b7843892ddd889ad50367452fa397423"
 
+    with unfoldable.repo = "https://github.com/purescm/purescript-unfoldable"
+    with unfoldable.version = "d36166652dfdce3f55e93aecb21657dafb66e398"
+
+    with foldable-traversable.repo = "https://github.com/purescm/purescript-foldable-traversable"
+    with foldable-traversable.version = "61db781115f7f8e1c4cab46d619022eb99c3df06"
+
     with minibench.repo = "https://github.com/purescm/purescript-minibench"
     with minibench.version = "36c106da2287f52653eaff9d2e3670285c1d41c9"

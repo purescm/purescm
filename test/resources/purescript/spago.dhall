@@ -1,5 +1,5 @@
 { name = "my-project"
-, dependencies = [ "prelude", "psci-support", "console", "minibench" ]
+, dependencies = [ "console", "effect", "minibench", "prelude", "psci-support" ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs" ]
 , backend = "purescm"
