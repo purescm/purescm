@@ -21,6 +21,8 @@ inlineCommonBinaryOperators (List [List [List [Symbol op, Symbol klass], x], y])
   = app "scm:fx+" [x, y]
   | klass == "Data.Ring.ringInt" && op == "Data.Ring.sub"
   = app "scm:fx-" [x, y]
+  | klass == "Data.Ord.ordInt" && op == "Data.Ord.lessThan"
+  = app "scm:fx<?" [x, y]
   | klass == "Data.Ring.ringNumber" && op == "Data.Ring.sub"
   = app "scm:fl-" [x, y]
   | klass == "Data.Semiring.semiringNumber" && op == "Data.Semiring.add"
