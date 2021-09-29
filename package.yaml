@@ -35,6 +35,7 @@ dependencies:
 - process
 - purescript
 - purescript-cst
+- random
 - text
 - turtle
 

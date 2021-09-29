@@ -4,6 +4,7 @@ packages:
   - .
 
 extra-deps:
+- random-1.2.1
 # Purescript wants this version
 - language-javascript-0.7.0.0
 

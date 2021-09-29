@@ -2,6 +2,13 @@ module Language.PureScript.Scheme.CodeGen.Scheme where
 
 import Data.Text (Text)
 import Language.PureScript.Scheme.CodeGen.SExpr (SExpr(..))
+import Language.PureScript.PSString (mkString)
+
+import qualified GHC.IO.Unsafe as Unsafe
+import qualified Data.Text as Text
+import qualified System.Random.Stateful as Random
+import qualified Control.Monad as Monad
+
 
 
 -- Helpers ---------------------------------------------------------------------
@@ -26,6 +33,16 @@ stringHash' = Symbol "scm:string-hash"
 
 
 -- Scheme special forms --------------------------------------------------------
+
+-- TODO: this is really a monadic action, but we didn't want to bother wrapping
+-- everything in a State monad to give us fresh identifiers, so we cheat a
+-- little and pretend it's pure. It's really not a big deal, but should get
+-- eventually fixed once we have a more stable compiling pipeline
+genIdent :: () -> String
+{-# NOINLINE genIdent #-}
+genIdent _
+  = Unsafe.unsafePerformIO
+  $ Monad.replicateM 24 (Random.uniformRM ('A', 'Z') Random.globalStdGen)
 
 define :: Text -> SExpr -> SExpr
 define name expr = List [Symbol "scm:define", Symbol name, expr]
@@ -63,13 +80,13 @@ condWithElse_ clauses maybeElse
     elseExpr = case maybeElse of
       Just elseExpr' -> elseExpr'
                         -- TODO: add sourcespan
-      Nothing -> error_ (String "Failed pattern match")
+      Nothing -> error_ (String $ "Failed pattern match " <> mkString (Text.pack $ genIdent ()))
 
 condWithElse :: [(SExpr, SExpr)] -> SExpr -> SExpr
 condWithElse clauses elseExpr = condWithElse_ clauses (Just elseExpr)
 
 cond :: [(SExpr, SExpr)] -> SExpr
-cond clauses = condWithElse_ clauses Nothing 
+cond clauses = condWithElse_ clauses Nothing
 
 begin :: [SExpr] -> SExpr
 begin xs = app "scm:begin" xs
