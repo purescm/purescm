@@ -10,6 +10,7 @@ import PureScheme.BenchmarkTest.FibonacciTco as FibonacciTco
 import PureScheme.BenchmarkTest.Ackermann as Ackermann
 import PureScheme.BenchmarkTest.AckermannCps as AckermannCps
 import PureScheme.BenchmarkTest.RecordUpdate as RecordUpdate
+import PureScheme.BenchmarkTest.ListInsert as ListInsert
 
 bench
   :: forall a
@@ -57,3 +58,10 @@ main = do
   bench "RecordUpdate   10000" 1000 (\_ -> RecordUpdate.test 10000)
   bench "RecordUpdate  100000" 1000 (\_ -> RecordUpdate.test 100000)
   bench "RecordUpdate 1000000" 1000 (\_ -> RecordUpdate.test 1000000)
+
+  -- List insert --
+  bench "ListInsert    1000" 1000 (\_ -> ListInsert.test 1000)
+  bench "ListInsert   10000" 1000 (\_ -> ListInsert.test 10000)
+  bench "ListInsert  100000" 1000 (\_ -> ListInsert.test 100000)
+  bench "ListInsert 1000000" 1000 (\_ -> ListInsert.test 1000000)
+
