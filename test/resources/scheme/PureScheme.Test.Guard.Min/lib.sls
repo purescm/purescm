@@ -19,6 +19,10 @@
             (scm:cond
               ((((Data.Ord.lessThan Data.Ord.ordInt) n) m) n)
               (Data.Boolean.otherwise m)
-              (scm:else (scm:error #f "Failed pattern match"))))
-          (scm:else (scm:error #f "Failed pattern match"))))))
+              (scm:else
+                (scm:error
+                  #f
+                  "Failed pattern match NLWWVIBZJNCWDULPATLTCSXV"))))
+          (scm:else
+            (scm:error #f "Failed pattern match TBVPQFWDBPJKTXPEPHSVFINO"))))))
   )

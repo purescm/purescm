@@ -19,5 +19,6 @@
             (scm:= (scm:hashtable-ref v "e" "Key not found: e") 6))
           7)
         (#t 8)
-        (scm:else (scm:error #f "Failed pattern match")))))
+        (scm:else
+          (scm:error #f "Failed pattern match LHVCPOGMPKVUZPCLQFRZXCZS")))))
   )

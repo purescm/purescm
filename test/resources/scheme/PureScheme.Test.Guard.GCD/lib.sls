@@ -23,6 +23,10 @@
               ((((Data.Ord.greaterThan Data.Ord.ordInt) v) v1)
                 ((gcd (scm:fx- v v1)) v1))
               (Data.Boolean.otherwise ((gcd v) (scm:fx- v1 v)))
-              (scm:else (scm:error #f "Failed pattern match"))))
-          (scm:else (scm:error #f "Failed pattern match"))))))
+              (scm:else
+                (scm:error
+                  #f
+                  "Failed pattern match RAITESLFANJGPDSWKSJFLBFW"))))
+          (scm:else
+            (scm:error #f "Failed pattern match VMKMWTZLJRKZKPOQOVBMYADG"))))))
   )

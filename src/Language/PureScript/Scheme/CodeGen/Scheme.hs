@@ -34,6 +34,10 @@ stringHash' = Symbol "scm:string-hash"
 
 -- Scheme special forms --------------------------------------------------------
 
+g :: Random.AtomicGenM Random.StdGen
+{-# NOINLINE g #-}
+g = Unsafe.unsafePerformIO $ Random.newAtomicGenM $ Random.mkStdGen 1337
+
 -- TODO: this is really a monadic action, but we didn't want to bother wrapping
 -- everything in a State monad to give us fresh identifiers, so we cheat a
 -- little and pretend it's pure. It's really not a big deal, but should get
@@ -42,7 +46,7 @@ genIdent :: () -> String
 {-# NOINLINE genIdent #-}
 genIdent _
   = Unsafe.unsafePerformIO
-  $ Monad.replicateM 24 (Random.uniformRM ('A', 'Z') Random.globalStdGen)
+  $ Monad.replicateM 24 (Random.uniformRM ('A', 'Z') g)
 
 define :: Text -> SExpr -> SExpr
 define name expr = List [Symbol "scm:define", Symbol name, expr]

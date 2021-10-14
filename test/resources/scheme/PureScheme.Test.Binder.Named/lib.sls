@@ -17,5 +17,6 @@
       (scm:cond
         ((scm:eq? (scm:car v) (scm:quote Bar)) v)
         ((scm:eq? (scm:car v) (scm:quote Baz)) Baz)
-        (scm:else (scm:error #f "Failed pattern match")))))
+        (scm:else
+          (scm:error #f "Failed pattern match VBZOMWLRVZWBTKVGWMHNGTLV")))))
   )

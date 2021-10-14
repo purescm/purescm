@@ -20,5 +20,6 @@
         ((scm:eq? (scm:car v) (scm:quote Qux))
           (Qux (scm:vector-ref (scm:cdr v) 0)))
         ((scm:eq? (scm:car v) (scm:quote Qux)) (Qux 3))
-        (scm:else (scm:error #f "Failed pattern match")))))
+        (scm:else
+          (scm:error #f "Failed pattern match QHEMZPJFKWGSEWMXZRUIVRPQ")))))
   )

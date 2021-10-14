@@ -15,7 +15,8 @@
           ((scm:= v 1) ((bar 2) v1))
           ((scm:= v 2) v1)
           (#t 0)
-          (scm:else (scm:error #f "Failed pattern match"))))))
+          (scm:else
+            (scm:error #f "Failed pattern match ADQBWTXGMZDGKWCBKJRSVLNL"))))))
 
   (scm:define
     bar
@@ -28,5 +29,6 @@
           ((scm:= v 1) ((foo 2) v1))
           ((scm:= v 2) v1)
           (#t 0)
-          (scm:else (scm:error #f "Failed pattern match"))))))
+          (scm:else
+            (scm:error #f "Failed pattern match UADOWQGWKSLUVTSLWVKDUAGN"))))))
   )

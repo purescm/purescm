@@ -23,5 +23,6 @@
       (dict)
       (scm:cond
         (#t (scm:hashtable-ref dict "compose" "Key not found: compose"))
-        (scm:else (scm:error #f "Failed pattern match")))))
+        (scm:else
+          (scm:error #f "Failed pattern match MNJSIMEOGAXBDNZHCLVGSYOA")))))
   )
