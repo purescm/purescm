@@ -34,9 +34,16 @@ stringHash' = Symbol "scm:string-hash"
 
 -- Scheme special forms --------------------------------------------------------
 
+-- This is a nasty GHC bug about the "magic unsafePerformIO tricks".
+-- Inlining both definitions is a known workaround.
+-- See https://gitlab.haskell.org/ghc/ghc/-/issues/19413
+gIO :: IO (Random.AtomicGenM Random.StdGen)
+{-# NOINLINE gIO #-}
+gIO = Random.newAtomicGenM $ Random.mkStdGen 1337
+
 g :: Random.AtomicGenM Random.StdGen
 {-# NOINLINE g #-}
-g = Unsafe.unsafePerformIO $ Random.newAtomicGenM $ Random.mkStdGen 1337
+g = Unsafe.unsafePerformIO gIO
 
 -- TODO: this is really a monadic action, but we didn't want to bother wrapping
 -- everything in a State monad to give us fresh identifiers, so we cheat a

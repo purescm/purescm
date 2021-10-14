@@ -44,6 +44,10 @@ ghc-options:
 - -Wcompat
 - -Wincomplete-record-updates
 - -Wredundant-constraints
+# These flags are required because we're using unsafePerformIO.
+# We'll get rid of these once we have fresh identifiers in a monad
+- -fno-cse
+- -fno-full-laziness
 
 default-extensions:
 - DeriveDataTypeable
