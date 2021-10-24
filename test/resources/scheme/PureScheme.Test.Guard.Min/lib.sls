@@ -17,7 +17,7 @@
         (scm:cond
           (#t
             (scm:cond
-              ((((Data.Ord.lessThan Data.Ord.ordInt) n) m) n)
+              ((scm:fx<? n m) n)
               (Data.Boolean.otherwise m)
               (scm:else (scm:error #f "Failed pattern match"))))
           (scm:else (scm:error #f "Failed pattern match"))))))
