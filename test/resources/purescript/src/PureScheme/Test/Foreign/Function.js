@@ -1,0 +1,1 @@
+exports.inc = function(n) { return n + 1; };
