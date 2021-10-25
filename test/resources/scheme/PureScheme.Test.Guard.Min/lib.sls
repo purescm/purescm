@@ -15,10 +15,7 @@
       (scm:lambda
         (m)
         (scm:cond
-          (#t
-            (scm:cond
-              ((scm:fx<? n m) n)
-              (Data.Boolean.otherwise m)
-              (scm:else (scm:error #f "Failed pattern match"))))
+          ((scm:fx<? n m) n)
+          (Data.Boolean.otherwise m)
           (scm:else (scm:error #f "Failed pattern match"))))))
   )
