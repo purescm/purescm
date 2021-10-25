@@ -235,32 +235,34 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
     caseToScheme values caseAlternatives =
       cond clauses
       where
-        clauses = map condClause alternatives
+        clauses = concatMap condClause alternatives
         alternatives = toAlternatives values caseAlternatives
 
-        -- Emit a pair (condition, result) for each case alternative to be used
-        -- by cond.
-        condClause :: Alternative -> (SExpr, SExpr)
+        -- Emit a list of pairs (condition, result) for each case alternative to be used
+        -- by cond. Every case alternative can produce multiple of them because there
+        -- might be multiple guards for each of them.
+        condClause :: Alternative -> [(SExpr, SExpr)]
 
-        -- If the result is a guarded expression then the result of the clause
-        -- is a nested cond expression.
+        -- If the result is a guarded expression then we concatenate the guard
+        -- conditions to the conditions for the alternative.
         condClause (Alternative boundValues (Left guardedExprs))
-          = ( test boundValues
-            , cond $ map guardedExprToClause guardedExprs
-            )
+          = map guardedExprToClause guardedExprs
           where
             guardedExprToClause :: GuardedExpr -> (SExpr, SExpr)
             guardedExprToClause (guard, result)
-              = ( replaceVariables (exprToScheme guard)
-                                   (variablesToReplace boundValues)
-                , replaceVariables (exprToScheme result)
-                                   (variablesToReplace boundValues)
+              = ( test boundValues $ Just $
+                  replaceVariables
+                    (exprToScheme guard)
+                    (variablesToReplace boundValues)
+                , replaceVariables
+                    (exprToScheme result)
+                    (variablesToReplace boundValues)
                 )
 
         -- If the result is a simple expression then the result is just the
         -- expression.
         condClause (Alternative boundValues (Right result))
-          = (test boundValues, bindersToResult boundValues result)
+          = [(test boundValues Nothing, bindersToResult boundValues result)]
 
         -- Emit the test for a cond clause.
         -- In scheme: (cond ((and test1a test1b) result1) ...)
@@ -285,11 +287,12 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
         --     (cond ((and (eq? (car v) 'Foo) cond1)  result1)
         --           ((and (eq? (car v) 'Foo) cond2)) result2)
         -- TODO: Maybe we should avoid the repeating of the first check.
-        test :: [(Expr Ann, Binder Ann)] -> SExpr
-        test valueAndBinders =
-          and_ (concatMap (\(value, binder) -> binderToTest (exprToScheme value)
-                                                            binder)
-                          valueAndBinders)
+        test :: [(Expr Ann, Binder Ann)] -> Maybe SExpr -> SExpr
+        test valueAndBinders maybeGuard = and_ $
+          concatMap (\(value, binder) -> binderToTest (exprToScheme value) binder) valueAndBinders
+          <> case maybeGuard of
+              Nothing -> []
+              Just g -> [g]
 
         -- Emit a cond clause test for each value and binder.
         -- E.g.: (value: 23, binder: 42) -> (= 23 42)
