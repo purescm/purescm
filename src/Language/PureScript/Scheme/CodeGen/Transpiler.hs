@@ -287,6 +287,9 @@ moduleToLibrary (Module _sourceSpan _comments moduleName _path
         --     (cond ((and (eq? (car v) 'Foo) cond1)  result1)
         --           ((and (eq? (car v) 'Foo) cond2)) result2)
         -- TODO: Maybe we should avoid the repeating of the first check.
+        --
+        -- The additional guard parameter is so that we can include the guard
+        -- conditions when handling a guarded expression.
         test :: [(Expr Ann, Binder Ann)] -> Maybe SExpr -> SExpr
         test valueAndBinders maybeGuard = and_ $
           concatMap (\(value, binder) -> binderToTest (exprToScheme value) binder) valueAndBinders
