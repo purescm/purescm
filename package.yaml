@@ -1,9 +1,9 @@
 name: purescm
 version: "0.0.1"
 
-license: AGPL-3
-license-file: LICENSE.txt
-copyright: 2021 Tancredi Orlando
+license: Apache-2.0
+license-file: LICENSE
+copyright: 2021-2023 Tancredi Orlando, Fabrizio Ferrai
 
 author:
 - Tancredi Orlando <tancredi.orlando@gmail.com>
@@ -23,7 +23,7 @@ description: |
 extra-source-files:
 - stack.yaml
 - README.md
-- LICENSE.txt
+- LICENSE
 
 dependencies:
 - base >= 4.7 && < 5
