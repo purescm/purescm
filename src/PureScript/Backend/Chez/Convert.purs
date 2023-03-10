@@ -3,9 +3,7 @@ module PureScript.Backend.Chez.Convert where
 import Prelude
 
 import Data.Argonaut as Json
-import Data.Array as A
 import Data.Array as Array
-import Data.Array.NonEmpty as NEA
 import Data.Array.NonEmpty as NonEmptyArray
 import Data.Maybe (Maybe(..))
 import Data.Newtype (wrap)
@@ -28,7 +26,7 @@ codegenModule { name, bindings, exports } =
     name' = coerce name
 
     exports' :: Array String
-    exports' = coerce $ A.fromFoldable exports
+    exports' = coerce $ Array.fromFoldable exports
 
     bindings' :: Array ChezExpr
     bindings' = Array.concat $ codegenTopLevelBindingGroup <$> bindings
@@ -56,7 +54,7 @@ codegenBindings = map (coerce $ uncurry S.define) <<< map (second go)
       codegenLiteral l
 
     App f p ->
-      NEA.foldl1 S.app $ NEA.cons (go f) (go <$> p)
+      NonEmptyArray.foldl1 S.app $ NonEmptyArray.cons (go f) (go <$> p)
     Abs _ _ ->
       S.Identifier "abs"
 
