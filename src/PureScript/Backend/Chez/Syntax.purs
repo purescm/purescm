@@ -2,6 +2,7 @@ module PureScript.Backend.Chez.Syntax where
 
 import Prelude
 
+import Data.Array as Array
 import Data.Newtype (class Newtype)
 import Dodo as Dodo
 import Prim as Prim
@@ -54,3 +55,32 @@ library moduleName exports bindings =
             ]
         ]
     ] <> bindings
+
+record :: Prim.Array { k :: Prim.String, v :: ChezExpr } -> ChezExpr
+record r =
+  let
+    field :: { k :: Prim.String, v :: ChezExpr } -> ChezExpr
+    field { k, v } =
+      List
+        [ Identifier "scm:hashtable-set!"
+        , Identifier "$record"
+        , String k
+        , v
+        ]
+  in
+    List $
+      [ Identifier "scm:letrec*"
+      , List
+          [ List
+              [ Identifier "$record"
+              , List
+                  [ Identifier "scm:make-hashtable"
+                  , Identifier "scm:string-hash"
+                  , Identifier "scm:string=?"
+                  ]
+              ]
+          ]
+      ] <> (field <$> r) <> [ Identifier "$record" ]
+
+vector :: Prim.Array ChezExpr -> ChezExpr
+vector = List <<< Array.cons (Identifier "scm:vector")

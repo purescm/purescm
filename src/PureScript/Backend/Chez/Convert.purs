@@ -14,7 +14,7 @@ import Partial.Unsafe (unsafeCrashWith)
 import PureScript.Backend.Chez.Syntax (ChezExpr)
 import PureScript.Backend.Chez.Syntax as S
 import PureScript.Backend.Optimizer.Convert (BackendModule, BackendBindingGroup)
-import PureScript.Backend.Optimizer.CoreFn (Ident(..), Literal(..), ModuleName(..), Qualified(..))
+import PureScript.Backend.Optimizer.CoreFn (Ident(..), Literal(..), ModuleName(..), Prop(..), Qualified(..))
 import PureScript.Backend.Optimizer.Semantics (NeutralExpr(..))
 import PureScript.Backend.Optimizer.Syntax (BackendSyntax(..))
 import Safe.Coerce (coerce)
@@ -39,75 +39,78 @@ codegenTopLevelBindingGroup { recursive, bindings }
   | otherwise = codegenBindings bindings
 
 codegenBindings :: Array (Tuple Ident NeutralExpr) -> Array ChezExpr
-codegenBindings = map (coerce $ uncurry S.define) <<< map (second go)
-  where
-  go :: NeutralExpr -> ChezExpr
-  go (NeutralExpr s) = case s of
-    Var (Qualified (Just (ModuleName mn)) (Ident v)) ->
-      S.Identifier $ mn <> "." <> v
-    Var (Qualified _ (Ident v)) ->
-      S.Identifier v
-    Local _ _ ->
-      S.Identifier "local-variable"
+codegenBindings = map (coerce $ uncurry S.define) <<< map (second codegenExpr)
 
-    Lit l ->
-      codegenLiteral l
+codegenExpr :: NeutralExpr -> ChezExpr
+codegenExpr (NeutralExpr s) = case s of
+  Var (Qualified (Just (ModuleName mn)) (Ident v)) ->
+    S.Identifier $ mn <> "." <> v
+  Var (Qualified _ (Ident v)) ->
+    S.Identifier v
+  Local _ _ ->
+    S.Identifier "local-variable"
 
-    App f p ->
-      NonEmptyArray.foldl1 S.app $ NonEmptyArray.cons (go f) (go <$> p)
-    Abs _ _ ->
-      S.Identifier "abs"
+  Lit l ->
+    codegenLiteral l
 
-    UncurriedApp _ _ ->
-      S.Identifier "uncurried-app"
-    UncurriedAbs _ _ ->
-      S.Identifier "uncurried-abs"
+  App f p ->
+    NonEmptyArray.foldl1 S.app $ NonEmptyArray.cons (codegenExpr f) (codegenExpr <$> p)
+  Abs _ _ ->
+    S.Identifier "abs"
 
-    UncurriedEffectApp _ _ ->
-      S.Identifier "uncurried-effect-app"
-    UncurriedEffectAbs _ _ ->
-      S.Identifier "uncurried-effect-ab"
+  UncurriedApp _ _ ->
+    S.Identifier "uncurried-app"
+  UncurriedAbs _ _ ->
+    S.Identifier "uncurried-abs"
 
-    Accessor _ _ ->
-      S.Identifier "object-accessor"
-    Update _ _ ->
-      S.Identifier "object-update"
+  UncurriedEffectApp _ _ ->
+    S.Identifier "uncurried-effect-app"
+  UncurriedEffectAbs _ _ ->
+    S.Identifier "uncurried-effect-ab"
 
-    CtorSaturated _ _ _ _ _ ->
-      S.Identifier "ctor-saturated"
-    CtorDef _ _ _ _ ->
-      S.Identifier "ctor-def"
+  Accessor _ _ ->
+    S.Identifier "object-accessor"
+  Update _ _ ->
+    S.Identifier "object-update"
 
-    LetRec _ _ _ ->
-      S.Identifier "let-rec"
-    Let _ _ _ _ ->
-      S.Identifier "let"
-    Branch _ _ ->
-      S.Identifier "branch"
+  CtorSaturated _ _ _ _ _ ->
+    S.Identifier "ctor-saturated"
+  CtorDef _ _ _ _ ->
+    S.Identifier "ctor-def"
 
-    EffectBind _ _ _ _ ->
-      S.Identifier "effect-bind"
-    EffectPure _ ->
-      S.Identifier "effect-pure"
-    EffectDefer _ ->
-      S.Identifier "effect-defer"
+  LetRec _ _ _ ->
+    S.Identifier "let-rec"
+  Let _ _ _ _ ->
+    S.Identifier "let"
+  Branch _ _ ->
+    S.Identifier "branch"
 
-    PrimOp _ ->
-      S.Identifier "prim-op"
-    PrimEffect _ ->
-      S.Identifier "prim-effect"
-    PrimUndefined ->
-      S.Identifier "prim-undefined"
+  EffectBind _ _ _ _ ->
+    S.Identifier "effect-bind"
+  EffectPure _ ->
+    S.Identifier "effect-pure"
+  EffectDefer _ ->
+    S.Identifier "effect-defer"
 
-    Fail _ ->
-      S.Identifier "fail"
+  PrimOp _ ->
+    S.Identifier "prim-op"
+  PrimEffect _ ->
+    S.Identifier "prim-effect"
+  PrimUndefined ->
+    S.Identifier "prim-undefined"
 
-codegenLiteral :: forall a. Literal a -> ChezExpr
+  Fail _ ->
+    S.Identifier "fail"
+
+codegenLiteral :: Literal NeutralExpr -> ChezExpr
 codegenLiteral = case _ of
   LitInt i -> S.Integer $ wrap $ show i
   LitNumber n -> S.Float $ wrap $ show n
   LitString s -> S.String $ Json.stringify $ Json.fromString s
   LitChar c -> S.Identifier $ "#\\" <> CodeUnits.singleton c
   LitBoolean b -> S.Identifier $ if b then "#t" else "#f"
-  LitArray _ -> S.Identifier "literal-array"
-  LitRecord _ -> S.Identifier "literal-object"
+  LitArray a -> S.vector $ codegenExpr <$> a
+  LitRecord r -> S.record $ r <#> \(Prop k v) ->
+    { k: Json.stringify $ Json.fromString k
+    , v: codegenExpr v
+    }
