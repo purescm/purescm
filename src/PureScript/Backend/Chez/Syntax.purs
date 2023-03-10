@@ -27,11 +27,7 @@ printChezExpr e = case e of
   String x -> Dodo.text x
   Boolean x -> Dodo.text $ if x then "#t" else "#f"
   Identifier x -> Dodo.text x
-  List xs ->
-    let
-      xs' = printChezExpr <$> xs
-    in
-      Dodo.text "(" <> Dodo.words xs' <> Dodo.text ")"
+  List xs -> Dodo.text "(" <> Dodo.words (printChezExpr <$> xs) <> Dodo.text ")"
 
 app :: ChezExpr -> ChezExpr -> ChezExpr
 app f x = List [ f, x ]
