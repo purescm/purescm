@@ -51,7 +51,6 @@ library moduleName exports bindings =
                 [ Identifier "chezscheme"
                 ]
             , Identifier "scm:"
-
             ]
         ]
     ] <> bindings
