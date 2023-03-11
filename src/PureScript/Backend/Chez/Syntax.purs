@@ -2,10 +2,13 @@ module PureScript.Backend.Chez.Syntax where
 
 import Prelude
 
+import Data.Argonaut as Json
 import Data.Array as Array
 import Data.Newtype (class Newtype)
 import Dodo as Dodo
 import Prim as Prim
+import PureScript.Backend.Optimizer.CoreFn (Ident(..), ModuleName(..), Prop(..))
+import Safe.Coerce (coerce)
 
 newtype LiteralDigit = LiteralDigit Prim.String
 
@@ -33,17 +36,17 @@ printChezExpr e = case e of
 app :: ChezExpr -> ChezExpr -> ChezExpr
 app f x = List [ f, x ]
 
-define :: Prim.String -> ChezExpr -> ChezExpr
-define i e = List [ Identifier "scm:define", Identifier i, e ]
+define :: Ident -> ChezExpr -> ChezExpr
+define i e = List [ Identifier "scm:define", Identifier $ coerce i, e ]
 
-library :: Prim.String -> Prim.Array Prim.String -> Prim.Array ChezExpr -> ChezExpr
+library :: ModuleName -> Prim.Array Ident -> Prim.Array ChezExpr -> ChezExpr
 library moduleName exports bindings =
   List $
     [ Identifier "library"
-    , Identifier $ "(" <> moduleName <> " lib" <> ")"
+    , Identifier $ "(" <> coerce moduleName <> " lib" <> ")"
     , List $
         [ Identifier "export"
-        ] <> (Identifier <$> exports)
+        ] <> (Identifier <$> coerce exports)
     , List
         [ Identifier "import"
         , List
@@ -56,15 +59,15 @@ library moduleName exports bindings =
         ]
     ] <> bindings
 
-record :: Prim.Array { k :: Prim.String, v :: ChezExpr } -> ChezExpr
+record :: Prim.Array (Prop ChezExpr) -> ChezExpr
 record r =
   let
-    field :: { k :: Prim.String, v :: ChezExpr } -> ChezExpr
-    field { k, v } =
+    field :: Prop ChezExpr -> ChezExpr
+    field (Prop k v) =
       List
         [ Identifier "scm:hashtable-set!"
         , Identifier "$record"
-        , String k
+        , String $ Json.stringify $ Json.fromString k
         , v
         ]
   in

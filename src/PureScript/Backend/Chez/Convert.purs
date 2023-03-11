@@ -14,7 +14,7 @@ import Partial.Unsafe (unsafeCrashWith)
 import PureScript.Backend.Chez.Syntax (ChezExpr)
 import PureScript.Backend.Chez.Syntax as S
 import PureScript.Backend.Optimizer.Convert (BackendModule, BackendBindingGroup)
-import PureScript.Backend.Optimizer.CoreFn (Ident(..), Literal(..), ModuleName(..), Prop(..), Qualified(..))
+import PureScript.Backend.Optimizer.CoreFn (Ident(..), Literal(..), ModuleName(..), Qualified(..))
 import PureScript.Backend.Optimizer.Semantics (NeutralExpr(..))
 import PureScript.Backend.Optimizer.Syntax (BackendSyntax(..))
 import Safe.Coerce (coerce)
@@ -22,16 +22,13 @@ import Safe.Coerce (coerce)
 codegenModule :: BackendModule -> ChezExpr
 codegenModule { name, bindings, exports } =
   let
-    name' :: String
-    name' = coerce name
-
-    exports' :: Array String
-    exports' = coerce $ Array.fromFoldable exports
+    exports' :: Array Ident
+    exports' = Array.fromFoldable exports
 
     bindings' :: Array ChezExpr
     bindings' = Array.concat $ codegenTopLevelBindingGroup <$> bindings
   in
-    S.library name' exports' bindings'
+    S.library name exports' bindings'
 
 codegenTopLevelBindingGroup :: BackendBindingGroup Ident NeutralExpr -> Array ChezExpr
 codegenTopLevelBindingGroup { recursive, bindings }
@@ -110,7 +107,4 @@ codegenLiteral = case _ of
   LitChar c -> S.Identifier $ "#\\" <> CodeUnits.singleton c
   LitBoolean b -> S.Identifier $ if b then "#t" else "#f"
   LitArray a -> S.vector $ codegenExpr <$> a
-  LitRecord r -> S.record $ r <#> \(Prop k v) ->
-    { k: Json.stringify $ Json.fromString k
-    , v: codegenExpr v
-    }
+  LitRecord r -> S.record $ (map codegenExpr) <$> r
