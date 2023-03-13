@@ -16,7 +16,7 @@ import PureScript.Backend.Chez.Syntax as S
 import PureScript.Backend.Optimizer.Convert (BackendModule, BackendBindingGroup)
 import PureScript.Backend.Optimizer.CoreFn (Ident(..), Literal(..), ModuleName(..), Qualified(..))
 import PureScript.Backend.Optimizer.Semantics (NeutralExpr(..))
-import PureScript.Backend.Optimizer.Syntax (BackendSyntax(..), Level(..))
+import PureScript.Backend.Optimizer.Syntax (BackendSyntax(..))
 import Safe.Coerce (coerce)
 
 type CodegenEnv =
