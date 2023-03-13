@@ -9,7 +9,6 @@ import Data.Array.NonEmpty as NonEmptyArray
 import Data.Maybe (Maybe(..))
 import Data.Newtype (class Newtype)
 import Dodo as Dodo
-import Partial.Unsafe (unsafeCrashWith)
 import Prim as Prim
 import PureScript.Backend.Optimizer.CoreFn (Ident(..), ModuleName(..), Prop(..))
 import PureScript.Backend.Optimizer.Syntax (Level(..))
