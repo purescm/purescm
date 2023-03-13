@@ -53,10 +53,8 @@ codegenExpr codegenEnv@{ currentModule } (NeutralExpr s) = case s of
     | otherwise -> S.Identifier $ coerce moduleName <> "." <> v
   Var (Qualified Nothing (Ident v)) ->
     S.Identifier v
-  Local i (Level l) ->
-    S.Identifier $ case i of
-      Just (Ident i') -> i' <> show l
-      Nothing -> "_" <> show l
+  Local i l ->
+    S.Identifier $ coerce $ S.toChezIdent i l
   Lit l ->
     codegenLiteral codegenEnv l
   App f p ->
