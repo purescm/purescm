@@ -4,10 +4,15 @@ import Prelude
 
 import Data.Argonaut as Json
 import Data.Array as Array
+import Data.Array.NonEmpty (NonEmptyArray)
+import Data.Array.NonEmpty as NonEmptyArray
+import Data.Maybe (Maybe(..))
 import Data.Newtype (class Newtype)
 import Dodo as Dodo
+import Partial.Unsafe (unsafeCrashWith)
 import Prim as Prim
 import PureScript.Backend.Optimizer.CoreFn (Ident(..), ModuleName(..), Prop(..))
+import PureScript.Backend.Optimizer.Syntax (Level(..))
 import Safe.Coerce (coerce)
 
 newtype LiteralDigit = LiteralDigit Prim.String
@@ -32,6 +37,24 @@ printChezExpr e = case e of
   Boolean x -> Dodo.text $ if x then "#t" else "#f"
   Identifier x -> Dodo.text x
   List xs -> Dodo.text "(" <> Dodo.words (printChezExpr <$> xs) <> Dodo.text ")"
+
+toChezIdent :: Maybe Ident -> Level -> Ident
+toChezIdent i (Level l) = Ident $ case i of
+  Just (Ident i') -> i' <> show l
+  Nothing -> "_" <> show l
+
+--
+
+chezCurriedApplication :: ChezExpr -> NonEmptyArray ChezExpr -> ChezExpr
+chezCurriedApplication f s = NonEmptyArray.foldl1 app $ NonEmptyArray.cons f s
+
+chezCurriedFunction :: NonEmptyArray Ident -> ChezExpr -> ChezExpr
+chezCurriedFunction a e = lambda (coerce $ NonEmptyArray.toArray a) e
+
+chezLet :: Ident -> ChezExpr -> ChezExpr -> ChezExpr
+chezLet (Ident i) v e = List [ Identifier "scm:letrec*", List [ List [ Identifier i, v ] ], e ]
+
+--
 
 app :: ChezExpr -> ChezExpr -> ChezExpr
 app f x = List [ f, x ]
@@ -84,6 +107,9 @@ record r =
               ]
           ]
       ] <> (field <$> r) <> [ Identifier "$record" ]
+
+lambda :: Prim.Array Prim.String -> ChezExpr -> ChezExpr
+lambda a e = List [ Identifier "scm:lambda", List $ Identifier <$> a, e ]
 
 vector :: Prim.Array ChezExpr -> ChezExpr
 vector = List <<< Array.cons (Identifier "scm:vector")
