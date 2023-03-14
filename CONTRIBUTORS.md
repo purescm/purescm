@@ -15,7 +15,7 @@ If you would prefer to use different terms, please use the section below instead
 | Username | Name | License |
 | :------- | :--- | :------ |
 | [@jordanmartinez](https://github.com/jordanmartinez) | Jordan Martinez | [Apache-2.0] |
-| [@PureFunctor](https://github.com/PureFunctor), [@sjpgarcia](https://github.com/sjpgarcia) | Justin Garcia | [BSD-3-Clause] |
+| [@PureFunctor](https://github.com/PureFunctor), [@sjpgarcia](https://github.com/sjpgarcia) | Justin Garcia | [Apache-2.0] |
 
 ### Contributors using Modified Terms
 
@@ -30,5 +30,4 @@ If you would prefer to use different terms, please use the section below instead
 | -- | -- | -- |
 
 
-[BSD-3-Clause]: https://opensource.org/license/bsd-3-clause
 [Apache-2.0]: https://opensource.org/license/apache-2.0
