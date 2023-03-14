@@ -15,3 +15,9 @@
 /*.purs*
 /**/.DS_Store
 /examples/**/out
+/test-snapshots/.spago
+/test-snapshots/output
+/test-snapshots/.purs*
+/test-snapshots/.psc*
+/test-snapshots/generated-docs
+/test-snapshots/test-out/
