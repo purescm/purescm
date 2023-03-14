@@ -1,3 +1,8 @@
+-- A majority of the code below was copied from 
+-- https://github.com/aristanetworks/purescript-backend-optimizer/blob/main/backend-es/test/Main.purs
+-- To fullfill copyright requirements...
+--    Copyright © 2022 Arista Networks, Inc.
+--    MIT license: https://opensource.org/license/mit/
 module Test.Main where
 
 import Prelude
