@@ -101,8 +101,10 @@ runSnapshotTests { accept, filter } = do
         , onCodegenModule: \_ (Module { name: ModuleName name, path }) backend -> do
             let
               formatted =
-                Dodo.print plainText Dodo.twoSpaces $ S.printChezExpr $ codegenModule
-                  backend
+                Dodo.print plainText Dodo.twoSpaces
+                  $ flip append Dodo.break
+                  $ S.printChezExpr
+                  $ codegenModule backend
             let testFileDir = Path.concat [ testOut, name ]
             let testFilePath = Path.concat [ testFileDir, "output.ss" ]
             mkdirp testFileDir
