@@ -48,7 +48,7 @@ chezCurriedApplication :: ChezExpr -> NonEmptyArray ChezExpr -> ChezExpr
 chezCurriedApplication f s = NonEmptyArray.foldl1 app $ NonEmptyArray.cons f s
 
 chezCurriedFunction :: NonEmptyArray Ident -> ChezExpr -> ChezExpr
-chezCurriedFunction a e = lambda (coerce $ NonEmptyArray.toArray a) e
+chezCurriedFunction a e = Array.foldr lambda e $ NonEmptyArray.toArray a
 
 chezLet :: Ident -> ChezExpr -> ChezExpr -> ChezExpr
 chezLet (Ident i) v e = List [ Identifier "scm:letrec*", List [ List [ Identifier i, v ] ], e ]
@@ -107,8 +107,8 @@ record r =
           ]
       ] <> (field <$> r) <> [ Identifier "$record" ]
 
-lambda :: Prim.Array Prim.String -> ChezExpr -> ChezExpr
-lambda a e = List [ Identifier "scm:lambda", List $ Identifier <$> a, e ]
+lambda :: Ident -> ChezExpr -> ChezExpr
+lambda a e = List [ Identifier "scm:lambda", List [ Identifier $ coerce a ], e ]
 
 vector :: Prim.Array ChezExpr -> ChezExpr
 vector = List <<< Array.cons (Identifier "scm:vector")
