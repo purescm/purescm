@@ -1,6 +1,7 @@
 module PureScript.Backend.Chez.Syntax where
 
 import Prelude
+import Prim (Array)
 
 import Data.Argonaut as Json
 import Data.Array as Array
@@ -26,7 +27,7 @@ data ChezExpr
   | String Prim.String
   | Boolean Prim.Boolean
   | Identifier Prim.String
-  | List (Prim.Array ChezExpr)
+  | List (Array ChezExpr)
 
 printChezExpr :: forall a. ChezExpr -> Dodo.Doc a
 printChezExpr e = case e of
@@ -61,7 +62,7 @@ app f x = List [ f, x ]
 define :: Ident -> ChezExpr -> ChezExpr
 define i e = List [ Identifier "scm:define", Identifier $ coerce i, e ]
 
-library :: ModuleName -> Prim.Array Ident -> Prim.Array ChezExpr -> ChezExpr
+library :: ModuleName -> Array Ident -> Array ChezExpr -> ChezExpr
 library moduleName exports bindings =
   List $
     [ Identifier "library"
@@ -81,7 +82,7 @@ library moduleName exports bindings =
         ]
     ] <> bindings
 
-record :: Prim.Array (Prop ChezExpr) -> ChezExpr
+record :: Array (Prop ChezExpr) -> ChezExpr
 record r =
   let
     field :: Prop ChezExpr -> ChezExpr
@@ -110,5 +111,5 @@ record r =
 lambda :: Ident -> ChezExpr -> ChezExpr
 lambda a e = List [ Identifier "scm:lambda", List [ Identifier $ coerce a ], e ]
 
-vector :: Prim.Array ChezExpr -> ChezExpr
+vector :: Array ChezExpr -> ChezExpr
 vector = List <<< Array.cons (Identifier "scm:vector")
