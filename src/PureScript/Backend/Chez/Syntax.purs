@@ -1,7 +1,6 @@
 module PureScript.Backend.Chez.Syntax where
 
 import Prelude
-import Prim (Array)
 
 import Data.Argonaut as Json
 import Data.Array as Array
@@ -10,6 +9,7 @@ import Data.Array.NonEmpty as NonEmptyArray
 import Data.Maybe (Maybe(..))
 import Data.Newtype (class Newtype)
 import Dodo as Dodo
+import Prim (Array)
 import Prim as Prim
 import PureScript.Backend.Optimizer.CoreFn (Ident(..), ModuleName(..), Prop(..))
 import PureScript.Backend.Optimizer.Syntax (Level(..))
@@ -62,15 +62,22 @@ app f x = List [ f, x ]
 define :: Ident -> ChezExpr -> ChezExpr
 define i e = List [ Identifier "scm:define", Identifier $ coerce i, e ]
 
-library :: ModuleName -> Array Ident -> Array ChezExpr -> ChezExpr
-library moduleName exports bindings =
+importSpec :: ModuleName -> ChezExpr
+importSpec (ModuleName moduleName) = List
+  [ Identifier "prefix"
+  , List [ Identifier moduleName, Identifier "lib" ]
+  , Identifier $ moduleName <> "."
+  ]
+
+library :: ModuleName -> Array Ident -> Array ModuleName -> Array ChezExpr -> ChezExpr
+library moduleName exports imports bindings = do
   List $
     [ Identifier "library"
     , Identifier $ "(" <> coerce moduleName <> " lib" <> ")"
     , List $
         [ Identifier "export"
         ] <> (Identifier <$> coerce exports)
-    , List
+    , List $
         [ Identifier "import"
         , List
             [ Identifier "prefix"
@@ -79,7 +86,7 @@ library moduleName exports bindings =
                 ]
             , Identifier "scm:"
             ]
-        ]
+        ] <> (importSpec <$> imports)
     ] <> bindings
 
 record :: Array (Prop ChezExpr) -> ChezExpr
