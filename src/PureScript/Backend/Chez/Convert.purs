@@ -10,7 +10,6 @@ import Data.Newtype (wrap)
 import Data.Profunctor.Strong (second)
 import Data.String.CodeUnits as CodeUnits
 import Data.Tuple (Tuple, uncurry)
-import Partial.Unsafe (unsafeCrashWith)
 import PureScript.Backend.Chez.Syntax (ChezExpr)
 import PureScript.Backend.Chez.Syntax as S
 import PureScript.Backend.Optimizer.Convert (BackendModule, BackendBindingGroup)
@@ -39,7 +38,7 @@ codegenModule { name, bindings, exports } =
 
 codegenTopLevelBindingGroup :: CodegenEnv -> BackendBindingGroup Ident NeutralExpr -> Array ChezExpr
 codegenTopLevelBindingGroup codegenEnv { recursive, bindings }
-  | recursive, Just bindings' <- NonEmptyArray.fromArray bindings = unsafeCrashWith "undefined"
+  | recursive, Just bindings' <- NonEmptyArray.fromArray bindings = [ S.Identifier "recursive-top-level-binding-group" ]
   | otherwise = codegenBindings codegenEnv bindings
 
 codegenBindings :: CodegenEnv -> Array (Tuple Ident NeutralExpr) -> Array ChezExpr
