@@ -8,7 +8,6 @@ import Data.Array.NonEmpty as NonEmptyArray
 import Data.Maybe (Maybe(..))
 import Data.Newtype (wrap)
 import Data.Profunctor.Strong (second)
-import Data.Set as Set
 import Data.String.CodeUnits as CodeUnits
 import Data.Tuple (Tuple, uncurry)
 import PureScript.Backend.Chez.Syntax (ChezExpr)
@@ -30,7 +29,7 @@ codegenModule { name, bindings, exports, imports, foreign: foreign_ } =
     codegenEnv = { currentModule: name }
 
     exports' :: Array Ident
-    exports' = Array.fromFoldable $ Set.difference exports foreign_
+    exports' = Array.fromFoldable exports
 
     imports' :: Array ModuleName
     imports' = Array.fromFoldable imports

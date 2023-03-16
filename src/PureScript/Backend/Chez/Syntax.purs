@@ -73,12 +73,8 @@ foreignImport :: ModuleName -> Array Ident -> Array ChezExpr
 foreignImport moduleName foreign_ =
   if not $ Array.null foreign_ then
     [ List
-        [ Identifier "prefix"
-        , List
-            [ Identifier $ coerce moduleName
-            , Identifier "foreign"
-            ]
-        , Identifier $ coerce moduleName <> "."
+        [ Identifier $ coerce moduleName
+        , Identifier "foreign"
         ]
     ]
   else
@@ -96,7 +92,7 @@ library moduleName exports imports bindings foreign_ = do
     , Identifier $ "(" <> coerce moduleName <> " lib" <> ")"
     , List $
         [ Identifier "export"
-        ] <> map Identifier (coerce exports) <> foreignExport moduleName foreign_
+        ] <> (Identifier <$> coerce exports)
     , List $
         [ Identifier "import"
         , List
