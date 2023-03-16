@@ -69,14 +69,34 @@ importSpec (ModuleName moduleName) = List
   , Identifier $ moduleName <> "."
   ]
 
-library :: ModuleName -> Array Ident -> Array ModuleName -> Array ChezExpr -> ChezExpr
-library moduleName exports imports bindings = do
+foreignImport :: ModuleName -> Array Ident -> Array ChezExpr
+foreignImport moduleName foreign_ =
+  if not $ Array.null foreign_ then
+    [ List
+        [ Identifier "prefix"
+        , List
+            [ Identifier $ coerce moduleName
+            , Identifier "foreign"
+            ]
+        , Identifier $ coerce moduleName <> "."
+        ]
+    ]
+  else
+    []
+
+foreignExport :: ModuleName -> Array Ident -> Array ChezExpr
+foreignExport moduleName foreign_ = foreign_ <#> \i ->
+  Identifier $ Array.fold [ coerce moduleName, ".", coerce i ]
+
+library
+  :: ModuleName -> Array Ident -> Array ModuleName -> Array ChezExpr -> Array Ident -> ChezExpr
+library moduleName exports imports bindings foreign_ = do
   List $
     [ Identifier "library"
     , Identifier $ "(" <> coerce moduleName <> " lib" <> ")"
     , List $
         [ Identifier "export"
-        ] <> (Identifier <$> coerce exports)
+        ] <> map Identifier (coerce exports) <> foreignExport moduleName foreign_
     , List $
         [ Identifier "import"
         , List
@@ -86,7 +106,7 @@ library moduleName exports imports bindings = do
                 ]
             , Identifier "scm:"
             ]
-        ] <> (importSpec <$> imports)
+        ] <> foreignImport moduleName foreign_ <> map importSpec imports
     ] <> bindings
 
 record :: Array (Prop ChezExpr) -> ChezExpr

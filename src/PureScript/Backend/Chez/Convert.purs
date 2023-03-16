@@ -8,6 +8,7 @@ import Data.Array.NonEmpty as NonEmptyArray
 import Data.Maybe (Maybe(..))
 import Data.Newtype (wrap)
 import Data.Profunctor.Strong (second)
+import Data.Set as Set
 import Data.String.CodeUnits as CodeUnits
 import Data.Tuple (Tuple, uncurry)
 import PureScript.Backend.Chez.Syntax (ChezExpr)
@@ -23,21 +24,24 @@ type CodegenEnv =
   }
 
 codegenModule :: BackendModule -> ChezExpr
-codegenModule { name, bindings, exports, imports } =
+codegenModule { name, bindings, exports, imports, foreign: foreign_ } =
   let
     codegenEnv :: CodegenEnv
     codegenEnv = { currentModule: name }
 
     exports' :: Array Ident
-    exports' = Array.fromFoldable exports
+    exports' = Array.fromFoldable $ Set.difference exports foreign_
 
     imports' :: Array ModuleName
     imports' = Array.fromFoldable imports
 
     bindings' :: Array ChezExpr
     bindings' = Array.concat $ codegenTopLevelBindingGroup codegenEnv <$> bindings
+
+    foreign' :: Array Ident
+    foreign' = Array.fromFoldable foreign_
   in
-    S.library name exports' imports' bindings'
+    S.library name exports' imports' bindings' foreign'
 
 codegenTopLevelBindingGroup :: CodegenEnv -> BackendBindingGroup Ident NeutralExpr -> Array ChezExpr
 codegenTopLevelBindingGroup codegenEnv { recursive, bindings }
