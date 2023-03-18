@@ -107,8 +107,7 @@ runSnapshotTests { accept, filter } = do
             let
               formatted =
                 Dodo.print plainText Dodo.twoSpaces
-                  $ flip append Dodo.break
-                  $ S.printChezExpr
+                  $ S.printLibrary
                   $ codegenModule backend
             let testFileDir = Path.concat [ testOut, name ]
             let testFilePath = Path.concat [ testFileDir, "output.ss" ]
