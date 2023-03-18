@@ -38,7 +38,8 @@ codegenModule { name, bindings, exports } =
 
 codegenTopLevelBindingGroup :: CodegenEnv -> BackendBindingGroup Ident NeutralExpr -> Array ChezExpr
 codegenTopLevelBindingGroup codegenEnv { recursive, bindings }
-  | recursive, Just bindings' <- NonEmptyArray.fromArray bindings = [ S.Identifier "recursive-top-level-binding-group" ]
+  | recursive, Just bindings' <- NonEmptyArray.fromArray bindings =
+      [ S.Identifier "recursive-top-level-binding-group" ]
   | otherwise = codegenBindings codegenEnv bindings
 
 codegenBindings :: CodegenEnv -> Array (Tuple Ident NeutralExpr) -> Array ChezExpr
@@ -85,7 +86,7 @@ codegenExpr codegenEnv@{ currentModule } (NeutralExpr s) = case s of
     S.Identifier "let-rec"
   Let i l v e ->
     S.chezLet (S.toChezIdent i l) (codegenExpr codegenEnv v) (codegenExpr codegenEnv e)
-  Branch  _ _ ->
+  Branch _ _ ->
     S.Identifier "branch"
 
   EffectBind _ _ _ _ ->
