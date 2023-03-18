@@ -50,7 +50,7 @@ let additions =
           ]
         , repo =
             "https://github.com/aristanetworks/purescript-backend-optimizer"
-        , version = "purs-backend-es-v1.3.1"
+        , version = "purs-backend-es-v1.3.2"
         }
       , node-glob-basic =
         { dependencies =
