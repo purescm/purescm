@@ -12,22 +12,23 @@ import Prelude
 import Control.Monad.Except (ExceptT(..), lift, runExceptT)
 import Control.Parallel (parTraverse)
 import Data.Argonaut as Json
-import Data.Array.NonEmpty (NonEmptyArray)
+import Data.Array as Array
 import Data.Array.NonEmpty as NonEmptyArray
+import Data.Array.NonEmpty.Internal (NonEmptyArray(..))
 import Data.Bifunctor (lmap)
 import Data.Compactable (separate)
 import Data.Either (Either(..))
 import Data.Foldable (foldl)
 import Data.Lazy as Lazy
 import Data.List (List)
-import Data.Maybe (Maybe(..), maybe)
+import Data.Maybe (maybe)
 import Data.Posix.Signal (Signal(..))
 import Data.Set as Set
 import Data.Set.NonEmpty as NonEmptySet
 import Data.Tuple (Tuple(..))
-import Effect (Effect)
-import Effect.Aff (Aff, Error, effectCanceler, error, makeAff, throwError)
+import Effect.Aff (Aff, effectCanceler, error, makeAff, throwError)
 import Effect.Class (liftEffect)
+import Effect.Console (log)
 import Node.Buffer (Buffer, freeze)
 import Node.Buffer.Immutable as ImmutableBuffer
 import Node.ChildProcess (ExecResult, Exit(..), defaultExecOptions, defaultSpawnOptions, inherit)
@@ -39,12 +40,15 @@ import Node.FS.Perms as Perms
 import Node.FS.Stats as Stats
 import Node.FS.Stream (createReadStream, createWriteStream)
 import Node.Glob.Basic (expandGlobs)
+import Node.Library.Execa (ExecaError, ExecaSuccess, execa)
 import Node.Path (FilePath)
 import Node.Process as Process
 import Node.Stream as Stream
 import PureScript.Backend.Optimizer.CoreFn (Ann, Module, ModuleName(..))
 import PureScript.Backend.Optimizer.CoreFn.Json (decodeModule)
 import PureScript.Backend.Optimizer.CoreFn.Sort (emptyPull, pullResult, resumePull, sortModules)
+import PureScript.CST (RecoveredParserResult(..), parseModule)
+import PureScript.CST.Types as CSTT
 
 spawnFromParent :: String -> Array String -> Aff Unit
 spawnFromParent command args = makeAff \k -> do
@@ -71,18 +75,13 @@ bufferToUTF8 = liftEffect <<< map (ImmutableBuffer.toString UTF8) <<< freeze
 mkdirp :: FilePath -> Aff Unit
 mkdirp path = FS.mkdir' path { recursive: true, mode: mkPerms Perms.all Perms.all Perms.all }
 
-foreign import loadModuleMainImpl
-  :: (Error -> Effect Unit)
-  -> (Effect Unit -> Effect Unit)
-  -> Effect Unit
-  -> FilePath
-  -> Effect Unit
-
 -- | Note: this code needs to be updated to run Chez Scheme scripts
-loadModuleMain :: FilePath -> Aff (Maybe (Effect Unit))
-loadModuleMain path = makeAff \k -> do
-  loadModuleMainImpl (k <<< Left) (k <<< Right <<< Just) (k (Right Nothing)) path
-  mempty
+loadModuleMain :: String -> Boolean -> FilePath -> Aff (Either ExecaError ExecaSuccess)
+loadModuleMain schemeBin hasMain path = do
+  when hasMain do
+    liftEffect $ log "Running a snaphot as a top-level program is not yet implemented."
+  spawned <- execa schemeBin [ "--script", path ] identity
+  spawned.result
 
 copyFile :: FilePath -> FilePath -> Aff Unit
 copyFile from to = do
@@ -137,3 +136,39 @@ readCoreFnModule filePath = do
       pure $ Left $ Tuple filePath err
     Right mod ->
       pure $ Right mod
+
+-- | Returns `Right true` if the source code has this type signature
+-- | somewhere in it:
+-- | ```
+-- | main :: Effect Unit
+-- | ```
+-- |
+-- | If `Effect` or `Unit` are qualified by a module alias,
+-- | this will not return `true`.
+-- | ```
+-- | main :: Effect.Effect Prelude.Unit
+-- | ```
+canRunMain :: String -> Either String Boolean
+canRunMain sourceCode =
+  case parseModule sourceCode of
+    ParseSucceeded (CSTT.Module { body: CSTT.ModuleBody { decls } }) ->
+      pure $ Array.any isMain decls
+    ParseSucceededWithErrors _ _ ->
+      Left "Could not completely parse file."
+    ParseFailed _ ->
+      Left "Could not parse file."
+  where
+  isMain = case _ of
+    CSTT.DeclSignature
+      ( CSTT.Labeled
+          { label: CSTT.Name { name: CSTT.Ident "main" }
+          , value:
+              CSTT.TypeApp
+                (CSTT.TypeConstructor (CSTT.QualifiedName { name: CSTT.Proper "Effect" }))
+                ( NonEmptyArray
+                    [ CSTT.TypeConstructor (CSTT.QualifiedName { name: CSTT.Proper "Unit" })
+                    ]
+                )
+          }
+      ) -> true
+    _ -> false

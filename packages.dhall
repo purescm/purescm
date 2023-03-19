@@ -70,4 +70,5 @@ let additions =
         }
       }
 
-in  upstream // additions
+in  (upstream // additions)
+      with node-execa.version = "v1.2.0"
