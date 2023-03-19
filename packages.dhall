@@ -71,4 +71,4 @@ let additions =
       }
 
 in  (upstream // additions)
-      with node-execa.version = "v1.2.0"
+      with node-execa.version = "v1.3.0"
