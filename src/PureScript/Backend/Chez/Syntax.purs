@@ -287,6 +287,17 @@ toChezIdent i (Level l) = case i of
 
 --
 
+chezCond :: NonEmptyArray { c :: ChezExpr, e :: ChezExpr } -> Maybe ChezExpr -> ChezExpr
+chezCond b o =
+  let
+    b' :: ChezExpr
+    b' = List $ NonEmptyArray.toArray b <#> \{ c, e } -> List [ c, e ]
+
+    o' :: Prim.Array ChezExpr
+    o' = Array.fromFoldable o <#> \x -> List [ Identifier "scm:else", x ]
+  in
+    List $ [ Identifier "scm:cond", b' ] <> o'
+
 chezCurriedApplication :: ChezExpr -> NonEmptyArray ChezExpr -> ChezExpr
 chezCurriedApplication f s = NonEmptyArray.foldl1 app $ NonEmptyArray.cons f s
 
