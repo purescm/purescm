@@ -16,7 +16,7 @@ import PureScript.Backend.Chez.Syntax as S
 import PureScript.Backend.Optimizer.Convert (BackendModule, BackendBindingGroup)
 import PureScript.Backend.Optimizer.CoreFn (Ident(..), Literal(..), ModuleName(..), Qualified(..))
 import PureScript.Backend.Optimizer.Semantics (NeutralExpr(..))
-import PureScript.Backend.Optimizer.Syntax (BackendSyntax(..))
+import PureScript.Backend.Optimizer.Syntax (BackendSyntax(..), Pair(..))
 import Safe.Coerce (coerce)
 
 type CodegenEnv =
@@ -126,8 +126,12 @@ codegenExpr codegenEnv@{ currentModule } (NeutralExpr s) = case s of
     S.Identifier "let-rec"
   Let i l v e ->
     S.chezLet (S.toChezIdent i l) (codegenExpr codegenEnv v) (codegenExpr codegenEnv e)
-  Branch _ _ ->
-    S.Identifier "branch"
+  Branch b o ->
+    let
+      goPair :: Pair NeutralExpr -> { c :: _, e :: _ }
+      goPair (Pair c e) = { c: codegenExpr codegenEnv c, e: codegenExpr codegenEnv e }
+    in
+      S.chezCond (goPair <$> b) (codegenExpr codegenEnv <$> o)
 
   EffectBind _ _ _ _ ->
     S.Identifier "effect-bind"
