@@ -7,7 +7,7 @@ import Data.Array as Array
 import Data.Array.NonEmpty as NEA
 import Data.Array.NonEmpty as NonEmptyArray
 import Data.Maybe (Maybe(..))
-import Data.Newtype (un, unwrap, wrap)
+import Data.Newtype (unwrap, wrap)
 import Data.Set as Set
 import Data.String.CodeUnits as CodeUnits
 import Data.Tuple (Tuple(..), uncurry)
@@ -74,72 +74,17 @@ codegenTopLevelBindingGroup codegenEnv { recursive, bindings }
   | recursive, Just bindings' <- NonEmptyArray.fromArray bindings =
       [ DefineValue "rtlbg" $ S.Identifier "recursive-top-level-binding-group" ]
   | otherwise =
-      map (codegenTopLevelBinding codegenEnv) bindings
+      codegenTopLevelBinding codegenEnv <$> bindings
 
 codegenTopLevelBinding :: CodegenEnv -> Tuple Ident NeutralExpr -> ChezDefinition
-codegenTopLevelBinding codegenEnv@{ currentModule } (Tuple (Ident ident) expr) = case unwrap expr of
-  Var (Qualified (Just moduleName) (Ident v))
-    | currentModule == moduleName -> DefineValue ident $ S.Identifier v
-    | otherwise -> DefineValue ident $ S.Identifier $ coerce moduleName <> "." <> v
-  Var (Qualified Nothing (Ident v)) ->
-    DefineValue ident $ S.Identifier v
-  Local i l ->
-    DefineValue ident $ S.Identifier $ coerce $ S.toChezIdent i l
-  Lit l ->
-    DefineValue ident $ codegenLiteral codegenEnv l
-  App f p ->
-    DefineValue ident $ S.chezCurriedApplication (codegenExpr codegenEnv f)
-      (codegenExpr codegenEnv <$> p)
-  Abs a e -> do
-    DefineCurriedFunction
-      ident
-      (map (un Ident <<< uncurry S.toChezIdent) $ a)
-      (codegenExpr codegenEnv e)
-
-  UncurriedApp _ _ ->
-    DefineValue ident $ S.Identifier "uncurried-app"
-  UncurriedAbs _ _ ->
-    DefineValue ident $ S.Identifier "uncurried-abs"
-
-  UncurriedEffectApp _ _ ->
-    DefineValue ident $ S.Identifier "uncurried-effect-app"
-  UncurriedEffectAbs _ _ ->
-    DefineValue ident $ S.Identifier "uncurried-effect-ab"
-
-  Accessor _ _ ->
-    DefineValue ident $ S.Identifier "object-accessor"
-  Update _ _ ->
-    DefineValue ident $ S.Identifier "object-update"
-
-  CtorSaturated _ _ _ _ _ ->
-    DefineValue ident $ S.Identifier "ctor-saturated"
-  CtorDef _ _ _ _ ->
-    DefineValue ident $ S.Identifier "ctor-def"
-
-  LetRec _ _ _ ->
-    DefineValue ident $ S.Identifier "let-rec"
-  Let i l v e ->
-    DefineValue ident $ S.chezLet (S.toChezIdent i l) (codegenExpr codegenEnv v)
-      (codegenExpr codegenEnv e)
-  Branch _ _ ->
-    DefineValue ident $ S.Identifier "branch"
-
-  EffectBind _ _ _ _ ->
-    DefineValue ident $ S.Identifier "effect-bind"
-  EffectPure _ ->
-    DefineValue ident $ S.Identifier "effect-pure"
-  EffectDefer _ ->
-    DefineValue ident $ S.Identifier "effect-defer"
-
-  PrimOp _ ->
-    DefineValue ident $ S.Identifier "prim-op"
-  PrimEffect _ ->
-    DefineValue ident $ S.Identifier "prim-effect"
-  PrimUndefined ->
-    DefineValue ident $ S.Identifier "prim-undefined"
-
-  Fail _ ->
-    DefineValue ident $ S.Identifier "fail"
+codegenTopLevelBinding codegenEnv (Tuple (Ident i) n) =
+  case unwrap n of
+    Abs a e ->
+      DefineCurriedFunction i (uncurry S.toChezIdent <$> a) (codegenExpr codegenEnv e)
+    UncurriedAbs a e ->
+      DefineUncurriedFunction i (uncurry S.toChezIdent <$> a) (codegenExpr codegenEnv e)
+    _ ->
+      DefineValue i $ codegenExpr codegenEnv n
 
 codegenExpr :: CodegenEnv -> NeutralExpr -> ChezExpr
 codegenExpr codegenEnv@{ currentModule } (NeutralExpr s) = case s of
