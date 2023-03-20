@@ -8,6 +8,7 @@ import Data.Array.NonEmpty as NEA
 import Data.Array.NonEmpty as NonEmptyArray
 import Data.Maybe (Maybe(..))
 import Data.Newtype (un, unwrap, wrap)
+import Data.Set as Set
 import Data.String.CodeUnits as CodeUnits
 import Data.Tuple (Tuple(..), uncurry)
 import PureScript.Backend.Chez.Syntax (ChezDefinition(..), ChezExport(..), ChezExpr, ChezImport(..), ChezImportSet(..), ChezLibrary)
@@ -23,7 +24,7 @@ type CodegenEnv =
   }
 
 codegenModule :: BackendModule -> ChezLibrary
-codegenModule { name, bindings, exports } =
+codegenModule { name, bindings, exports, imports, foreign: foreign_ } =
   let
     codegenEnv :: CodegenEnv
     codegenEnv = { currentModule: name }
@@ -34,6 +35,23 @@ codegenModule { name, bindings, exports } =
     definitions :: Array ChezDefinition
     definitions = Array.concat $
       codegenTopLevelBindingGroup codegenEnv <$> bindings
+
+    pursImports :: Array ChezImport
+    pursImports = Array.fromFoldable imports <#> \importedModule ->
+      ImportSet $ ImportPrefix
+        ( ImportLibrary
+            { identifiers: NEA.cons' (coerce importedModule) [ "lib" ], version: Nothing }
+        )
+        (coerce importedModule)
+
+    foreignImport :: Array ChezImport
+    foreignImport
+      | Set.isEmpty foreign_ = []
+      | otherwise =
+          [ ImportSet $
+              ImportLibrary
+                { identifiers: NEA.cons' (coerce name) [ "foreign" ], version: Nothing }
+          ]
   in
     { "#!r6rs": true
     , "#!chezscheme": true
@@ -45,7 +63,7 @@ codegenModule { name, bindings, exports } =
         [ ImportSet $ ImportPrefix
             (ImportLibrary { identifiers: NEA.singleton "chezscheme", version: Nothing })
             "scm:"
-        ]
+        ] <> pursImports <> foreignImport
     , exports: exports'
     , body: { definitions, exprs: [] }
     }

@@ -13,6 +13,7 @@
   , "either"
   , "maybe"
   , "newtype"
+  , "ordered-collections"
   , "partial"
   , "prelude"
   , "profunctor"
