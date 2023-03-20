@@ -65,7 +65,7 @@ codegenModule { name, bindings, exports, imports, foreign: foreign_ } =
             "scm:"
         ] <> pursImports <> foreignImport
     , exports: exports'
-    , body: { definitions, exprs: [] }
+    , body: { definitions, expressions: [] }
     }
 
 codegenTopLevelBindingGroup
