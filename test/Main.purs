@@ -112,7 +112,7 @@ runSnapshotTests { accept, filter } = do
                   $ S.printLibrary
                   $ codegenModule backend
             let testFileDir = Path.concat [ testOut, name ]
-            let testFilePath = Path.concat [ testFileDir, "output.ss" ]
+            let testFilePath = Path.concat [ testFileDir, "lib.ss" ]
             mkdirp testFileDir
             FS.writeTextFile UTF8 testFilePath formatted
             unless (Set.isEmpty backend.foreign) do
@@ -141,8 +141,8 @@ runSnapshotTests { accept, filter } = do
         let
           snapshotFilePath = Path.concat [ snapshotsOut, name <> ".ss" ]
           runAcceptedTest = do
-            schemeFile <- liftEffect $ Path.resolve [ testOut, name ] "output.ss"
-            result <- loadModuleMain schemeBin hasMain schemeFile
+            schemeFile <- liftEffect $ Path.resolve [ testOut, name ] "lib.ss"
+            result <- loadModuleMain testOut schemeBin hasMain schemeFile
             case result of
               Left err | matchesFail err.message failsWith -> do
                 Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <> " failed."

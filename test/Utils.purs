@@ -76,11 +76,11 @@ mkdirp :: FilePath -> Aff Unit
 mkdirp path = FS.mkdir' path { recursive: true, mode: mkPerms Perms.all Perms.all Perms.all }
 
 -- | Note: this code needs to be updated to run Chez Scheme scripts
-loadModuleMain :: String -> Boolean -> FilePath -> Aff (Either ExecaError ExecaSuccess)
-loadModuleMain schemeBin hasMain path = do
+loadModuleMain :: FilePath -> String -> Boolean -> FilePath -> Aff (Either ExecaError ExecaSuccess)
+loadModuleMain libDir schemeBin hasMain path = do
   when hasMain do
     liftEffect $ log "Running a snaphot as a top-level program is not yet implemented."
-  spawned <- execa schemeBin [ "--script", path ] identity
+  spawned <- execa schemeBin [ "--libdirs", libDir <> ":", "--script", path ] identity
   spawned.result
 
 copyFile :: FilePath -> FilePath -> Aff Unit
