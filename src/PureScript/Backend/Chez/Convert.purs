@@ -42,7 +42,7 @@ codegenModule { name, bindings, exports, imports, foreign: foreign_ } =
         ( ImportLibrary
             { identifiers: NEA.cons' (coerce importedModule) [ "lib" ], version: Nothing }
         )
-        (coerce importedModule)
+        (coerce importedModule <> ".")
 
     foreignImport :: Array ChezImport
     foreignImport
