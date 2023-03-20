@@ -1,6 +1,6 @@
 let upstream =
-      https://github.com/purescript/package-sets/releases/download/psc-0.15.7-20230316/packages.dhall
-        sha256:9320ddfff0db826cb792999782354e41a8c3f52a5929bb09050506b84b1bc630
+      https://github.com/purescript/package-sets/releases/download/psc-0.15.7-20230320/packages.dhall
+        sha256:6f2a4b50b793f304d3a64fd25d631de990de280981c73b0683a090e4fa499f0d
 
 let additions =
       { backend-optimizer =

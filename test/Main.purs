@@ -14,11 +14,11 @@ import ArgParse.Basic as ArgParser
 import Data.Array (findMap)
 import Data.Array as Array
 import Data.Array.NonEmpty (NonEmptyArray)
-import Data.Either (Either(..))
+import Data.Either (Either(..), either, isRight)
 import Data.Foldable (for_)
 import Data.Foldable as Foldable
 import Data.Map as Map
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), fromMaybe, isJust)
 import Data.Monoid (power)
 import Data.Newtype (unwrap)
 import Data.Set as Set
@@ -30,16 +30,17 @@ import Data.Tuple (Tuple(..))
 import Dodo (plainText)
 import Dodo as Dodo
 import Effect (Effect)
-import Effect.Aff (Aff, Error, attempt, launchAff_)
-import Effect.Aff as Error
+import Effect.Aff (Aff, attempt, launchAff_)
 import Effect.Class (liftEffect)
 import Effect.Class.Console as Console
 import Effect.Ref as Ref
 import Node.Encoding (Encoding(..))
 import Node.FS.Aff as FS
 import Node.Glob.Basic (expandGlobs)
+import Node.Library.Execa.Which (defaultWhichOptions, which)
 import Node.Path as Path
 import Node.Process as Process
+import Partial.Unsafe (unsafeCrashWith)
 import PureScript.Backend.Chez.Convert (codegenModule)
 import PureScript.Backend.Chez.Syntax as S
 import PureScript.Backend.Optimizer.Builder (buildModules)
@@ -48,7 +49,7 @@ import PureScript.Backend.Optimizer.CoreFn (Comment(..), Module(..), ModuleName(
 import PureScript.Backend.Optimizer.Directives (parseDirectiveFile)
 import PureScript.Backend.Optimizer.Directives.Defaults (defaultDirectives)
 import PureScript.Backend.Optimizer.Semantics.Foreign (coreForeignSemantics)
-import Test.Utils (bufferToUTF8, coreFnModulesFromOutput, execWithStdin, mkdirp, spawnFromParent)
+import Test.Utils (bufferToUTF8, canRunMain, copyFile, coreFnModulesFromOutput, execWithStdin, loadModuleMain, mkdirp, spawnFromParent)
 
 type TestArgs =
   { accept :: Boolean
@@ -86,6 +87,7 @@ runSnapshotTests { accept, filter } = do
   snapshotDir <- liftEffect Process.cwd
   snapshotPaths <- expandGlobs (Path.concat [ snapshotDir, "snapshots-input" ])
     [ "Snapshot.*.purs" ]
+  schemeBin <- getSchemeBinary
   outputRef <- liftEffect $ Ref.new Map.empty
   let snapshotsOut = Path.concat [ snapshotDir, "snapshots-output" ]
   let testOut = Path.concat [ snapshotDir, "test-out" ]
@@ -113,15 +115,19 @@ runSnapshotTests { accept, filter } = do
             let testFilePath = Path.concat [ testFileDir, "output.ss" ]
             mkdirp testFileDir
             FS.writeTextFile UTF8 testFilePath formatted
-            -- Not worried about FFI yet
-            -- unless (Set.isEmpty backend.foreign) do
-            --   let
-            --     foreignSiblingPath =
-            --       fromMaybe path (String.stripSuffix (Pattern (Path.extname path)) path) <> ".ss"
-            --   let foreignOutputPath = Path.concat [ testFileDir, "foreign.ss" ]
-            --   copyFile foreignSiblingPath foreignOutputPath
-            when (Set.member (Path.concat [ snapshotDir, path ]) snapshotPaths) do
-              void $ liftEffect $ Ref.modify (Map.insert name (Tuple formatted (hasFails backend)))
+            unless (Set.isEmpty backend.foreign) do
+              let
+                foreignSiblingPath =
+                  fromMaybe path (String.stripSuffix (Pattern (Path.extname path)) path) <> ".ss"
+              let foreignOutputPath = Path.concat [ testFileDir, "foreign.ss" ]
+              copyFile foreignSiblingPath foreignOutputPath
+            let snapshotDirFile = Path.concat [ snapshotDir, path ]
+            when (Set.member snapshotDirFile snapshotPaths) do
+              originalFileSourceCode <- FS.readTextFile UTF8 snapshotDirFile
+              hasMain <- either (\_ -> unsafeCrashWith "canRunMain: parse failure") pure $
+                canRunMain originalFileSourceCode
+              void $ liftEffect $ Ref.modify
+                (Map.insert name ({ formatted, failsWith: hasFails backend, hasMain }))
                 outputRef
         , onPrepareModule: \build coreFnMod@(Module { name }) -> do
             let total = show build.moduleCount
@@ -131,43 +137,40 @@ runSnapshotTests { accept, filter } = do
             pure coreFnMod
         }
       outputModules <- liftEffect $ Ref.read outputRef
-      results <- forWithIndex outputModules \name (Tuple output _failsWith) -> do
+      results <- forWithIndex outputModules \name ({ formatted, failsWith, hasMain }) -> do
         let
           snapshotFilePath = Path.concat [ snapshotsOut, name <> ".ss" ]
-        -- Not doing acceptance tests yet
-        -- runAcceptedTest = do
-        --   result <- attempt $ foldMap liftEffect =<< loadModuleMain =<< liftEffect
-        --     (Path.resolve [ testOut, name ] "output.ss")
-        --   case result of
-        --     Left err | matchesFail err failsWith -> do
-        --       Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <> " failed."
-        --       Console.log $ Error.message err
-        --       pure false
-        --     Right _ | isJust failsWith -> do
-        --       Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <>
-        --         " succeeded when it should have failed."
-        --       pure false
-        --     _ ->
-        --       pure true
+          runAcceptedTest = do
+            schemeFile <- liftEffect $ Path.resolve [ testOut, name ] "output.ss"
+            result <- loadModuleMain schemeBin hasMain schemeFile
+            case result of
+              Left err | matchesFail err.message failsWith -> do
+                Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <> " failed."
+                Console.log err.message
+                pure false
+              Right _ | isJust failsWith -> do
+                Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <>
+                  " succeeded when it should have failed."
+                pure false
+              _ ->
+                pure true
         attempt (FS.readTextFile UTF8 snapshotFilePath) >>= case _ of
           Left _ -> do
             Console.log $ withGraphics (foreground Yellow) "✓" <> " " <> name <> " saved."
-            FS.writeTextFile UTF8 snapshotFilePath output
+            FS.writeTextFile UTF8 snapshotFilePath formatted
             pure true
           Right prevOutput
-            | output == prevOutput ->
-                -- runAcceptedTest
-                pure true
+            | formatted == prevOutput ->
+                runAcceptedTest
             | accept -> do
                 Console.log $ withGraphics (foreground Yellow) "✓" <> " " <> name <> " accepted."
-                FS.writeTextFile UTF8 snapshotFilePath output
-                -- runAcceptedTest
-                pure true
+                FS.writeTextFile UTF8 snapshotFilePath formatted
+                runAcceptedTest
             | otherwise -> do
                 Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <> " failed."
                 diff <- bufferToUTF8 <<< _.stdout =<< execWithStdin
                   ("diff " <> snapshotFilePath <> " -")
-                  output
+                  formatted
                 Console.log diff
                 pure false
       unless (Foldable.and results) do
@@ -182,9 +185,21 @@ hasFails = findMap go <<< _.comments
     _ ->
       Nothing
 
-matchesFail :: Error -> Maybe String -> Boolean
-matchesFail err = case _ of
+matchesFail :: String -> Maybe String -> Boolean
+matchesFail errMsg = case _ of
   Just msg ->
-    not $ String.contains (Pattern msg) $ Error.message err
+    not $ String.contains (Pattern msg) errMsg
   Nothing ->
     true
+
+getSchemeBinary :: Aff String
+getSchemeBinary = do
+  useScheme <- isRight <$> which "scheme" defaultWhichOptions
+  if useScheme then do
+    pure "scheme"
+  else do
+    useChez <- isRight <$> which "chez" defaultWhichOptions
+    if useChez then
+      pure "chez"
+    else do
+      unsafeCrashWith "Could not find scheme binary"
