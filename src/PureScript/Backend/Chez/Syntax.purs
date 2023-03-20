@@ -82,7 +82,7 @@ type LibraryBody =
 data ChezDefinition
   = DefineValue Prim.String ChezExpr
   | DefineCurriedFunction Prim.String (NonEmptyArray Prim.String) ChezExpr
-  | DefineUncurriedFunction Prim.String (NonEmptyArray Prim.String) ChezExpr
+  | DefineUncurriedFunction Prim.String (Prim.Array Prim.String) ChezExpr
 
 newtype LiteralDigit = LiteralDigit Prim.String
 
@@ -280,8 +280,8 @@ printChezExpr e = case e of
   Identifier x -> D.text x
   List xs -> D.text "(" <> D.words (printChezExpr <$> xs) <> D.text ")"
 
-toChezIdent :: Maybe Ident -> Level -> Ident
-toChezIdent i (Level l) = Ident $ case i of
+toChezIdent :: Maybe Ident -> Level -> Prim.String
+toChezIdent i (Level l) = case i of
   Just (Ident i') -> i' <> show l
   Nothing -> "_" <> show l
 
@@ -290,11 +290,11 @@ toChezIdent i (Level l) = Ident $ case i of
 chezCurriedApplication :: ChezExpr -> NonEmptyArray ChezExpr -> ChezExpr
 chezCurriedApplication f s = NonEmptyArray.foldl1 app $ NonEmptyArray.cons f s
 
-chezCurriedFunction :: NonEmptyArray Ident -> ChezExpr -> ChezExpr
+chezCurriedFunction :: NonEmptyArray Prim.String -> ChezExpr -> ChezExpr
 chezCurriedFunction a e = Array.foldr lambda e $ NonEmptyArray.toArray a
 
-chezLet :: Ident -> ChezExpr -> ChezExpr -> ChezExpr
-chezLet (Ident i) v e = List [ Identifier "scm:letrec*", List [ List [ Identifier i, v ] ], e ]
+chezLet :: Prim.String -> ChezExpr -> ChezExpr -> ChezExpr
+chezLet i v e = List [ Identifier "scm:letrec*", List [ List [ Identifier i, v ] ], e ]
 
 --
 
@@ -350,8 +350,8 @@ record r =
           ]
       ] <> (field <$> r) <> [ Identifier "$record" ]
 
-lambda :: Ident -> ChezExpr -> ChezExpr
-lambda a e = List [ Identifier "scm:lambda", List [ Identifier $ coerce a ], e ]
+lambda :: Prim.String -> ChezExpr -> ChezExpr
+lambda a e = List [ Identifier "scm:lambda", List [ Identifier a ], e ]
 
 vector :: Prim.Array ChezExpr -> ChezExpr
 vector = List <<< Array.cons (Identifier "scm:vector")
