@@ -76,7 +76,7 @@ data ChezImportSet
 
 type LibraryBody =
   { definitions :: Prim.Array ChezDefinition
-  , exprs :: Prim.Array ChezExpr
+  , expressions :: Prim.Array ChezExpr
   }
 
 data ChezDefinition
@@ -236,7 +236,7 @@ printBody :: LibraryBody -> Doc Void
 printBody lib = do
   let
     defs = map printDefinition lib.definitions
-    exprs = map printChezExpr lib.exprs
+    exprs = map printChezExpr lib.expressions
   linesSeparated $ defs <> exprs
 
 printNamedIndentedList :: Doc Void -> Doc Void -> Doc Void
