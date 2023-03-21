@@ -16,7 +16,7 @@ import PureScript.Backend.Chez.Syntax as S
 import PureScript.Backend.Optimizer.Convert (BackendModule, BackendBindingGroup)
 import PureScript.Backend.Optimizer.CoreFn (Ident(..), Literal(..), ModuleName(..), Qualified(..))
 import PureScript.Backend.Optimizer.Semantics (NeutralExpr(..))
-import PureScript.Backend.Optimizer.Syntax (BackendSyntax(..), Pair(..))
+import PureScript.Backend.Optimizer.Syntax (BackendOperator(..), BackendOperator2(..), BackendOperatorNum(..), BackendOperatorOrd(..), BackendSyntax(..), Pair(..))
 import Safe.Coerce (coerce)
 
 type CodegenEnv =
@@ -140,8 +140,8 @@ codegenExpr codegenEnv@{ currentModule } (NeutralExpr s) = case s of
   EffectDefer _ ->
     S.Identifier "effect-defer"
 
-  PrimOp _ ->
-    S.Identifier "prim-op"
+  PrimOp o ->
+    codegenPrimOp codegenEnv o
   PrimEffect _ ->
     S.Identifier "prim-effect"
   PrimUndefined ->
@@ -159,3 +159,46 @@ codegenLiteral codegenEnv = case _ of
   LitBoolean b -> S.Identifier $ if b then "#t" else "#f"
   LitArray a -> S.vector $ codegenExpr codegenEnv <$> a
   LitRecord r -> S.record $ (map $ codegenExpr codegenEnv) <$> r
+
+codegenPrimOp :: CodegenEnv -> BackendOperator NeutralExpr -> ChezExpr
+codegenPrimOp codegenEnv = case _ of
+  Op1 _ _ ->
+    S.Identifier "unary-prim-op"
+  Op2 o x y ->
+    let
+      x' = codegenExpr codegenEnv x
+      y' = codegenExpr codegenEnv y
+
+      opDtNum = case _ of
+        OpAdd -> S.Identifier "scm:+"
+        OpSubtract -> S.Identifier "scm:-"
+        OpMultiply -> S.Identifier "scm:*"
+        OpDivide -> S.Identifier "scm:/"
+
+      opDtOrd = case _ of
+        OpEq -> S.Identifier "scm:="
+        OpNotEq -> S.Identifier "scm:="
+        OpGt -> S.Identifier "scm:>"
+        OpGte -> S.Identifier "scm:>="
+        OpLt -> S.Identifier "scm:<"
+        OpLte -> S.Identifier "scm:<="
+    in
+      case o of
+        OpIntNum o' ->
+          S.List [ opDtNum o', x', y' ]
+        OpIntOrd o' ->
+          case o' of
+            OpNotEq ->
+              S.List [ S.Identifier "scm:not", S.List [ opDtOrd o', x', y' ] ]
+            _ ->
+              S.List [ opDtOrd o', x', y' ]
+        OpNumberNum o' ->
+          S.List [ opDtNum o', x', y' ]
+        OpNumberOrd o' ->
+          case o' of
+            OpNotEq ->
+              S.List [ S.Identifier "scm:not", S.List [ opDtOrd o', x', y' ] ]
+            _ ->
+              S.List [ opDtOrd o', x', y' ]
+        _ ->
+          S.Identifier "binary-prim-op"

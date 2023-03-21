@@ -10,7 +10,7 @@
 
   (scm:define g
     (scm:lambda (v0)
-      (scm:cond (prim-op 1) (prim-op 2) (prim-op 3) (scm:else 0))))
+      (scm:cond ((scm:= v0 0) 1) ((scm:= v0 1) 2) ((scm:= v0 2) 3) (scm:else 0))))
 
   (scm:define f
     (scm:lambda (x0)
