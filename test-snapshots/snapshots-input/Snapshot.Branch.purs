@@ -9,3 +9,8 @@ g = case _ of
   1 -> 2
   2 -> 3
   _ -> 0
+
+h :: Number -> Number
+h = case _ of
+  3.14 -> 3.14159
+  _ -> 0.0

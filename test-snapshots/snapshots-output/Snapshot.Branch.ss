@@ -4,9 +4,14 @@
   (Snapshot.Branch lib)
   (export
     f
-    g)
+    g
+    h)
   (import
     (prefix (chezscheme) scm:))
+
+  (scm:define h
+    (scm:lambda (v0)
+      (scm:cond ((scm:= v0 3.14) 3.14159) (scm:else 0.0))))
 
   (scm:define g
     (scm:lambda (v0)
