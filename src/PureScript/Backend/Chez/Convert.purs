@@ -182,8 +182,54 @@ codegenPrimOp codegenEnv = case _ of
         OpGte -> S.Identifier "scm:>="
         OpLt -> S.Identifier "scm:<"
         OpLte -> S.Identifier "scm:<="
+
+      opCharOrd = case _ of
+        OpEq -> S.Identifier "scm:char=?"
+        OpNotEq -> S.Identifier "scm:char=?"
+        OpGt -> S.Identifier "scm:char>?"
+        OpGte -> S.Identifier "scm:char>=?"
+        OpLt -> S.Identifier "scm:char<?"
+        OpLte -> S.Identifier "scm:char<=?"
+
+      opStringOrd = case _ of
+        OpEq -> S.Identifier "scm:string=?"
+        OpNotEq -> S.Identifier "scm:string=?"
+        OpGt -> S.Identifier "scm:string>?"
+        OpGte -> S.Identifier "scm:string>=?"
+        OpLt -> S.Identifier "scm:string<?"
+        OpLte -> S.Identifier "scm:string<=?"
     in
       case o of
+        OpArrayIndex ->
+          S.List [ S.Identifier "scm:vector-ref", x', y' ]
+        OpBooleanAnd ->
+          S.List [ S.Identifier "scm:and", x', y' ]
+        OpBooleanOr ->
+          S.List [ S.Identifier "scm:or", x', y' ]
+        OpBooleanOrd _ ->
+          -- Neither R6RS nor Chez defines comparison operators for
+          -- booleans, meaning that we would either have to inject
+          -- the definitions at the call site _or_ provide them
+          -- through a library loaded by _all_ files.
+          S.Identifier "boolean-ord"
+        OpCharOrd o' ->
+          case o' of
+            OpNotEq ->
+              S.List [ S.Identifier "scm:not", S.List [ opCharOrd o', x', y' ] ]
+            _ ->
+              S.List [ opCharOrd o', x', y' ]
+        OpIntBitAnd ->
+          S.List [ S.Identifier "scm:bitwise-and", x', y' ]
+        OpIntBitOr ->
+          S.List  [ S.Identifier "scm:bitwise-or", x', y' ]
+        OpIntBitShiftLeft ->
+          S.List [ S.Identifier "scm:bitwise-arithmetic-shift-left", x', y' ]
+        OpIntBitShiftRight ->
+          S.List [ S.Identifier "scm:bitwise-arithmetic-shift-right", x', y' ]
+        OpIntBitXor ->
+          S.List [ S.Identifier "scm:bitwise-xor", x', y' ]
+        OpIntBitZeroFillShiftRight ->
+          S.Identifier "zero-fill-shift-right"
         OpIntNum o' ->
           S.List [ opDtNum o', x', y' ]
         OpIntOrd o' ->
@@ -200,5 +246,13 @@ codegenPrimOp codegenEnv = case _ of
               S.List [ S.Identifier "scm:not", S.List [ opDtOrd o', x', y' ] ]
             _ ->
               S.List [ opDtOrd o', x', y' ]
-        _ ->
-          S.Identifier "binary-prim-op"
+        OpStringAppend ->
+          S.List [ S.Identifier "scm:string-append", x', y' ]
+        OpStringOrd o' ->
+          -- We've done this pattern-matching four times. Should this
+          -- be refactored to have the pretty-printer deal with it?
+          case o' of
+            OpNotEq ->
+              S.List [ S.Identifier "scm:not", S.List [ opStringOrd o', x', y' ] ]
+            _ -> 
+              S.List [ opStringOrd o', x', y' ]
