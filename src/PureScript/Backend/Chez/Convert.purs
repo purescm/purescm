@@ -86,6 +86,10 @@ codegenTopLevelBinding codegenEnv (Tuple (Ident i) n) =
       DefineCurriedFunction i (uncurry S.toChezIdent <$> a) (codegenExpr codegenEnv e)
     UncurriedAbs a e ->
       DefineUncurriedFunction i (uncurry S.toChezIdent <$> a) (codegenExpr codegenEnv e)
+    CtorDef _ _ _ ss ->
+      case NonEmptyArray.fromArray ss of
+        Nothing -> DefineUncurriedFunction i [] $ codegenExpr codegenEnv n
+        Just xs -> DefineCurriedFunction i xs $ codegenExpr codegenEnv n
     _ ->
       DefineValue i $ codegenExpr codegenEnv n
 
@@ -122,8 +126,8 @@ codegenExpr codegenEnv@{ currentModule } (NeutralExpr s) = case s of
 
   CtorSaturated _ _ _ _ _ ->
     S.Identifier "ctor-saturated"
-  CtorDef _ _ _ _ ->
-    S.Identifier "ctor-def"
+  CtorDef _ _ i ss ->
+    codegenCtorDef i ss
 
   LetRec _ _ _ ->
     S.Identifier "let-rec"
@@ -279,3 +283,17 @@ codegenPrimOp codegenEnv = case _ of
           S.List [ S.Identifier "scm:string-append", x', y' ]
         OpStringOrd o' ->
           makeComparison "string" o'
+
+codegenCtorDef :: Ident -> Array String -> ChezExpr
+codegenCtorDef (Ident i) [] =
+  S.List
+    [ S.Identifier "scm:cons"
+    , S.List [ S.Identifier "scm:quote", S.Identifier i ]
+    , S.Identifier "scm:nil"
+    ]
+codegenCtorDef (Ident i) ss =
+  S.List
+    [ S.Identifier "scm:cons"
+    , S.List [ S.Identifier "scm:quote", S.Identifier i ]
+    , S.List $ [ S.Identifier "scm:vector" ] <> map S.Identifier ss
+    ]
