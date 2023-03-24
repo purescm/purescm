@@ -169,19 +169,33 @@ codegenPrimOp codegenEnv = case _ of
       x' = codegenExpr codegenEnv x
       y' = codegenExpr codegenEnv y
 
-      opDtNum = case _ of
-        OpAdd -> S.Identifier "scm:+"
-        OpSubtract -> S.Identifier "scm:-"
-        OpMultiply -> S.Identifier "scm:*"
-        OpDivide -> S.Identifier "scm:/"
+      opFixNum = case _ of
+        OpAdd -> S.Identifier "scm:fx+"
+        OpSubtract -> S.Identifier "scm:fx-"
+        OpMultiply -> S.Identifier "scm:fx*"
+        OpDivide -> S.Identifier "scm:fx/"
 
-      opDtOrd = case _ of
-        OpEq -> S.Identifier "scm:="
-        OpNotEq -> S.Identifier "scm:="
-        OpGt -> S.Identifier "scm:>"
-        OpGte -> S.Identifier "scm:>="
-        OpLt -> S.Identifier "scm:<"
-        OpLte -> S.Identifier "scm:<="
+      opFixOrd = case _ of
+        OpEq -> S.Identifier "scm:fx="
+        OpNotEq -> S.Identifier "scm:fx="
+        OpGt -> S.Identifier "scm:fx>"
+        OpGte -> S.Identifier "scm:fx>="
+        OpLt -> S.Identifier "scm:fx<"
+        OpLte -> S.Identifier "scm:fx<="
+
+      opFloNum = case _ of 
+        OpAdd -> S.Identifier "scm:fl+"
+        OpSubtract -> S.Identifier "scm:fl-"
+        OpMultiply -> S.Identifier "scm:fl*"
+        OpDivide -> S.Identifier "scm:fl/"
+
+      opFloOrd = case _ of
+        OpEq -> S.Identifier "scm:fl="
+        OpNotEq -> S.Identifier "scm:fl="
+        OpGt -> S.Identifier "scm:fl>"
+        OpGte -> S.Identifier "scm:fl>="
+        OpLt -> S.Identifier "scm:fl<"
+        OpLte -> S.Identifier "scm:fl<="
 
       opCharOrd = case _ of
         OpEq -> S.Identifier "scm:char=?"
@@ -219,33 +233,42 @@ codegenPrimOp codegenEnv = case _ of
             _ ->
               S.List [ opCharOrd o', x', y' ]
         OpIntBitAnd ->
-          S.List [ S.Identifier "scm:bitwise-and", x', y' ]
+          S.List [ S.Identifier "scm:fxlogand", x', y' ]
         OpIntBitOr ->
-          S.List  [ S.Identifier "scm:bitwise-or", x', y' ]
+          S.List [ S.Identifier "scm:fxlogor", x', y' ]
         OpIntBitShiftLeft ->
-          S.List [ S.Identifier "scm:bitwise-arithmetic-shift-left", x', y' ]
+          -- shift-left-logical = shift-left-arithmetic
+          S.List [ S.Identifier "scm:fxsll", x', y' ]
         OpIntBitShiftRight ->
-          S.List [ S.Identifier "scm:bitwise-arithmetic-shift-right", x', y' ]
+          -- shift-right-arithmetic preserves signs
+          S.List [ S.Identifier "scm:fxsra", x', y' ]
         OpIntBitXor ->
-          S.List [ S.Identifier "scm:bitwise-xor", x', y' ]
+          S.List [ S.Identifier "scm:fxlogxor", x', y' ]
         OpIntBitZeroFillShiftRight ->
-          S.Identifier "zero-fill-shift-right"
+          -- shift-right-logical follows the invariant:
+          --
+          -- (= (most-positive-fixnum) (fxsrl -1 1))
+          --
+          -- or:
+          --
+          -- top == zshr (-1) 1
+          S.List [ S.Identifier "scm:fxsrl", x', y' ]
         OpIntNum o' ->
-          S.List [ opDtNum o', x', y' ]
+          S.List [ opFixNum o', x', y' ]
         OpIntOrd o' ->
           case o' of
             OpNotEq ->
-              S.List [ S.Identifier "scm:not", S.List [ opDtOrd o', x', y' ] ]
+              S.List [ S.Identifier "scm:not", S.List [ opFixOrd o', x', y' ] ]
             _ ->
-              S.List [ opDtOrd o', x', y' ]
+              S.List [ opFixOrd o', x', y' ]
         OpNumberNum o' ->
-          S.List [ opDtNum o', x', y' ]
+          S.List [ opFloNum o', x', y' ]
         OpNumberOrd o' ->
           case o' of
             OpNotEq ->
-              S.List [ S.Identifier "scm:not", S.List [ opDtOrd o', x', y' ] ]
+              S.List [ S.Identifier "scm:not", S.List [ opFloOrd o', x', y' ] ]
             _ ->
-              S.List [ opDtOrd o', x', y' ]
+              S.List [ opFloOrd o', x', y' ]
         OpStringAppend ->
           S.List [ S.Identifier "scm:string-append", x', y' ]
         OpStringOrd o' ->
@@ -254,5 +277,5 @@ codegenPrimOp codegenEnv = case _ of
           case o' of
             OpNotEq ->
               S.List [ S.Identifier "scm:not", S.List [ opStringOrd o', x', y' ] ]
-            _ -> 
+            _ ->
               S.List [ opStringOrd o', x', y' ]
