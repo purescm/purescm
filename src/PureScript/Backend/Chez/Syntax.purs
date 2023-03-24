@@ -258,7 +258,7 @@ printDefinition = case _ of
     printNamedIndentedList (D.text "scm:define " <> D.text ident)
       $ printCurriedApp (NEA.toArray args) expr
   DefineUncurriedFunction ident args expr ->
-    printNamedIndentedList (D.text "scm:define" <> D.text ident)
+    printNamedIndentedList (D.text "scm:define " <> D.text ident)
       $ printNamedIndentedList
           (D.text "scm:lambda " <> printList (D.words $ map D.text args))
           (printChezExpr expr)
