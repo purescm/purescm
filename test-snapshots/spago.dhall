@@ -2,6 +2,6 @@
 , dependencies =
   [ "prelude"
   ]
-, packages = ../packages.dhall
+, packages = ./packages.dhall
 , sources = [ "snapshots-input/**/*.purs" ]
 }
