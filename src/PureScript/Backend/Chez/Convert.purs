@@ -187,6 +187,14 @@ codegenPrimOp codegenEnv = case _ of
       x' = codegenExpr codegenEnv x
       y' = codegenExpr codegenEnv y
 
+      opBooleanOrd = case _ of
+        OpEq -> S.Identifier "scm:boolean=?"
+        OpNotEq -> S.Identifier "scm:boolean=?"
+        OpGt -> S.Identifier "rt:boolean<?"
+        OpGte -> S.Identifier "rt:boolean>=?"
+        OpLt -> S.Identifier "rt:boolean<?"
+        OpLte -> S.Identifier "rt:boolean<=?"
+
       opFixNum = case _ of
         OpAdd -> S.Identifier "scm:fx+"
         OpSubtract -> S.Identifier "scm:fx-"
@@ -238,12 +246,12 @@ codegenPrimOp codegenEnv = case _ of
           S.List [ S.Identifier "scm:and", x', y' ]
         OpBooleanOr ->
           S.List [ S.Identifier "scm:or", x', y' ]
-        OpBooleanOrd _ ->
-          -- Neither R6RS nor Chez defines comparison operators for
-          -- booleans, meaning that we would either have to inject
-          -- the definitions at the call site _or_ provide them
-          -- through a library loaded by _all_ files.
-          S.Identifier "boolean-ord"
+        OpBooleanOrd o' ->
+          case o' of
+            OpNotEq ->
+              S.List [ S.Identifier "scm:not", S.List [ opBooleanOrd o', x', y' ] ]
+            _ ->
+              S.List [ opBooleanOrd o', x', y' ]
         OpCharOrd o' ->
           case o' of
             OpNotEq ->
