@@ -76,7 +76,7 @@
     (Foo 1))
 
   (scm:define test5
-    (scm:lambda ($__unused0)
+    (scm:lambda (_)
       (scm:lambda (v1)
         (scm:cond ((First? v1) (First-value0 v1)) (scm:else (scm:raise (scm:condition (scm:make-error) (scm:make-message-condition "Failed pattern match"))))))))
 

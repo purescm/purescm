@@ -342,7 +342,9 @@ printRecordDefinition ident name constructor predicate fields =
 
 toChezIdent :: Maybe Ident -> Level -> Prim.String
 toChezIdent i (Level l) = case i of
-  Just (Ident i') -> i' <> show l
+  Just (Ident i') -> case i' of
+    "$__unused" -> "_"
+    _ -> i' <> show l
   Nothing -> "_" <> show l
 
 --
@@ -367,8 +369,11 @@ chezCurriedApplication f s = NonEmptyArray.foldl1 app $ NonEmptyArray.cons f s
 chezCurriedFunction :: NonEmptyArray Prim.String -> ChezExpr -> ChezExpr
 chezCurriedFunction a e = Array.foldr lambda e $ NonEmptyArray.toArray a
 
-chezLet :: Prim.String -> ChezExpr -> ChezExpr -> ChezExpr
-chezLet i v e = List [ Identifier $ scmPrefixed "letrec*", List [ List [ Identifier i, v ] ], e ]
+chezThunk :: ChezExpr -> ChezExpr
+chezThunk e = List [ Identifier $ scmPrefixed "lambda", List [], e ]
+
+chezUnthunk :: ChezExpr -> ChezExpr
+chezUnthunk e = List [ e ]
 
 --
 
