@@ -14,3 +14,10 @@ h :: Number -> Number
 h = case _ of
   3.14 -> 3.14159
   _ -> 0.0
+
+i :: Boolean -> Boolean -> Boolean
+i = case _, _ of
+  true, true -> false
+  false, false -> true
+  false, true -> false
+  true, false -> true

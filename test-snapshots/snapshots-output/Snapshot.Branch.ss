@@ -5,10 +5,16 @@
   (export
     f
     g
-    h)
+    h
+    i)
   (import
     (prefix (chezscheme) scm:)
     (prefix (_Chez_Runtime lib) rt:))
+
+  (scm:define i
+    (scm:lambda (v0)
+      (scm:lambda (v11)
+        (scm:cond (v0 (scm:not v11)) ((scm:not v11) #t) (v11 #f) (scm:else (scm:raise (scm:condition (scm:make-error) (scm:make-message-condition "Failed pattern match"))))))))
 
   (scm:define h
     (scm:lambda (v0)
