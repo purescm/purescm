@@ -150,8 +150,18 @@ codegenExpr codegenEnv@{ currentModule } (NeutralExpr s) = case s of
   PrimUndefined ->
     S.Identifier "prim-undefined"
 
-  Fail _ ->
-    S.Identifier "fail"
+  Fail i ->
+    S.List
+      [ S.Identifier "scm:raise"
+      , S.List
+          [ S.Identifier "scm:condition"
+          , S.List [ S.Identifier "scm:make-error" ]
+          , S.List
+              [ S.Identifier "scm:make-message-condition"
+              , S.String $ Json.stringify $ Json.fromString i
+              ]
+          ]
+      ]
 
 codegenLiteral :: CodegenEnv -> Literal NeutralExpr -> ChezExpr
 codegenLiteral codegenEnv = case _ of
