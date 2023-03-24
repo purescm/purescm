@@ -151,6 +151,9 @@ codegenExpr codegenEnv@{ currentModule } (NeutralExpr s) = case s of
     S.Identifier "prim-undefined"
 
   Fail i ->
+    -- Note: This can be improved by using `error`, but it requires
+    -- that we track where exactly this `Fail` is defined. We can
+    -- make use of the `codegenEnv` for this.
     S.List
       [ S.Identifier "scm:raise"
       , S.List
