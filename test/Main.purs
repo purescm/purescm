@@ -42,6 +42,7 @@ import Node.Path as Path
 import Node.Process as Process
 import Partial.Unsafe (unsafeCrashWith)
 import PureScript.Backend.Chez.Convert (codegenModule)
+import PureScript.Backend.Chez.Runtime (runtimeModule)
 import PureScript.Backend.Chez.Syntax as S
 import PureScript.Backend.Optimizer.Builder (buildModules)
 import PureScript.Backend.Optimizer.Convert (BackendModule)
@@ -93,6 +94,12 @@ runSnapshotTests { accept, filter } = do
   let testOut = Path.concat [ snapshotDir, "test-out" ]
   mkdirp snapshotsOut
   mkdirp testOut
+  -- RUNTIME
+  let runtimePath = Path.concat [ testOut, "_Chez_Runtime" ]
+  mkdirp runtimePath
+  let runtimeFilePath = Path.concat [ runtimePath, "lib.ss" ]
+  let runtimeContents = Dodo.print plainText Dodo.twoSpaces $ S.printLibrary $ runtimeModule
+  FS.writeTextFile UTF8 runtimeFilePath runtimeContents
   coreFnModulesFromOutput "output" filter >>= case _ of
     Left errors -> do
       for_ errors \(Tuple filePath err) -> do

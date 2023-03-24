@@ -63,6 +63,9 @@ codegenModule { name, bindings, exports, imports, foreign: foreign_ } =
         [ ImportSet $ ImportPrefix
             (ImportLibrary { identifiers: NEA.singleton "chezscheme", version: Nothing })
             "scm:"
+        , ImportSet $ ImportPrefix
+            (ImportLibrary { identifiers: NEA.cons' "_Chez_Runtime" [ "lib" ], version: Nothing })
+            "rt:"
         ] <> pursImports <> foreignImport
     , exports: exports'
     , body: { definitions, expressions: [] }
@@ -198,7 +201,7 @@ codegenPrimOp codegenEnv = case _ of
         OpLt -> S.Identifier "scm:fx<"
         OpLte -> S.Identifier "scm:fx<="
 
-      opFloNum = case _ of 
+      opFloNum = case _ of
         OpAdd -> S.Identifier "scm:fl+"
         OpSubtract -> S.Identifier "scm:fl-"
         OpMultiply -> S.Identifier "scm:fl*"
