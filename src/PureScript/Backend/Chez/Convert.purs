@@ -193,31 +193,24 @@ codegenChain :: BlockMode -> CodegenEnv -> NeutralExpr -> ChezExpr
 codegenChain blockMode codegenEnv = go []
   where
   go :: Array _ -> NeutralExpr -> ChezExpr
-  go a e = case unwrap e of
+  go bindings expression = case unwrap expression of
     Let i l v e' ->
-      go (a <> [ { i, l, v: codegenExpr codegenEnv v } ]) e'
+      go (bindings <> [ { i, l, v: codegenExpr codegenEnv v } ]) e'
     EffectBind i l v e' | blockMode.effect ->
-      go (a <> [ { i, l, v: S.chezUnthunk $ codegenExpr codegenEnv v } ]) e'
+      go (bindings <> [ { i, l, v: S.chezUnthunk $ codegenExpr codegenEnv v } ]) e'
     EffectPure e' | blockMode.effect ->
-      go a e'
+      go bindings e'
     EffectDefer e' | blockMode.effect ->
-      go a e'
-    _ | Array.null a ->
-      codegenExpr codegenEnv e
+      go bindings e'
+    _ | Array.null bindings ->
+      codegenExpr codegenEnv expression
     _ ->
-      let
-        asBinding :: _ -> ChezExpr
-        asBinding info =
-          S.List
-            [ S.Identifier $ S.toChezIdent info.i info.l
-            , info.v
-            ]
-      in
-        S.List $
-          [ S.Identifier "scm:let*"
-          , S.List $ asBinding <$> a
-          , codegenExpr codegenEnv e
-          ]
+      S.List $
+        [ S.Identifier "scm:let*"
+        , S.List $ bindings <#> \binding ->
+            S.List [ S.Identifier $ S.toChezIdent binding.i binding.l, binding.v ]
+        , codegenExpr codegenEnv expression
+        ]
 
 codegenPrimOp :: CodegenEnv -> BackendOperator NeutralExpr -> ChezExpr
 codegenPrimOp codegenEnv = case _ of
