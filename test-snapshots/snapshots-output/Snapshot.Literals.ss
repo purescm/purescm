@@ -14,7 +14,8 @@
     record2
     string)
   (import
-    (prefix (chezscheme) scm:))
+    (prefix (chezscheme) scm:)
+    (prefix (_Chez_Runtime lib) rt:))
 
   (scm:define string
     "string")

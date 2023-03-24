@@ -7,6 +7,7 @@
     fortyTwo)
   (import
     (prefix (chezscheme) scm:)
+    (prefix (_Chez_Runtime lib) rt:)
     (Snapshot.Import.Impl foreign))
 
   (scm:define fortyTwo
