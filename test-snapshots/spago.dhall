@@ -1,5 +1,5 @@
 { name = "snapshots"
-, dependencies = [ "partial", "prelude" ]
+, dependencies = [ "effect", "partial", "prelude" ]
 , packages = ./packages.dhall
 , sources = [ "snapshots-input/**/*.purs" ]
 }

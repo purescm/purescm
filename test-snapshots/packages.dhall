@@ -13,3 +13,8 @@ in  upstream
     , repo = "https://github.com/purescm/purescript-partial.git"
     , version = "d8b6daf068e4aab0ad85a42d0f890ed37f416923"
     }
+  with effect =
+    { dependencies = [ "prelude" ]
+    , repo = "https://github.com/purescm/purescript-effect.git"
+    , version = "8aee2c2fbf5425bf8fa4537a5ad2070170622acf"
+    }

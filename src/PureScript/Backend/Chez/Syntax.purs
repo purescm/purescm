@@ -304,8 +304,11 @@ chezCurriedApplication f s = NonEmptyArray.foldl1 app $ NonEmptyArray.cons f s
 chezCurriedFunction :: NonEmptyArray Prim.String -> ChezExpr -> ChezExpr
 chezCurriedFunction a e = Array.foldr lambda e $ NonEmptyArray.toArray a
 
-chezLet :: Prim.String -> ChezExpr -> ChezExpr -> ChezExpr
-chezLet i v e = List [ Identifier "scm:letrec*", List [ List [ Identifier i, v ] ], e ]
+chezThunk :: ChezExpr -> ChezExpr
+chezThunk e = List [ Identifier "scm:lambda", List [], e ]
+
+chezUnthunk :: ChezExpr -> ChezExpr
+chezUnthunk e = List [ e ]
 
 --
 

@@ -15,7 +15,7 @@ import PureScript.Backend.Chez.Syntax (ChezDefinition(..), ChezExport(..), ChezE
 import PureScript.Backend.Chez.Syntax as S
 import PureScript.Backend.Optimizer.Convert (BackendModule, BackendBindingGroup)
 import PureScript.Backend.Optimizer.CoreFn (Ident(..), Literal(..), ModuleName(..), Qualified(..))
-import PureScript.Backend.Optimizer.Semantics (NeutralExpr(..))
+import PureScript.Backend.Optimizer.Semantics (NeutralExpr)
 import PureScript.Backend.Optimizer.Syntax (BackendOperator(..), BackendOperator1(..), BackendOperator2(..), BackendOperatorNum(..), BackendOperatorOrd(..), BackendSyntax(..), Pair(..))
 import Safe.Coerce (coerce)
 
@@ -90,7 +90,7 @@ codegenTopLevelBinding codegenEnv (Tuple (Ident i) n) =
       DefineValue i $ codegenExpr codegenEnv n
 
 codegenExpr :: CodegenEnv -> NeutralExpr -> ChezExpr
-codegenExpr codegenEnv@{ currentModule } (NeutralExpr s) = case s of
+codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
   Var (Qualified (Just moduleName) (Ident v))
     | currentModule == moduleName -> S.Identifier v
     | otherwise -> S.Identifier $ coerce moduleName <> "." <> v
@@ -127,8 +127,8 @@ codegenExpr codegenEnv@{ currentModule } (NeutralExpr s) = case s of
 
   LetRec _ _ _ ->
     S.Identifier "let-rec"
-  Let i l v e ->
-    S.chezLet (S.toChezIdent i l) (codegenExpr codegenEnv v) (codegenExpr codegenEnv e)
+  Let _ _ _ _ ->
+    codegenChain pureBlockMode codegenEnv s
   Branch b o -> do
     let
       goPair :: Pair NeutralExpr -> { c :: _, e :: _ }
@@ -136,11 +136,11 @@ codegenExpr codegenEnv@{ currentModule } (NeutralExpr s) = case s of
     S.chezCond (goPair <$> b) (codegenExpr codegenEnv <$> o)
 
   EffectBind _ _ _ _ ->
-    S.Identifier "effect-bind"
+    codegenEffectChain codegenEnv s
   EffectPure _ ->
-    S.Identifier "effect-pure"
+    codegenEffectChain codegenEnv s
   EffectDefer _ ->
-    S.Identifier "effect-defer"
+    codegenEffectChain codegenEnv s
 
   PrimOp o ->
     codegenPrimOp codegenEnv o
@@ -174,6 +174,50 @@ codegenLiteral codegenEnv = case _ of
   LitBoolean b -> S.Identifier $ if b then "#t" else "#f"
   LitArray a -> S.vector $ codegenExpr codegenEnv <$> a
   LitRecord r -> S.record $ (map $ codegenExpr codegenEnv) <$> r
+
+type BlockMode = { effect :: Boolean }
+
+pureBlockMode :: BlockMode
+pureBlockMode = { effect: false }
+
+effectBlockMode :: BlockMode
+effectBlockMode = { effect: true }
+
+codegenPureChain :: CodegenEnv -> NeutralExpr -> ChezExpr
+codegenPureChain = codegenChain pureBlockMode
+
+codegenEffectChain :: CodegenEnv -> NeutralExpr -> ChezExpr
+codegenEffectChain codegenEnv = S.chezThunk <<< codegenChain effectBlockMode codegenEnv
+
+codegenChain :: BlockMode -> CodegenEnv -> NeutralExpr -> ChezExpr
+codegenChain blockMode codegenEnv = go []
+  where
+  go :: Array _ -> NeutralExpr -> ChezExpr
+  go a e = case unwrap e of
+    Let i l v e' ->
+      go (a <> [ { i, l, v: codegenExpr codegenEnv v } ]) e'
+    EffectBind i l v e' | blockMode.effect ->
+      go (a <> [ { i, l, v: S.chezUnthunk $ codegenExpr codegenEnv v } ]) e'
+    EffectPure e' | blockMode.effect ->
+      go a e'
+    EffectDefer e' | blockMode.effect ->
+      go a e'
+    _ | Array.null a ->
+      codegenExpr codegenEnv e
+    _ ->
+      let
+        asBinding :: _ -> ChezExpr
+        asBinding info =
+          S.List
+            [ S.Identifier $ S.toChezIdent info.i info.l
+            , info.v
+            ]
+      in
+        S.List $
+          [ S.Identifier "scm:let*"
+          , S.List $ asBinding <$> a
+          , codegenExpr codegenEnv e
+          ]
 
 codegenPrimOp :: CodegenEnv -> BackendOperator NeutralExpr -> ChezExpr
 codegenPrimOp codegenEnv = case _ of
