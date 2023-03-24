@@ -16,7 +16,7 @@ import PureScript.Backend.Chez.Syntax as S
 import PureScript.Backend.Optimizer.Convert (BackendModule, BackendBindingGroup)
 import PureScript.Backend.Optimizer.CoreFn (Ident(..), Literal(..), ModuleName(..), Qualified(..))
 import PureScript.Backend.Optimizer.Semantics (NeutralExpr(..))
-import PureScript.Backend.Optimizer.Syntax (BackendOperator(..), BackendOperator2(..), BackendOperatorNum(..), BackendOperatorOrd(..), BackendSyntax(..), Pair(..))
+import PureScript.Backend.Optimizer.Syntax (BackendOperator(..), BackendOperator1(..), BackendOperator2(..), BackendOperatorNum(..), BackendOperatorOrd(..), BackendSyntax(..), Pair(..))
 import Safe.Coerce (coerce)
 
 type CodegenEnv =
@@ -162,8 +162,23 @@ codegenLiteral codegenEnv = case _ of
 
 codegenPrimOp :: CodegenEnv -> BackendOperator NeutralExpr -> ChezExpr
 codegenPrimOp codegenEnv = case _ of
-  Op1 _ _ ->
-    S.Identifier "unary-prim-op"
+  Op1 o x ->
+    let
+      x' = codegenExpr codegenEnv x
+    in
+      case o of
+        OpBooleanNot ->
+          S.List [ S.Identifier "scm:not", x' ]
+        OpIntBitNot ->
+          S.List [ S.Identifier "scm:fxlognot", x' ]
+        OpIntNegate ->
+          S.List [ S.Identifier "scm:fx-", x' ]
+        OpNumberNegate ->
+          S.List [ S.Identifier "scm:fl-", x' ]
+        OpArrayLength ->
+          S.List [ S.Identifier "scm:vector-length", x' ]
+        OpIsTag _ ->
+          S.Identifier "op-is-tag"
   Op2 o x y ->
     let
       x' = codegenExpr codegenEnv x
