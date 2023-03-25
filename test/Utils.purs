@@ -28,7 +28,6 @@ import Data.Set.NonEmpty as NonEmptySet
 import Data.Tuple (Tuple(..))
 import Effect.Aff (Aff, effectCanceler, error, makeAff, throwError)
 import Effect.Class (liftEffect)
-import Effect.Console (log)
 import Node.Buffer (Buffer, freeze)
 import Node.Buffer.Immutable as ImmutableBuffer
 import Node.ChildProcess (ExecResult, Exit(..), defaultExecOptions, defaultSpawnOptions, inherit)
@@ -75,12 +74,25 @@ bufferToUTF8 = liftEffect <<< map (ImmutableBuffer.toString UTF8) <<< freeze
 mkdirp :: FilePath -> Aff Unit
 mkdirp path = FS.mkdir' path { recursive: true, mode: mkPerms Perms.all Perms.all Perms.all }
 
--- | Note: this code needs to be updated to run Chez Scheme scripts
-loadModuleMain :: FilePath -> String -> Boolean -> FilePath -> Aff (Either ExecaError ExecaSuccess)
-loadModuleMain libDir schemeBin hasMain path = do
-  when hasMain do
-    liftEffect $ log "Running a snaphot as a top-level program is not yet implemented."
-  spawned <- execa schemeBin [ "--libdirs", libDir <> ":", "--script", path ] identity
+loadModuleMain
+  :: { libdir :: FilePath
+     , scheme :: String
+     , hasMain :: Boolean
+     , moduleName :: String
+     , modulePath :: String
+     }
+  -> Aff (Either ExecaError ExecaSuccess)
+loadModuleMain options = do
+  let
+    arguments :: Array String
+    arguments = [ "-q", "--libdirs", options.libdir <> ":" ] <>
+      if not options.hasMain then
+        [ "--script", options.modulePath ]
+      else
+        [ ]
+  spawned <- execa options.scheme arguments identity
+  when options.hasMain do
+    spawned.stdin.writeUtf8End $ Array.fold [ "(import (", options.moduleName, " lib)) (display (main))" ]
   spawned.result
 
 copyFile :: FilePath -> FilePath -> Aff Unit
