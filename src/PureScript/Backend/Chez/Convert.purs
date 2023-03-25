@@ -129,12 +129,11 @@ codegenExpr codegenEnv@{ currentModule } (NeutralExpr s) = case s of
     S.Identifier "let-rec"
   Let i l v e ->
     S.chezLet (S.toChezIdent i l) (codegenExpr codegenEnv v) (codegenExpr codegenEnv e)
-  Branch b o ->
+  Branch b o -> do
     let
       goPair :: Pair NeutralExpr -> { c :: _, e :: _ }
       goPair (Pair c e) = { c: codegenExpr codegenEnv c, e: codegenExpr codegenEnv e }
-    in
-      S.chezCond (goPair <$> b) (codegenExpr codegenEnv <$> o)
+    S.chezCond (goPair <$> b) (codegenExpr codegenEnv <$> o)
 
   EffectBind _ _ _ _ ->
     S.Identifier "effect-bind"
@@ -178,23 +177,22 @@ codegenLiteral codegenEnv = case _ of
 
 codegenPrimOp :: CodegenEnv -> BackendOperator NeutralExpr -> ChezExpr
 codegenPrimOp codegenEnv = case _ of
-  Op1 o x ->
+  Op1 o x -> do
     let
       x' = codegenExpr codegenEnv x
-    in
-      case o of
-        OpBooleanNot ->
-          S.List [ S.Identifier "scm:not", x' ]
-        OpIntBitNot ->
-          S.List [ S.Identifier "scm:fxlognot", x' ]
-        OpIntNegate ->
-          S.List [ S.Identifier "scm:fx-", x' ]
-        OpNumberNegate ->
-          S.List [ S.Identifier "scm:fl-", x' ]
-        OpArrayLength ->
-          S.List [ S.Identifier "scm:vector-length", x' ]
-        OpIsTag _ ->
-          S.Identifier "op-is-tag"
+    case o of
+      OpBooleanNot ->
+        S.List [ S.Identifier "scm:not", x' ]
+      OpIntBitNot ->
+        S.List [ S.Identifier "scm:fxlognot", x' ]
+      OpIntNegate ->
+        S.List [ S.Identifier "scm:fx-", x' ]
+      OpNumberNegate ->
+        S.List [ S.Identifier "scm:fl-", x' ]
+      OpArrayLength ->
+        S.List [ S.Identifier "scm:vector-length", x' ]
+      OpIsTag _ ->
+        S.Identifier "op-is-tag"
   Op2 o x y ->
     let
       x' = codegenExpr codegenEnv x
@@ -213,18 +211,18 @@ codegenPrimOp codegenEnv = case _ of
         OpDivide -> S.Identifier "scm:fl/"
 
       makeComparison :: String -> BackendOperatorOrd -> ChezExpr
-      makeComparison tyName =
+      makeComparison tyName = do
         let
+          comparisonExpression :: String -> ChezExpr
           comparisonExpression opName =
             S.List [ S.Identifier $ Array.fold [ "scm:", tyName, opName ], x', y' ]
-        in
-          case _ of
-            OpEq -> comparisonExpression "=?"
-            OpNotEq -> S.List [ S.Identifier "scm:not", comparisonExpression "=?" ]
-            OpGt -> comparisonExpression ">?"
-            OpGte -> comparisonExpression ">=?"
-            OpLt -> comparisonExpression "<?"
-            OpLte -> comparisonExpression "<=?"
+        case _ of
+          OpEq -> comparisonExpression "=?"
+          OpNotEq -> S.List [ S.Identifier "scm:not", comparisonExpression "=?" ]
+          OpGt -> comparisonExpression ">?"
+          OpGte -> comparisonExpression ">=?"
+          OpLt -> comparisonExpression "<?"
+          OpLte -> comparisonExpression "<=?"
     in
       case o of
         OpArrayIndex ->
@@ -233,20 +231,19 @@ codegenPrimOp codegenEnv = case _ of
           S.List [ S.Identifier "scm:and", x', y' ]
         OpBooleanOr ->
           S.List [ S.Identifier "scm:or", x', y' ]
-        OpBooleanOrd o' ->
+        OpBooleanOrd o' -> do
           -- Gt, Gte, Lt, Lte are defined under rt:
           let
             comparisonExpression :: String -> String -> ChezExpr
             comparisonExpression prefix opName =
               S.List [ S.Identifier $ Array.fold [ prefix, "boolean", opName ], x', y' ]
-          in
-            case o' of
-              OpEq -> comparisonExpression "scm:" "=?"
-              OpNotEq -> S.List [ S.Identifier "scm:not", comparisonExpression "scm:" "=?" ]
-              OpGt -> comparisonExpression "rt:" ">?"
-              OpGte -> comparisonExpression "rt:" ">=?"
-              OpLt -> comparisonExpression "rt:" "<?"
-              OpLte -> comparisonExpression "rt:" "<=?"
+          case o' of
+            OpEq -> comparisonExpression "scm:" "=?"
+            OpNotEq -> S.List [ S.Identifier "scm:not", comparisonExpression "scm:" "=?" ]
+            OpGt -> comparisonExpression "rt:" ">?"
+            OpGte -> comparisonExpression "rt:" ">=?"
+            OpLt -> comparisonExpression "rt:" "<?"
+            OpLte -> comparisonExpression "rt:" "<=?"
         OpCharOrd o' ->
           makeComparison "char" o'
         OpIntBitAnd ->
