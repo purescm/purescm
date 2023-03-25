@@ -289,7 +289,7 @@ codegenCtorDef (Ident i) [] =
   S.List
     [ S.Identifier "scm:cons"
     , S.List [ S.Identifier "scm:quote", S.Identifier i ]
-    , S.Identifier "scm:nil"
+    , S.List [ S.Identifier "scm:quote", S.Identifier "()" ]
     ]
 codegenCtorDef (Ident i) ss =
   S.List

@@ -13,7 +13,7 @@
 
   (scm:define Nil
     (scm:lambda ()
-      (scm:cons (scm:quote Nil) scm:nil)))
+      (scm:cons (scm:quote Nil) (scm:quote ()))))
 
   (scm:define Node
     (scm:lambda (value0)
@@ -27,4 +27,4 @@
 
   (scm:define Nothing
     (scm:lambda ()
-      (scm:cons (scm:quote Nothing) scm:nil))))
+      (scm:cons (scm:quote Nothing) (scm:quote ())))))
