@@ -269,9 +269,10 @@ printDefinition = case _ of
       , D.indent $ fields' <> D.text ")"
       ]
     where
+    name = ident <> "$"
     ctor = ident <> "*"
     pred = ident <> "?"
-    names = printList $ D.words $ map D.text [ ident, ctor, pred ]
+    names = printList $ D.words $ map D.text [ name, ctor, pred ]
     fields' = printList $ D.words $ map D.text (Array.cons "scm:fields" fields)
 
 printCurriedApp :: Prim.Array Prim.String -> ChezExpr -> Doc Void

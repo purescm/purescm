@@ -78,19 +78,29 @@ codegenTopLevelBindingGroup codegenEnv { recursive, bindings }
   | recursive, Just bindings' <- NonEmptyArray.fromArray bindings =
       [ DefineValue "rtlbg" $ S.Identifier "recursive-top-level-binding-group" ]
   | otherwise =
-      codegenTopLevelBinding codegenEnv <$> bindings
+      Array.concatMap (codegenTopLevelBinding codegenEnv) bindings
 
-codegenTopLevelBinding :: CodegenEnv -> Tuple Ident NeutralExpr -> ChezDefinition
+codegenTopLevelBinding :: CodegenEnv -> Tuple Ident NeutralExpr -> Array ChezDefinition
 codegenTopLevelBinding codegenEnv (Tuple (Ident i) n) =
   case unwrap n of
     Abs a e ->
-      DefineCurriedFunction i (uncurry S.toChezIdent <$> a) (codegenExpr codegenEnv e)
+      [ DefineCurriedFunction i (uncurry S.toChezIdent <$> a) (codegenExpr codegenEnv e) ]
     UncurriedAbs a e ->
-      DefineUncurriedFunction i (uncurry S.toChezIdent <$> a) (codegenExpr codegenEnv e)
+      [ DefineUncurriedFunction i (uncurry S.toChezIdent <$> a) (codegenExpr codegenEnv e) ]
     CtorDef _ _ _ ss ->
-      DefineRecordType i ss
+      case NonEmptyArray.fromArray ss of
+        Nothing -> [ DefineRecordType i [] ]
+        Just xs ->
+          if NEA.length xs == 1
+          then [ DefineRecordType i ss ]
+          else [ DefineRecordType i ss
+               , DefineCurriedFunction i xs
+                 $ S.List
+                 $ Array.cons (S.Identifier $ i <> "*")
+                 (map S.Identifier ss)
+               ]
     _ ->
-      DefineValue i $ codegenExpr codegenEnv n
+      [ DefineValue i $ codegenExpr codegenEnv n ]
 
 codegenExpr :: CodegenEnv -> NeutralExpr -> ChezExpr
 codegenExpr codegenEnv@{ currentModule } (NeutralExpr s) = case s of
