@@ -11,6 +11,7 @@
   , "dodo-printer"
   , "effect"
   , "either"
+  , "foldable-traversable"
   , "maybe"
   , "newtype"
   , "ordered-collections"
@@ -19,6 +20,7 @@
   , "profunctor"
   , "safe-coerce"
   , "strings"
+  , "transformers"
   , "tuples"
   ]
 , packages = ./packages.dhall
