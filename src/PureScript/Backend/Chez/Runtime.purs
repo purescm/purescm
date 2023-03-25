@@ -1,4 +1,4 @@
-module PureScript.Backend.Chez.Runtime where
+module PureScript.Backend.Chez.Runtime (runtimeModule) where
 
 import Prelude
 
