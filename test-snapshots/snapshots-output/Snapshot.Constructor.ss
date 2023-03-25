@@ -11,20 +11,14 @@
     (prefix (chezscheme) scm:)
     (prefix (_Chez_Runtime lib) rt:))
 
-  (scm:define Nil
-    (scm:lambda ()
-      (scm:cons (scm:quote Nil) (scm:quote ()))))
+  (scm:define-record-type (Nil Nil* Nil?)
+    (scm:fields))
 
-  (scm:define Node
-    (scm:lambda (value0)
-      (scm:lambda (value1)
-        (scm:lambda (value2)
-          (scm:cons (scm:quote Node) (scm:vector value0 value1 value2))))))
+  (scm:define-record-type (Node Node* Node?)
+    (scm:fields value0 value1 value2))
 
-  (scm:define Just
-    (scm:lambda (value0)
-      (scm:cons (scm:quote Just) (scm:vector value0))))
+  (scm:define-record-type (Just Just* Just?)
+    (scm:fields value0))
 
-  (scm:define Nothing
-    (scm:lambda ()
-      (scm:cons (scm:quote Nothing) (scm:quote ())))))
+  (scm:define-record-type (Nothing Nothing* Nothing?)
+    (scm:fields)))

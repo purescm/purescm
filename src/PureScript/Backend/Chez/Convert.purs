@@ -11,6 +11,7 @@ import Data.Newtype (unwrap, wrap)
 import Data.Set as Set
 import Data.String.CodeUnits as CodeUnits
 import Data.Tuple (Tuple(..), uncurry)
+import Partial.Unsafe (unsafeCrashWith)
 import PureScript.Backend.Chez.Syntax (ChezDefinition(..), ChezExport(..), ChezExpr, ChezImport(..), ChezImportSet(..), ChezLibrary)
 import PureScript.Backend.Chez.Syntax as S
 import PureScript.Backend.Optimizer.Convert (BackendModule, BackendBindingGroup)
@@ -87,9 +88,7 @@ codegenTopLevelBinding codegenEnv (Tuple (Ident i) n) =
     UncurriedAbs a e ->
       DefineUncurriedFunction i (uncurry S.toChezIdent <$> a) (codegenExpr codegenEnv e)
     CtorDef _ _ _ ss ->
-      case NonEmptyArray.fromArray ss of
-        Nothing -> DefineUncurriedFunction i [] $ codegenExpr codegenEnv n
-        Just xs -> DefineCurriedFunction i xs $ codegenExpr codegenEnv n
+      DefineRecordType i ss
     _ ->
       DefineValue i $ codegenExpr codegenEnv n
 
@@ -126,8 +125,8 @@ codegenExpr codegenEnv@{ currentModule } (NeutralExpr s) = case s of
 
   CtorSaturated _ _ _ _ _ ->
     S.Identifier "ctor-saturated"
-  CtorDef _ _ i ss ->
-    codegenCtorDef i ss
+  CtorDef _ _ _ _ ->
+    unsafeCrashWith "Unreacheable"
 
   LetRec _ _ _ ->
     S.Identifier "let-rec"
@@ -283,17 +282,3 @@ codegenPrimOp codegenEnv = case _ of
           S.List [ S.Identifier "scm:string-append", x', y' ]
         OpStringOrd o' ->
           makeComparison "string" o'
-
-codegenCtorDef :: Ident -> Array String -> ChezExpr
-codegenCtorDef (Ident i) [] =
-  S.List
-    [ S.Identifier "scm:cons"
-    , S.List [ S.Identifier "scm:quote", S.Identifier i ]
-    , S.List [ S.Identifier "scm:quote", S.Identifier "()" ]
-    ]
-codegenCtorDef (Ident i) ss =
-  S.List
-    [ S.Identifier "scm:cons"
-    , S.List [ S.Identifier "scm:quote", S.Identifier i ]
-    , S.List $ [ S.Identifier "scm:vector" ] <> map S.Identifier ss
-    ]

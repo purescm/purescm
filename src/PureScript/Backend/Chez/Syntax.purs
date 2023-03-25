@@ -83,6 +83,7 @@ data ChezDefinition
   = DefineValue Prim.String ChezExpr
   | DefineCurriedFunction Prim.String (NonEmptyArray Prim.String) ChezExpr
   | DefineUncurriedFunction Prim.String (Prim.Array Prim.String) ChezExpr
+  | DefineRecordType Prim.String (Prim.Array Prim.String)
 
 newtype LiteralDigit = LiteralDigit Prim.String
 
@@ -262,6 +263,16 @@ printDefinition = case _ of
       $ printNamedIndentedList
           (D.text "scm:lambda " <> printList (D.words $ map D.text args))
           (printChezExpr expr)
+  DefineRecordType ident fields ->
+    D.lines
+      [ D.text "(" <> D.text "scm:define-record-type " <> names
+      , D.indent $ fields' <> D.text ")"
+      ]
+    where
+    ctor = ident <> "*"
+    pred = ident <> "?"
+    names = printList $ D.words $ map D.text [ ident, ctor, pred ]
+    fields' = printList $ D.words $ map D.text (Array.cons "scm:fields" fields)
 
 printCurriedApp :: Prim.Array Prim.String -> ChezExpr -> Doc Void
 printCurriedApp args body = case Array.uncons args of
