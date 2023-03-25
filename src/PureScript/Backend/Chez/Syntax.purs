@@ -282,7 +282,9 @@ printChezExpr e = case e of
 
 toChezIdent :: Maybe Ident -> Level -> Prim.String
 toChezIdent i (Level l) = case i of
-  Just (Ident i') -> i' <> show l
+  Just (Ident i') -> case i' of
+    "$__unused" -> "_"
+    _ -> i' <> show l
   Nothing -> "_" <> show l
 
 --
