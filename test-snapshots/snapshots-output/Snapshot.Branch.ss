@@ -18,7 +18,7 @@
 
   (scm:define h
     (scm:lambda (v0)
-      (scm:cond ((scm:fl=? v0 3.14) 3.14159) (scm:else 0.0))))
+      (scm:cond ((scm:fl=? v0 3.14) 3.14159) (scm:else (scm:raise (scm:condition (scm:make-error) (scm:make-message-condition "Failed pattern match")))))))
 
   (scm:define g
     (scm:lambda (v0)
