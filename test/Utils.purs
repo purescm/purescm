@@ -89,10 +89,11 @@ loadModuleMain options = do
       if not options.hasMain then
         [ "--script", options.modulePath ]
       else
-        [ ]
+        []
   spawned <- execa options.scheme arguments identity
   when options.hasMain do
-    spawned.stdin.writeUtf8End $ Array.fold [ "(import (", options.moduleName, " lib)) (display (main))" ]
+    spawned.stdin.writeUtf8End $ Array.fold
+      [ "(import (", options.moduleName, " lib)) (display (main))" ]
   spawned.result
 
 copyFile :: FilePath -> FilePath -> Aff Unit
