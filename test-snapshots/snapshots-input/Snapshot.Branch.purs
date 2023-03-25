@@ -1,5 +1,7 @@
 module Snapshot.Branch where
 
+import Partial.Unsafe (unsafePartial)
+
 f :: Boolean -> Boolean -> Boolean -> Int
 f x y z = if x then if y then if z then 0 else 1 else 2 else 3
 
@@ -11,9 +13,8 @@ g = case _ of
   _ -> 0
 
 h :: Number -> Number
-h = case _ of
+h = unsafePartial case _ of
   3.14 -> 3.14159
-  _ -> 0.0
 
 i :: Boolean -> Boolean -> Boolean
 i = case _, _ of

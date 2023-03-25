@@ -8,3 +8,8 @@ in  upstream
     , repo = "https://github.com/purescm/purescript-prelude.git"
     , version = "63ff5a24beba191c8fda919a58489f36bde2d506"
     }
+  with partial =
+    { dependencies = [] : List Text
+    , repo = "https://github.com/purescm/purescript-partial.git"
+    , version = "d8b6daf068e4aab0ad85a42d0f890ed37f416923"
+    }
