@@ -200,27 +200,11 @@ codegenPrimOp codegenEnv = case _ of
       x' = codegenExpr codegenEnv x
       y' = codegenExpr codegenEnv y
 
-      opBooleanOrd = case _ of
-        OpEq -> S.Identifier "scm:boolean=?"
-        OpNotEq -> S.Identifier "scm:boolean=?"
-        OpGt -> S.Identifier "rt:boolean<?"
-        OpGte -> S.Identifier "rt:boolean>=?"
-        OpLt -> S.Identifier "rt:boolean<?"
-        OpLte -> S.Identifier "rt:boolean<=?"
-
       opFixNum = case _ of
         OpAdd -> S.Identifier "scm:fx+"
         OpSubtract -> S.Identifier "scm:fx-"
         OpMultiply -> S.Identifier "scm:fx*"
         OpDivide -> S.Identifier "scm:fx/"
-
-      opFixOrd = case _ of
-        OpEq -> S.Identifier "scm:fx="
-        OpNotEq -> S.Identifier "scm:fx="
-        OpGt -> S.Identifier "scm:fx>"
-        OpGte -> S.Identifier "scm:fx>="
-        OpLt -> S.Identifier "scm:fx<"
-        OpLte -> S.Identifier "scm:fx<="
 
       opFloNum = case _ of
         OpAdd -> S.Identifier "scm:fl+"
@@ -228,29 +212,19 @@ codegenPrimOp codegenEnv = case _ of
         OpMultiply -> S.Identifier "scm:fl*"
         OpDivide -> S.Identifier "scm:fl/"
 
-      opFloOrd = case _ of
-        OpEq -> S.Identifier "scm:fl="
-        OpNotEq -> S.Identifier "scm:fl="
-        OpGt -> S.Identifier "scm:fl>"
-        OpGte -> S.Identifier "scm:fl>="
-        OpLt -> S.Identifier "scm:fl<"
-        OpLte -> S.Identifier "scm:fl<="
-
-      opCharOrd = case _ of
-        OpEq -> S.Identifier "scm:char=?"
-        OpNotEq -> S.Identifier "scm:char=?"
-        OpGt -> S.Identifier "scm:char>?"
-        OpGte -> S.Identifier "scm:char>=?"
-        OpLt -> S.Identifier "scm:char<?"
-        OpLte -> S.Identifier "scm:char<=?"
-
-      opStringOrd = case _ of
-        OpEq -> S.Identifier "scm:string=?"
-        OpNotEq -> S.Identifier "scm:string=?"
-        OpGt -> S.Identifier "scm:string>?"
-        OpGte -> S.Identifier "scm:string>=?"
-        OpLt -> S.Identifier "scm:string<?"
-        OpLte -> S.Identifier "scm:string<=?"
+      makeComparison :: String -> BackendOperatorOrd -> ChezExpr
+      makeComparison tyName =
+        let
+          comparisonExpression opName =
+            S.List [ S.Identifier $ Array.fold [ "scm:", tyName, opName ], x', y' ]
+        in
+          case _ of
+            OpEq -> comparisonExpression "=?"
+            OpNotEq -> S.List [ S.Identifier "scm:not", comparisonExpression "=?" ]
+            OpGt -> comparisonExpression ">?"
+            OpGte -> comparisonExpression ">=?"
+            OpLt -> comparisonExpression "<?"
+            OpLte -> comparisonExpression "<=?"
     in
       case o of
         OpArrayIndex ->
@@ -260,17 +234,21 @@ codegenPrimOp codegenEnv = case _ of
         OpBooleanOr ->
           S.List [ S.Identifier "scm:or", x', y' ]
         OpBooleanOrd o' ->
-          case o' of
-            OpNotEq ->
-              S.List [ S.Identifier "scm:not", S.List [ opBooleanOrd o', x', y' ] ]
-            _ ->
-              S.List [ opBooleanOrd o', x', y' ]
+          -- Gt, Gte, Lt, Lte are defined under rt:
+          let
+            comparisonExpression :: String -> String -> ChezExpr
+            comparisonExpression prefix opName =
+              S.List [ S.Identifier $ Array.fold [ prefix, "boolean", opName ], x', y' ]
+          in
+            case o' of
+              OpEq -> comparisonExpression "scm:" "=?"
+              OpNotEq -> S.List [ S.Identifier "scm:not", comparisonExpression "scm:" "=?" ]
+              OpGt -> comparisonExpression "rt:" ">?"
+              OpGte -> comparisonExpression "rt:" ">=?"
+              OpLt -> comparisonExpression "rt:" "<?"
+              OpLte -> comparisonExpression "rt:" "<=?"
         OpCharOrd o' ->
-          case o' of
-            OpNotEq ->
-              S.List [ S.Identifier "scm:not", S.List [ opCharOrd o', x', y' ] ]
-            _ ->
-              S.List [ opCharOrd o', x', y' ]
+          makeComparison "char" o'
         OpIntBitAnd ->
           S.List [ S.Identifier "scm:fxlogand", x', y' ]
         OpIntBitOr ->
@@ -295,26 +273,12 @@ codegenPrimOp codegenEnv = case _ of
         OpIntNum o' ->
           S.List [ opFixNum o', x', y' ]
         OpIntOrd o' ->
-          case o' of
-            OpNotEq ->
-              S.List [ S.Identifier "scm:not", S.List [ opFixOrd o', x', y' ] ]
-            _ ->
-              S.List [ opFixOrd o', x', y' ]
+          makeComparison "fx" o'
         OpNumberNum o' ->
           S.List [ opFloNum o', x', y' ]
         OpNumberOrd o' ->
-          case o' of
-            OpNotEq ->
-              S.List [ S.Identifier "scm:not", S.List [ opFloOrd o', x', y' ] ]
-            _ ->
-              S.List [ opFloOrd o', x', y' ]
+          makeComparison "fl" o'
         OpStringAppend ->
           S.List [ S.Identifier "scm:string-append", x', y' ]
         OpStringOrd o' ->
-          -- We've done this pattern-matching four times. Should this
-          -- be refactored to have the pretty-printer deal with it?
-          case o' of
-            OpNotEq ->
-              S.List [ S.Identifier "scm:not", S.List [ opStringOrd o', x', y' ] ]
-            _ ->
-              S.List [ opStringOrd o', x', y' ]
+          makeComparison "string" o'
