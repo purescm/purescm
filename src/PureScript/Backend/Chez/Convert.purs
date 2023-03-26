@@ -195,9 +195,9 @@ codegenChain blockMode codegenEnv = go []
   go :: Array _ -> NeutralExpr -> ChezExpr
   go bindings expression = case unwrap expression of
     Let i l v e' ->
-      go (bindings <> [ { i, l, v: codegenExpr codegenEnv v } ]) e'
+      go (Array.cons { i, l, v: codegenExpr codegenEnv v } bindings) e'
     EffectBind i l v e' | blockMode.effect ->
-      go (bindings <> [ { i, l, v: S.chezUnthunk $ codegenExpr codegenEnv v } ]) e'
+      go (Array.cons { i, l, v: S.chezUnthunk $ codegenExpr codegenEnv v } bindings) e'
     EffectPure e' | blockMode.effect ->
       go bindings e'
     EffectDefer e' | blockMode.effect ->
@@ -207,7 +207,7 @@ codegenChain blockMode codegenEnv = go []
     _ ->
       S.List $
         [ S.Identifier "scm:let*"
-        , S.List $ bindings <#> \binding ->
+        , S.List $ Array.reverse bindings <#> \binding ->
             S.List [ S.Identifier $ S.toChezIdent binding.i binding.l, binding.v ]
         , codegenExpr codegenEnv expression
         ]
