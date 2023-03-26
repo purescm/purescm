@@ -3,16 +3,16 @@
 (library
   (Snapshot.Literals lib)
   (export
-    array
-    array2
-    boolean1
-    boolean2
-    char
-    int
-    number
-    record
+    string
     record2
-    string)
+    record
+    number
+    int
+    char
+    boolean2
+    boolean1
+    array2
+    array)
   (import
     (prefix (chezscheme) scm:)
     (prefix (_Chez_Runtime lib) rt:))

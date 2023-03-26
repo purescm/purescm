@@ -25,17 +25,19 @@ type CodegenEnv =
   }
 
 codegenModule :: BackendModule -> ChezLibrary
-codegenModule { name, bindings, exports, imports, foreign: foreign_ } =
+codegenModule { name, bindings, exports: _exports, imports, foreign: foreign_ } =
   let
     codegenEnv :: CodegenEnv
     codegenEnv = { currentModule: name }
 
-    exports' :: Array ChezExport
-    exports' = map ExportIdentifier $ coerce $ Array.fromFoldable exports
-
     definitions :: Array ChezDefinition
     definitions = Array.concat $
       codegenTopLevelBindingGroup codegenEnv <$> bindings
+
+    exports' :: Array ChezExport
+    exports' = map ExportIdentifier
+      $ Array.concatMap S.definitionIdentifiers definitions
+          <> map coerce (Array.fromFoldable foreign_)
 
     pursImports :: Array ChezImport
     pursImports = Array.fromFoldable imports <#> \importedModule ->
@@ -91,14 +93,14 @@ codegenTopLevelBinding codegenEnv (Tuple (Ident i) n) =
       case NonEmptyArray.fromArray ss of
         Nothing -> [ DefineRecordType i [] ]
         Just xs ->
-          if NEA.length xs == 1
-          then [ DefineRecordType i ss ]
-          else [ DefineRecordType i ss
-               , DefineCurriedFunction i xs
-                 $ S.List
-                 $ Array.cons (S.Identifier $ i <> "*")
-                 (map S.Identifier ss)
-               ]
+          if NEA.length xs == 1 then [ DefineRecordType i ss ]
+          else
+            [ DefineRecordType i ss
+            , DefineCurriedFunction i xs
+                $ S.List
+                $ Array.cons (S.Identifier $ i <> "*")
+                    (map S.Identifier ss)
+            ]
     _ ->
       [ DefineValue i $ codegenExpr codegenEnv n ]
 

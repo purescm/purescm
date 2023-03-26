@@ -3,10 +3,20 @@
 (library
   (Snapshot.Constructor lib)
   (export
-    Just
-    Nil
+    Nil*
+    Nil?
     Node
-    Nothing)
+    Node*
+    Node?
+    Node$-value0
+    Node$-value1
+    Node$-value2
+    Node
+    Just*
+    Just?
+    Just$-value0
+    Nothing*
+    Nothing?)
   (import
     (prefix (chezscheme) scm:)
     (prefix (_Chez_Runtime lib) rt:))

@@ -99,6 +99,16 @@ data ChezExpr
   | Identifier Prim.String
   | List (Prim.Array ChezExpr)
 
+definitionIdentifiers :: ChezDefinition -> Prim.Array Prim.String
+definitionIdentifiers (DefineValue i _) = [ i ]
+definitionIdentifiers (DefineCurriedFunction i _ _) = [ i ]
+definitionIdentifiers (DefineUncurriedFunction i _ _) = [ i ]
+definitionIdentifiers (DefineRecordType i []) = [ i <> "*", i <> "?" ]
+definitionIdentifiers (DefineRecordType i [ x ]) =
+  [ i <> "*", i <> "?", i <> "$-" <> x ]
+definitionIdentifiers (DefineRecordType i xs) =
+  [ i, i <> "*", i <> "?" ] <> (map ((<>) (i <> "$-")) xs)
+
 printWrap :: Doc Void -> Doc Void -> Doc Void -> Doc Void
 printWrap l r x = l <> x <> r
 

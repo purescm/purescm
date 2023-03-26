@@ -3,10 +3,10 @@
 (library
   (Snapshot.Branch lib)
   (export
-    f
-    g
+    i
     h
-    i)
+    g
+    f)
   (import
     (prefix (chezscheme) scm:)
     (prefix (_Chez_Runtime lib) rt:))
