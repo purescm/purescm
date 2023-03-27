@@ -328,6 +328,9 @@ chezCond b o =
 chezCurriedApplication :: ChezExpr -> NonEmptyArray ChezExpr -> ChezExpr
 chezCurriedApplication f s = NonEmptyArray.foldl1 app $ NonEmptyArray.cons f s
 
+chezUncurriedApplication :: ChezExpr -> Prim.Array ChezExpr -> ChezExpr
+chezUncurriedApplication f args = List $ Array.cons f args
+
 chezCurriedFunction :: NonEmptyArray Prim.String -> ChezExpr -> ChezExpr
 chezCurriedFunction a e = Array.foldr lambda e $ NonEmptyArray.toArray a
 

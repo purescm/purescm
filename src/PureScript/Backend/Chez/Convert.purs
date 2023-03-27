@@ -93,15 +93,16 @@ codegenTopLevelBinding codegenEnv (Tuple (Ident i) n) =
     CtorDef _ _ _ ss ->
       case NonEmptyArray.fromArray ss of
         Nothing -> [ DefineRecordType i [] ]
-        Just xs ->
-          if NEA.length xs == 1 then [ DefineRecordType i ss ]
-          else
-            [ DefineRecordType i ss
-            , DefineCurriedFunction i xs
-                $ S.List
-                $ Array.cons (S.Identifier $ i <> "*")
-                    (map S.Identifier ss)
-            ]
+        Just xs
+          | NEA.length xs == 1 ->
+              [ DefineRecordType i ss ]
+          | otherwise ->
+              [ DefineRecordType i ss
+              , DefineCurriedFunction i xs
+                  $ S.chezUncurriedApplication
+                      (S.Identifier $ S.recordTypeUncurriedConstructor i)
+                      (map S.Identifier ss)
+              ]
     _ ->
       [ DefineValue i $ codegenExpr codegenEnv n ]
 
