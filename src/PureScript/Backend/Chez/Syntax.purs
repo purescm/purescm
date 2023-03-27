@@ -274,15 +274,21 @@ printDefinition = case _ of
           (printChezExpr expr)
   DefineRecordType ident fields ->
     printNamedIndentedList
-      (D.words [ D.text "scm:define-record-type"
-               , printList
-                   $ D.words
-                   $ map D.text [ recordTypeName ident
-                                , recordTypeUncurriedConstructor ident
-                                , recordTypePredicate ident
-                                ]
-               ])
-      $ printList $ D.words $ map D.text $ Array.cons "scm:fields" fields
+      ( D.words
+          [ D.text "scm:define-record-type"
+          , printList
+              $ D.words
+              $ map D.text
+                  [ recordTypeName ident
+                  , recordTypeUncurriedConstructor ident
+                  , recordTypePredicate ident
+                  ]
+          ]
+      )
+      $ printList
+      $ D.words
+      $ map D.text
+      $ Array.cons "scm:fields" fields
 
 printCurriedApp :: Prim.Array Prim.String -> ChezExpr -> Doc Void
 printCurriedApp args body = case Array.uncons args of
@@ -396,3 +402,18 @@ recordTypeUncurriedConstructor i = i <> "*"
 
 recordTypePredicate :: Prim.String -> Prim.String
 recordTypePredicate i = i <> "?"
+
+recordAccessor :: ChezExpr -> Prim.Int -> ChezExpr
+recordAccessor expr offset =
+  chezLet "$record" expr
+    $ List
+        [ List
+            [ Identifier "scm:record-accessor"
+            , List
+                [ Identifier "scm:record-rtd"
+                , Identifier "$record"
+                ]
+            , Integer $ LiteralDigit $ show offset
+            ]
+        , Identifier "$record"
+        ]

@@ -11,7 +11,8 @@
     Node*
     Node?
     Nothing*
-    Nothing?)
+    Nothing?
+    extractInt)
   (import
     (prefix (chezscheme) scm:)
     (prefix (_Chez_Runtime lib) rt:))
@@ -32,4 +33,8 @@
     (scm:fields value0))
 
   (scm:define-record-type (Nothing$ Nothing* Nothing?)
-    (scm:fields)))
+    (scm:fields))
+
+  (scm:define extractInt
+    (scm:lambda (v0)
+      (scm:cond ((Just? v0) (scm:letrec* (($record v0)) ((scm:record-accessor (scm:record-rtd $record) 0) $record))) ((Nothing? v0) 0) (scm:else (scm:raise (scm:condition (scm:make-error) (scm:make-message-condition "Failed pattern match"))))))))

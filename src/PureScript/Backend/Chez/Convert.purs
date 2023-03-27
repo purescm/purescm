@@ -17,7 +17,7 @@ import PureScript.Backend.Chez.Syntax as S
 import PureScript.Backend.Optimizer.Convert (BackendModule, BackendBindingGroup)
 import PureScript.Backend.Optimizer.CoreFn (Ident(..), Literal(..), ModuleName(..), Qualified(..))
 import PureScript.Backend.Optimizer.Semantics (NeutralExpr(..))
-import PureScript.Backend.Optimizer.Syntax (BackendOperator(..), BackendOperator1(..), BackendOperator2(..), BackendOperatorNum(..), BackendOperatorOrd(..), BackendSyntax(..), Pair(..))
+import PureScript.Backend.Optimizer.Syntax (BackendAccessor(..), BackendOperator(..), BackendOperator1(..), BackendOperator2(..), BackendOperatorNum(..), BackendOperatorOrd(..), BackendSyntax(..), Pair(..))
 import Safe.Coerce (coerce)
 
 type CodegenEnv =
@@ -131,8 +131,12 @@ codegenExpr codegenEnv@{ currentModule } (NeutralExpr s) = case s of
   UncurriedEffectAbs _ _ ->
     S.Identifier "uncurried-effect-ab"
 
-  Accessor _ _ ->
-    S.Identifier "object-accessor"
+  Accessor _ (GetProp _) ->
+    S.Identifier $ "accessor-get-prop"
+  Accessor _ (GetIndex _) ->
+    S.Identifier $ "accessor-get-index"
+  Accessor e (GetOffset o) ->
+    S.recordAccessor (codegenExpr codegenEnv e) o
   Update _ _ ->
     S.Identifier "object-update"
 
@@ -192,7 +196,7 @@ codegenLiteral codegenEnv = case _ of
   LitRecord r -> S.record $ (map $ codegenExpr codegenEnv) <$> r
 
 codegenPrimOp :: CodegenEnv -> BackendOperator NeutralExpr -> ChezExpr
-codegenPrimOp codegenEnv = case _ of
+codegenPrimOp codegenEnv@{ currentModule } = case _ of
   Op1 o x -> do
     let
       x' = codegenExpr codegenEnv x
@@ -207,8 +211,13 @@ codegenPrimOp codegenEnv = case _ of
         S.List [ S.Identifier "scm:fl-", x' ]
       OpArrayLength ->
         S.List [ S.Identifier "scm:vector-length", x' ]
-      OpIsTag _ ->
-        S.Identifier "op-is-tag"
+      OpIsTag (Qualified Nothing (Ident i)) ->
+        S.app (S.Identifier $ S.recordTypePredicate i) x'
+      OpIsTag (Qualified (Just moduleName) (Ident i))
+        | currentModule == moduleName ->
+            S.app (S.Identifier $ S.recordTypePredicate i) x'
+        | otherwise ->
+            S.app (S.Identifier $ coerce moduleName <> "." <> S.recordTypePredicate i) x'
   Op2 o x y ->
     let
       x' = codegenExpr codegenEnv x
