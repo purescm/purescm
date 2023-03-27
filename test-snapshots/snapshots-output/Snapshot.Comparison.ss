@@ -3,11 +3,11 @@
 (library
   (Snapshot.Comparison lib)
   (export
-    stringComparison
-    numberComparison
-    integerComparison
+    booleanComparison
     charComparison
-    booleanComparison)
+    integerComparison
+    numberComparison
+    stringComparison)
   (import
     (prefix (chezscheme) scm:)
     (prefix (_Chez_Runtime lib) rt:))

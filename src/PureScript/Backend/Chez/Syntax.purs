@@ -103,11 +103,10 @@ definitionIdentifiers :: ChezDefinition -> Prim.Array Prim.String
 definitionIdentifiers (DefineValue i _) = [ i ]
 definitionIdentifiers (DefineCurriedFunction i _ _) = [ i ]
 definitionIdentifiers (DefineUncurriedFunction i _ _) = [ i ]
-definitionIdentifiers (DefineRecordType i []) = [ i <> "*", i <> "?" ]
-definitionIdentifiers (DefineRecordType i [ x ]) =
-  [ i <> "*", i <> "?", i <> "$-" <> x ]
-definitionIdentifiers (DefineRecordType i xs) =
-  [ i, i <> "*", i <> "?" ] <> (map ((<>) (i <> "$-")) xs)
+definitionIdentifiers (DefineRecordType i _) =
+  [ recordTypeUncurriedConstructor i
+  , recordTypePredicate i
+  ]
 
 printWrap :: Doc Void -> Doc Void -> Doc Void -> Doc Void
 printWrap l r x = l <> x <> r
@@ -274,16 +273,16 @@ printDefinition = case _ of
           (D.text "scm:lambda " <> printList (D.words $ map D.text args))
           (printChezExpr expr)
   DefineRecordType ident fields ->
-    D.lines
-      [ D.text "(" <> D.text "scm:define-record-type " <> names
-      , D.indent $ fields' <> D.text ")"
-      ]
-    where
-    name = ident <> "$"
-    ctor = ident <> "*"
-    pred = ident <> "?"
-    names = printList $ D.words $ map D.text [ name, ctor, pred ]
-    fields' = printList $ D.words $ map D.text (Array.cons "scm:fields" fields)
+    printNamedIndentedList
+      (D.words [ D.text "scm:define-record-type"
+               , printList
+                   $ D.words
+                   $ map D.text [ recordTypeName ident
+                                , recordTypeUncurriedConstructor ident
+                                , recordTypePredicate ident
+                                ]
+               ])
+      $ printList $ D.words $ map D.text $ Array.cons "scm:fields" fields
 
 printCurriedApp :: Prim.Array Prim.String -> ChezExpr -> Doc Void
 printCurriedApp args body = case Array.uncons args of
@@ -388,3 +387,12 @@ lambda a e = List [ Identifier "scm:lambda", List [ Identifier a ], e ]
 
 vector :: Prim.Array ChezExpr -> ChezExpr
 vector = List <<< Array.cons (Identifier "scm:vector")
+
+recordTypeName :: Prim.String -> Prim.String
+recordTypeName i = i <> "$"
+
+recordTypeUncurriedConstructor :: Prim.String -> Prim.String
+recordTypeUncurriedConstructor i = i <> "*"
+
+recordTypePredicate :: Prim.String -> Prim.String
+recordTypePredicate i = i <> "?"

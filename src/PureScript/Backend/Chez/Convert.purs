@@ -36,6 +36,7 @@ codegenModule { name, bindings, exports: _exports, imports, foreign: foreign_ } 
 
     exports' :: Array ChezExport
     exports' = map ExportIdentifier
+      $ Array.sort
       $ Array.concatMap S.definitionIdentifiers definitions
           <> map coerce (Array.fromFoldable foreign_)
 
@@ -138,7 +139,7 @@ codegenExpr codegenEnv@{ currentModule } (NeutralExpr s) = case s of
   CtorSaturated _ _ _ _ _ ->
     S.Identifier "ctor-saturated"
   CtorDef _ _ _ _ ->
-    unsafeCrashWith "Unreacheable"
+    unsafeCrashWith "codegenExpr:CtorDef - handled by codegenTopLevelBinding!"
 
   LetRec _ _ _ ->
     S.Identifier "let-rec"

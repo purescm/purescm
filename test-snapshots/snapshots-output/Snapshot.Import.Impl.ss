@@ -3,8 +3,8 @@
 (library
   (Snapshot.Import.Impl lib)
   (export
-    fortyTwo
-    addImpl)
+    addImpl
+    fortyTwo)
   (import
     (prefix (chezscheme) scm:)
     (prefix (_Chez_Runtime lib) rt:)

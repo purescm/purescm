@@ -3,18 +3,13 @@
 (library
   (Snapshot.Constructor lib)
   (export
+    Just*
+    Just?
     Nil*
     Nil?
     Node
     Node*
     Node?
-    Node$-value0
-    Node$-value1
-    Node$-value2
-    Node
-    Just*
-    Just?
-    Just$-value0
     Nothing*
     Nothing?)
   (import
