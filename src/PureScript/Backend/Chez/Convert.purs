@@ -15,7 +15,7 @@ import Partial.Unsafe (unsafeCrashWith)
 import PureScript.Backend.Chez.Syntax (ChezDefinition(..), ChezExport(..), ChezExpr, ChezImport(..), ChezImportSet(..), ChezLibrary)
 import PureScript.Backend.Chez.Syntax as S
 import PureScript.Backend.Optimizer.Convert (BackendModule, BackendBindingGroup)
-import PureScript.Backend.Optimizer.CoreFn (Ident(..), Literal(..), ModuleName(..), Qualified(..))
+import PureScript.Backend.Optimizer.CoreFn (Ident(..), Literal(..), ModuleName(..))
 import PureScript.Backend.Optimizer.Semantics (NeutralExpr(..))
 import PureScript.Backend.Optimizer.Syntax (BackendAccessor(..), BackendOperator(..), BackendOperator1(..), BackendOperator2(..), BackendOperatorNum(..), BackendOperatorOrd(..), BackendSyntax(..), Pair(..))
 import Safe.Coerce (coerce)
@@ -108,11 +108,8 @@ codegenTopLevelBinding codegenEnv (Tuple (Ident i) n) =
 
 codegenExpr :: CodegenEnv -> NeutralExpr -> ChezExpr
 codegenExpr codegenEnv@{ currentModule } (NeutralExpr s) = case s of
-  Var (Qualified (Just moduleName) (Ident v))
-    | currentModule == moduleName -> S.Identifier v
-    | otherwise -> S.Identifier $ coerce moduleName <> "." <> v
-  Var (Qualified Nothing (Ident v)) ->
-    S.Identifier v
+  Var qi ->
+    S.Identifier $ S.resolve currentModule qi
   Local i l ->
     S.Identifier $ coerce $ S.toChezIdent i l
   Lit l ->
@@ -212,13 +209,8 @@ codegenPrimOp codegenEnv@{ currentModule } = case _ of
         S.List [ S.Identifier "scm:fl-", x' ]
       OpArrayLength ->
         S.List [ S.Identifier "scm:vector-length", x' ]
-      OpIsTag (Qualified Nothing (Ident i)) ->
-        S.app (S.Identifier $ S.recordTypePredicate i) x'
-      OpIsTag (Qualified (Just moduleName) (Ident i))
-        | currentModule == moduleName ->
-            S.app (S.Identifier $ S.recordTypePredicate i) x'
-        | otherwise ->
-            S.app (S.Identifier $ coerce moduleName <> "." <> S.recordTypePredicate i) x'
+      OpIsTag qi ->
+        S.app (S.Identifier $ S.recordTypePredicate $ S.resolve currentModule qi) x'
   Op2 o x y ->
     let
       x' = codegenExpr codegenEnv x
