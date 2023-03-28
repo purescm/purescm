@@ -3,23 +3,19 @@
 (library
   (Snapshot.Constructor lib)
   (export
+    Just$-value0
     Just*
-    Just-value0
     Just?
     Nil
     Nil?
     Node
+    Node$-value0
+    Node$-value1
+    Node$-value2
     Node*
-    Node-value0
-    Node-value1
-    Node-value2
     Node?
     Nothing
-    Nothing?
-    extractInt
-    just1
-    nothing
-    tree)
+    Nothing?)
   (import
     (prefix (chezscheme) scm:)
     (prefix (_Chez_Runtime lib) rt:))
@@ -48,17 +44,4 @@
 
   (scm:define Nothing?
     (scm:lambda (v)
-      (scm:eq? (scm:quote Nothing) v)))
-
-  (scm:define tree
-    (Node* (Node* (Node* Nil 1 Nil) 2 (Node* (Node* Nil 3 Nil) 4 Nil)) 5 Nil))
-
-  (scm:define nothing
-    Nothing)
-
-  (scm:define just1
-    (Just* 1))
-
-  (scm:define extractInt
-    (scm:lambda (v0)
-      (scm:cond ((Just? v0) (Just-value0 v0)) ((Nothing? v0) 0) (scm:else (scm:raise (scm:condition (scm:make-error) (scm:make-message-condition "Failed pattern match"))))))))
+      (scm:eq? (scm:quote Nothing) v))))
