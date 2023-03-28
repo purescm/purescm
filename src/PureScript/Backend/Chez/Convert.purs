@@ -25,21 +25,35 @@ type CodegenEnv =
   { currentModule :: ModuleName
   }
 
+type DefinitionTranslation =
+  { pursIdent :: Ident
+  , chezDefinitions :: Array ChezDefinition
+  }
+
 codegenModule :: BackendModule -> ChezLibrary
-codegenModule { name, bindings, exports: _exports, imports, foreign: foreign_ } =
+codegenModule { name, bindings, exports, imports, foreign: foreign_ } =
   let
     codegenEnv :: CodegenEnv
     codegenEnv = { currentModule: name }
 
+    translations :: Array DefinitionTranslation
+    translations = Array.concatMap (codegenTopLevelBindingGroup codegenEnv) bindings
+
     definitions :: Array ChezDefinition
-    definitions = Array.concat $
-      codegenTopLevelBindingGroup codegenEnv <$> bindings
+    definitions = Array.concatMap _.chezDefinitions translations
 
     exports' :: Array ChezExport
     exports' = map ExportIdentifier
       $ Array.sort
-      $ Array.concatMap S.definitionIdentifiers definitions
+      $ Array.concatMap S.definitionIdentifiers definitions'
           <> map coerce (Array.fromFoldable foreign_)
+      where
+      translations' :: Array DefinitionTranslation
+      translations' =
+        Array.filter (\t -> Set.member t.pursIdent exports) translations
+
+      definitions' :: Array ChezDefinition
+      definitions' = Array.concatMap _.chezDefinitions translations'
 
     pursImports :: Array ChezImport
     pursImports = Array.fromFoldable imports <#> \importedModule ->
@@ -77,15 +91,30 @@ codegenModule { name, bindings, exports: _exports, imports, foreign: foreign_ } 
     }
 
 codegenTopLevelBindingGroup
-  :: CodegenEnv -> BackendBindingGroup Ident NeutralExpr -> Array ChezDefinition
+  :: CodegenEnv
+  -> BackendBindingGroup Ident NeutralExpr
+  -> Array DefinitionTranslation
 codegenTopLevelBindingGroup codegenEnv { recursive, bindings }
   | recursive, Just bindings' <- NonEmptyArray.fromArray bindings =
-      [ DefineValue "rtlbg" $ S.Identifier "recursive-top-level-binding-group" ]
+      [ { pursIdent: Ident "rtlbg"
+        , chezDefinitions:
+            [ DefineValue "rtlbg" $ S.Identifier "recursive-top-level-binding-group" ]
+        }
+      ]
   | otherwise =
-      Array.concatMap (codegenTopLevelBinding codegenEnv) bindings
+      map (codegenTopLevelBinding codegenEnv) bindings
 
-codegenTopLevelBinding :: CodegenEnv -> Tuple Ident NeutralExpr -> Array ChezDefinition
-codegenTopLevelBinding codegenEnv (Tuple (Ident i) n) =
+codegenTopLevelBinding
+  :: CodegenEnv
+  -> Tuple Ident NeutralExpr
+  -> DefinitionTranslation
+codegenTopLevelBinding codegenEnv (Tuple i n) =
+  { pursIdent: i
+  , chezDefinitions: codegenTopLevelBinding' codegenEnv i n
+  }
+
+codegenTopLevelBinding' :: CodegenEnv -> Ident -> NeutralExpr -> Array ChezDefinition
+codegenTopLevelBinding' codegenEnv (Ident i) n =
   case unwrap n of
     Abs a e ->
       [ DefineCurriedFunction i (uncurry S.toChezIdent <$> a) (codegenExpr codegenEnv e) ]
