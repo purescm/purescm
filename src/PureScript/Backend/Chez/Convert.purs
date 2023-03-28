@@ -10,6 +10,7 @@ import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap, wrap)
 import Data.Set as Set
 import Data.String.CodeUnits as CodeUnits
+import Data.Tuple as Tuple
 import Data.Tuple (Tuple(..), uncurry)
 import Partial.Unsafe (unsafeCrashWith)
 import PureScript.Backend.Chez.Syntax (ChezDefinition(..), ChezExport(..), ChezExpr, ChezImport(..), ChezImportSet(..), ChezLibrary)
@@ -92,7 +93,11 @@ codegenTopLevelBinding codegenEnv (Tuple (Ident i) n) =
       [ DefineUncurriedFunction i (uncurry S.toChezIdent <$> a) (codegenExpr codegenEnv e) ]
     CtorDef _ _ _ ss ->
       case NonEmptyArray.fromArray ss of
-        Nothing -> [ DefineRecordType i [] ]
+        Nothing ->
+          [ DefineValue i $ S.quote $ S.Identifier i
+          , DefineUncurriedFunction (S.recordTypePredicate i) [ "v" ]
+              $ S.eqQ (S.quote $ S.Identifier i) (S.Identifier "v")
+          ]
         Just xs
           | NEA.length xs == 1 ->
               [ DefineRecordType i ss ]
@@ -138,8 +143,10 @@ codegenExpr codegenEnv@{ currentModule } (NeutralExpr s) = case s of
   Update _ _ ->
     S.Identifier "object-update"
 
-  CtorSaturated _ _ _ _ _ ->
-    S.Identifier "ctor-saturated"
+  CtorSaturated qi _ _ _ xs ->
+    S.chezUncurriedApplication
+      (S.Identifier $ S.recordTypeUncurriedConstructor $ S.resolve currentModule qi)
+      (map (codegenExpr codegenEnv <<< Tuple.snd) xs)
   CtorDef _ _ _ _ ->
     unsafeCrashWith "codegenExpr:CtorDef - handled by codegenTopLevelBinding!"
 

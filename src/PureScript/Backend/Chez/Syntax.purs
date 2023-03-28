@@ -400,6 +400,12 @@ record r =
 lambda :: Prim.String -> ChezExpr -> ChezExpr
 lambda a e = List [ Identifier "scm:lambda", List [ Identifier a ], e ]
 
+quote :: ChezExpr -> ChezExpr
+quote e = app (Identifier "scm:quote") e
+
+eqQ :: ChezExpr -> ChezExpr -> ChezExpr
+eqQ x y = chezUncurriedApplication (Identifier "scm:eq?") [ x, y ]
+
 vector :: Prim.Array ChezExpr -> ChezExpr
 vector = List <<< Array.cons (Identifier "scm:vector")
 
