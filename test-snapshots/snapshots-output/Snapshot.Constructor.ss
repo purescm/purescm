@@ -3,16 +3,16 @@
 (library
   (Snapshot.Constructor lib)
   (export
-    Just$-value0
     Just*
+    Just-value0
     Just?
     Nil
     Nil?
     Node
-    Node$-value0
-    Node$-value1
-    Node$-value2
     Node*
+    Node-value0
+    Node-value1
+    Node-value2
     Node?
     Nothing
     Nothing?)
@@ -28,7 +28,7 @@
       (scm:eq? (scm:quote Nil) v)))
 
   (scm:define-record-type (Node$ Node* Node?)
-    (scm:fields value0 value1 value2))
+    (scm:fields (scm:immutable value0 Node-value0) (scm:immutable value1 Node-value1) (scm:immutable value2 Node-value2)))
 
   (scm:define Node
     (scm:lambda (value0)
@@ -37,7 +37,7 @@
           (Node* value0 value1 value2)))))
 
   (scm:define-record-type (Just$ Just* Just?)
-    (scm:fields value0))
+    (scm:fields (scm:immutable value0 Just-value0)))
 
   (scm:define Nothing
     (scm:quote Nothing))

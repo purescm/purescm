@@ -291,10 +291,15 @@ printDefinition = case _ of
                   ]
           ]
       )
-      $ printList
-      $ D.words
-      $ map D.text
-      $ Array.cons "scm:fields" fields
+      fieldsForm
+    where
+    fieldForm :: Prim.String -> Doc Void
+    fieldForm field =
+      printList $ D.words $ map D.text [ "scm:immutable", field, recordTypeAccessor ident field ]
+
+    fieldsForm :: Doc Void
+    fieldsForm = printList $ D.words $ Array.cons (D.text "scm:fields")
+      $ map fieldForm fields
 
 printCurriedApp :: Prim.Array Prim.String -> ChezExpr -> Doc Void
 printCurriedApp args body = case Array.uncons args of
@@ -419,7 +424,7 @@ recordTypePredicate :: Prim.String -> Prim.String
 recordTypePredicate i = i <> "?"
 
 recordTypeAccessor :: Prim.String -> Prim.String -> Prim.String
-recordTypeAccessor i field = (recordTypeName i) <> "-" <> field
+recordTypeAccessor i field = i <> "-" <> field
 
 recordAccessor :: ChezExpr -> Prim.String -> Prim.String -> ChezExpr
 recordAccessor expr name field =
