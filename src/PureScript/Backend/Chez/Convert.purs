@@ -138,8 +138,8 @@ codegenExpr codegenEnv@{ currentModule } (NeutralExpr s) = case s of
     S.Identifier $ "accessor-get-prop"
   Accessor _ (GetIndex _) ->
     S.Identifier $ "accessor-get-index"
-  Accessor e (GetOffset o) ->
-    S.recordAccessor (codegenExpr codegenEnv e) o
+  Accessor e (GetCtorField qi _ _ _ field _) ->
+    S.recordAccessor (codegenExpr codegenEnv e) (S.resolve currentModule qi) field
   Update _ _ ->
     S.Identifier "object-update"
 

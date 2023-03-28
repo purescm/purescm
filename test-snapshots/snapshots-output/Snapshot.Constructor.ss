@@ -4,11 +4,15 @@
   (Snapshot.Constructor lib)
   (export
     Just*
+    Just-value0
     Just?
     Nil
     Nil?
     Node
     Node*
+    Node-value0
+    Node-value1
+    Node-value2
     Node?
     Nothing
     Nothing?
@@ -57,4 +61,4 @@
 
   (scm:define extractInt
     (scm:lambda (v0)
-      (scm:cond ((Just? v0) (scm:letrec* (($record v0)) ((scm:record-accessor (scm:record-rtd $record) 0) $record))) ((Nothing? v0) 0) (scm:else (scm:raise (scm:condition (scm:make-error) (scm:make-message-condition "Failed pattern match"))))))))
+      (scm:cond ((Just? v0) (Just-value0 v0)) ((Nothing? v0) 0) (scm:else (scm:raise (scm:condition (scm:make-error) (scm:make-message-condition "Failed pattern match"))))))))

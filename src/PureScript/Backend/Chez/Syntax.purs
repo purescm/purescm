@@ -103,10 +103,10 @@ definitionIdentifiers :: ChezDefinition -> Prim.Array Prim.String
 definitionIdentifiers (DefineValue i _) = [ i ]
 definitionIdentifiers (DefineCurriedFunction i _ _) = [ i ]
 definitionIdentifiers (DefineUncurriedFunction i _ _) = [ i ]
-definitionIdentifiers (DefineRecordType i _) =
+definitionIdentifiers (DefineRecordType i fields) =
   [ recordTypeUncurriedConstructor i
   , recordTypePredicate i
-  ]
+  ] <> map (recordTypeAccessor i) fields
 
 resolve :: ModuleName -> Qualified Ident -> Prim.String
 resolve _ (Qualified Nothing (Ident i)) = i
@@ -418,17 +418,9 @@ recordTypeUncurriedConstructor i = i <> "*"
 recordTypePredicate :: Prim.String -> Prim.String
 recordTypePredicate i = i <> "?"
 
-recordAccessor :: ChezExpr -> Prim.Int -> ChezExpr
-recordAccessor expr offset =
-  chezLet "$record" expr
-    $ List
-        [ List
-            [ Identifier "scm:record-accessor"
-            , List
-                [ Identifier "scm:record-rtd"
-                , Identifier "$record"
-                ]
-            , Integer $ LiteralDigit $ show offset
-            ]
-        , Identifier "$record"
-        ]
+recordTypeAccessor :: Prim.String -> Prim.String -> Prim.String
+recordTypeAccessor i field = (recordTypeName i) <> "-" <> field
+
+recordAccessor :: ChezExpr -> Prim.String -> Prim.String -> ChezExpr
+recordAccessor expr name field =
+  chezUncurriedApplication (Identifier $ recordTypeAccessor name field) [ expr ]
