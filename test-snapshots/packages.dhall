@@ -6,15 +6,25 @@ in  upstream
   with prelude =
     { dependencies = [] : List Text
     , repo = "https://github.com/purescm/purescript-prelude.git"
-    , version = "63ff5a24beba191c8fda919a58489f36bde2d506"
+    , version = "v6.0.1-scm"
     }
   with partial =
     { dependencies = [] : List Text
     , repo = "https://github.com/purescm/purescript-partial.git"
-    , version = "d8b6daf068e4aab0ad85a42d0f890ed37f416923"
+    , version = "v4.0.0-scm"
     }
   with effect =
     { dependencies = [ "prelude" ]
     , repo = "https://github.com/purescm/purescript-effect.git"
-    , version = "8aee2c2fbf5425bf8fa4537a5ad2070170622acf"
+    , version = "v4.0.0-scm"
+    }
+  with `assert` =
+    { dependencies = [ "console", "effect", "prelude" ]
+    , repo = "https://github.com/purescm/purescript-assert.git"
+    , version = "v6.0.0-scm"
+    }
+  with console =
+    { dependencies = [ "effect", "prelude" ]
+    , repo = "https://github.com/purescm/purescript-console.git"
+    , version = "v6.0.0-scm"
     }
