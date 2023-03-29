@@ -47,8 +47,8 @@ workspace:
     registry: 19.1.0
   extra_packages:
     backend-optimizer:
-      git: https://github.com/aristanetworks/purescript-backend-optimizer
-      ref: purs-backend-es-v1.3.2
+      git: https://github.com/JordanMartinez/purescript-backend-optimizer
+      ref: add-ty-con-info
       dependencies:
         - aff
         - ansi
