@@ -10,8 +10,8 @@ import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap, wrap)
 import Data.Set as Set
 import Data.String.CodeUnits as CodeUnits
-import Data.Tuple as Tuple
 import Data.Tuple (Tuple(..), uncurry)
+import Data.Tuple as Tuple
 import Partial.Unsafe (unsafeCrashWith)
 import PureScript.Backend.Chez.Syntax (ChezDefinition(..), ChezExport(..), ChezExpr, ChezImport(..), ChezImportSet(..), ChezLibrary)
 import PureScript.Backend.Chez.Syntax as S
