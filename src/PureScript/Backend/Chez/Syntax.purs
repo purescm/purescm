@@ -83,6 +83,7 @@ data ChezDefinition
   = DefineValue Prim.String ChezExpr
   | DefineCurriedFunction Prim.String (NonEmptyArray Prim.String) ChezExpr
   | DefineUncurriedFunction Prim.String (Prim.Array Prim.String) ChezExpr
+  | DefineRecordType Prim.String (Prim.Array Prim.String)
 
 newtype LiteralDigit = LiteralDigit Prim.String
 
@@ -97,6 +98,20 @@ data ChezExpr
   | Boolean Prim.Boolean
   | Identifier Prim.String
   | List (Prim.Array ChezExpr)
+
+definitionIdentifiers :: ChezDefinition -> Prim.Array Prim.String
+definitionIdentifiers (DefineValue i _) = [ i ]
+definitionIdentifiers (DefineCurriedFunction i _ _) = [ i ]
+definitionIdentifiers (DefineUncurriedFunction i _ _) = [ i ]
+definitionIdentifiers (DefineRecordType i [ x ]) =
+  [ recordTypeCurriedConstructor i
+  , recordTypePredicate i
+  , recordTypeAccessor i x
+  ]
+definitionIdentifiers (DefineRecordType i fields) =
+  [ recordTypeUncurriedConstructor i
+  , recordTypePredicate i
+  ] <> map (recordTypeAccessor i) fields
 
 resolve :: ModuleName -> Qualified Ident -> Prim.String
 resolve _ (Qualified Nothing (Ident i)) = i
@@ -268,6 +283,20 @@ printDefinition = case _ of
       $ printNamedIndentedList
           (D.text "scm:lambda " <> printList (D.words $ map D.text args))
           (printChezExpr expr)
+  DefineRecordType ident [ field ] ->
+    printRecordDefinition
+      ident
+      (recordTypeName ident)
+      (recordTypeCurriedConstructor ident)
+      (recordTypePredicate ident)
+      [ field ]
+  DefineRecordType ident fields ->
+    printRecordDefinition
+      ident
+      (recordTypeName ident)
+      (recordTypeUncurriedConstructor ident)
+      (recordTypePredicate ident)
+      fields
 
 printCurriedApp :: Prim.Array Prim.String -> ChezExpr -> Doc Void
 printCurriedApp args body = case Array.uncons args of
@@ -286,6 +315,30 @@ printChezExpr e = case e of
   Identifier x -> D.text x
   List xs -> D.text "(" <> D.words (printChezExpr <$> xs) <> D.text ")"
 
+printRecordDefinition
+  :: Prim.String
+  -> Prim.String
+  -> Prim.String
+  -> Prim.String
+  -> Prim.Array Prim.String
+  -> Doc Void
+printRecordDefinition ident name constructor predicate fields =
+  printNamedIndentedList defineForm fieldsForm
+  where
+  defineForm :: Doc Void
+  defineForm = D.words
+    [ D.text "scm:define-record-type"
+    , printList $ D.words $ map D.text [ name, constructor, predicate ]
+    ]
+
+  fieldForm :: Prim.String -> Doc Void
+  fieldForm field = printList $ D.words
+    $ map D.text [ "scm:immutable", field, recordTypeAccessor ident field ]
+
+  fieldsForm :: Doc Void
+  fieldsForm = printList $ D.words $ Array.cons (D.text "scm:fields")
+    $ map fieldForm fields
+
 toChezIdent :: Maybe Ident -> Level -> Prim.String
 toChezIdent i (Level l) = case i of
   Just (Ident i') -> i' <> show l
@@ -303,6 +356,9 @@ chezCond b o =
     o' = Array.fromFoldable o <#> \x -> List [ Identifier "scm:else", x ]
   in
     List $ [ Identifier "scm:cond" ] <> b' <> o'
+
+chezUncurriedApplication :: ChezExpr -> Prim.Array ChezExpr -> ChezExpr
+chezUncurriedApplication f args = List $ Array.cons f args
 
 chezCurriedApplication :: ChezExpr -> NonEmptyArray ChezExpr -> ChezExpr
 chezCurriedApplication f s = NonEmptyArray.foldl1 app $ NonEmptyArray.cons f s
@@ -367,8 +423,33 @@ record r =
           ]
       ] <> (field <$> r) <> [ Identifier "$record" ]
 
+quote :: ChezExpr -> ChezExpr
+quote e = app (Identifier "scm:quote") e
+
+eqQ :: ChezExpr -> ChezExpr -> ChezExpr
+eqQ x y = chezUncurriedApplication (Identifier "scm:eq?") [ x, y ]
+
 lambda :: Prim.String -> ChezExpr -> ChezExpr
 lambda a e = List [ Identifier "scm:lambda", List [ Identifier a ], e ]
 
 vector :: Prim.Array ChezExpr -> ChezExpr
 vector = List <<< Array.cons (Identifier "scm:vector")
+
+recordTypeName :: Prim.String -> Prim.String
+recordTypeName i = i <> "$"
+
+recordTypeCurriedConstructor :: Prim.String -> Prim.String
+recordTypeCurriedConstructor i = i
+
+recordTypeUncurriedConstructor :: Prim.String -> Prim.String
+recordTypeUncurriedConstructor i = i <> "*"
+
+recordTypePredicate :: Prim.String -> Prim.String
+recordTypePredicate i = i <> "?"
+
+recordTypeAccessor :: Prim.String -> Prim.String -> Prim.String
+recordTypeAccessor i field = i <> "-" <> field
+
+recordAccessor :: ChezExpr -> Prim.String -> Prim.String -> ChezExpr
+recordAccessor expr name field =
+  chezUncurriedApplication (Identifier $ recordTypeAccessor name field) [ expr ]

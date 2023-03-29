@@ -10,13 +10,15 @@ import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap, wrap)
 import Data.Set as Set
 import Data.String.CodeUnits as CodeUnits
+import Data.Tuple as Tuple
 import Data.Tuple (Tuple(..), uncurry)
+import Partial.Unsafe (unsafeCrashWith)
 import PureScript.Backend.Chez.Syntax (ChezDefinition(..), ChezExport(..), ChezExpr, ChezImport(..), ChezImportSet(..), ChezLibrary)
 import PureScript.Backend.Chez.Syntax as S
 import PureScript.Backend.Optimizer.Convert (BackendModule, BackendBindingGroup)
 import PureScript.Backend.Optimizer.CoreFn (Ident(..), Literal(..), ModuleName(..))
 import PureScript.Backend.Optimizer.Semantics (NeutralExpr(..))
-import PureScript.Backend.Optimizer.Syntax (BackendOperator(..), BackendOperator1(..), BackendOperator2(..), BackendOperatorNum(..), BackendOperatorOrd(..), BackendSyntax(..), Pair(..))
+import PureScript.Backend.Optimizer.Syntax (BackendAccessor(..), BackendOperator(..), BackendOperator1(..), BackendOperator2(..), BackendOperatorNum(..), BackendOperatorOrd(..), BackendSyntax(..), Pair(..))
 import Safe.Coerce (coerce)
 
 type CodegenEnv =
@@ -24,17 +26,20 @@ type CodegenEnv =
   }
 
 codegenModule :: BackendModule -> ChezLibrary
-codegenModule { name, bindings, exports, imports, foreign: foreign_ } =
+codegenModule { name, bindings, imports, foreign: foreign_ } =
   let
     codegenEnv :: CodegenEnv
     codegenEnv = { currentModule: name }
 
-    exports' :: Array ChezExport
-    exports' = map ExportIdentifier $ coerce $ Array.fromFoldable exports
-
     definitions :: Array ChezDefinition
     definitions = Array.concat $
       codegenTopLevelBindingGroup codegenEnv <$> bindings
+
+    exports' :: Array ChezExport
+    exports' = map ExportIdentifier
+      $ Array.sort
+      $ Array.concatMap S.definitionIdentifiers definitions
+          <> map coerce (Array.fromFoldable foreign_)
 
     pursImports :: Array ChezImport
     pursImports = Array.fromFoldable imports <#> \importedModule ->
@@ -72,22 +77,54 @@ codegenModule { name, bindings, exports, imports, foreign: foreign_ } =
     }
 
 codegenTopLevelBindingGroup
-  :: CodegenEnv -> BackendBindingGroup Ident NeutralExpr -> Array ChezDefinition
+  :: CodegenEnv
+  -> BackendBindingGroup Ident NeutralExpr
+  -> Array ChezDefinition
 codegenTopLevelBindingGroup codegenEnv { recursive, bindings }
   | recursive, Just bindings' <- NonEmptyArray.fromArray bindings =
       [ DefineValue "rtlbg" $ S.Identifier "recursive-top-level-binding-group" ]
   | otherwise =
-      codegenTopLevelBinding codegenEnv <$> bindings
+      Array.concatMap (codegenTopLevelBinding codegenEnv) bindings
 
-codegenTopLevelBinding :: CodegenEnv -> Tuple Ident NeutralExpr -> ChezDefinition
+codegenTopLevelBinding
+  :: CodegenEnv
+  -> Tuple Ident NeutralExpr
+  -> Array ChezDefinition
 codegenTopLevelBinding codegenEnv (Tuple (Ident i) n) =
   case unwrap n of
     Abs a e ->
-      DefineCurriedFunction i (uncurry S.toChezIdent <$> a) (codegenExpr codegenEnv e)
+      [ DefineCurriedFunction
+          i
+          (uncurry S.toChezIdent <$> a)
+          (codegenExpr codegenEnv e)
+      ]
     UncurriedAbs a e ->
-      DefineUncurriedFunction i (uncurry S.toChezIdent <$> a) (codegenExpr codegenEnv e)
+      [ DefineUncurriedFunction
+          i
+          (uncurry S.toChezIdent <$> a)
+          (codegenExpr codegenEnv e)
+      ]
+    CtorDef _ _ _ ss ->
+      case NonEmptyArray.fromArray ss of
+        Nothing ->
+          [ DefineValue i (S.quote $ S.Identifier i)
+          , DefineUncurriedFunction
+              (S.recordTypePredicate i)
+              [ "v" ]
+              $ S.eqQ (S.quote $ S.Identifier i) (S.Identifier "v")
+          ]
+        Just xs
+          | NEA.length xs == 1 ->
+              [ DefineRecordType i ss ]
+          | otherwise ->
+              [ DefineRecordType i ss
+              , DefineCurriedFunction i xs
+                  $ S.chezUncurriedApplication
+                      (S.Identifier $ S.recordTypeUncurriedConstructor i)
+                      (map S.Identifier ss)
+              ]
     _ ->
-      DefineValue i $ codegenExpr codegenEnv n
+      [ DefineValue i $ codegenExpr codegenEnv n ]
 
 codegenExpr :: CodegenEnv -> NeutralExpr -> ChezExpr
 codegenExpr codegenEnv@{ currentModule } (NeutralExpr s) = case s of
@@ -112,15 +149,21 @@ codegenExpr codegenEnv@{ currentModule } (NeutralExpr s) = case s of
   UncurriedEffectAbs _ _ ->
     S.Identifier "uncurried-effect-ab"
 
-  Accessor _ _ ->
-    S.Identifier "object-accessor"
+  Accessor _ (GetProp _) ->
+    S.Identifier $ "accessor-get-prop"
+  Accessor _ (GetIndex _) ->
+    S.Identifier $ "accessor-get-index"
+  Accessor e (GetCtorField qi _ _ _ field _) ->
+    S.recordAccessor (codegenExpr codegenEnv e) (S.resolve currentModule qi) field
   Update _ _ ->
     S.Identifier "object-update"
 
-  CtorSaturated _ _ _ _ _ ->
-    S.Identifier "ctor-saturated"
+  CtorSaturated qi _ _ _ xs ->
+    S.chezUncurriedApplication
+      (S.Identifier $ S.recordTypeUncurriedConstructor $ S.resolve currentModule qi)
+      (map (codegenExpr codegenEnv <<< Tuple.snd) xs)
   CtorDef _ _ _ _ ->
-    S.Identifier "ctor-def"
+    unsafeCrashWith "codegenExpr:CtorDef - handled by codegenTopLevelBinding!"
 
   LetRec _ _ _ ->
     S.Identifier "let-rec"
@@ -173,7 +216,7 @@ codegenLiteral codegenEnv = case _ of
   LitRecord r -> S.record $ (map $ codegenExpr codegenEnv) <$> r
 
 codegenPrimOp :: CodegenEnv -> BackendOperator NeutralExpr -> ChezExpr
-codegenPrimOp codegenEnv = case _ of
+codegenPrimOp codegenEnv@{ currentModule } = case _ of
   Op1 o x -> do
     let
       x' = codegenExpr codegenEnv x
@@ -188,8 +231,10 @@ codegenPrimOp codegenEnv = case _ of
         S.List [ S.Identifier "scm:fl-", x' ]
       OpArrayLength ->
         S.List [ S.Identifier "scm:vector-length", x' ]
-      OpIsTag _ ->
-        S.Identifier "op-is-tag"
+      OpIsTag qi ->
+        S.app
+          (S.Identifier $ S.recordTypePredicate $ S.resolve currentModule qi)
+          x'
   Op2 o x y ->
     let
       x' = codegenExpr codegenEnv x
