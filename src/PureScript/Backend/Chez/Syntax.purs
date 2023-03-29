@@ -103,6 +103,11 @@ definitionIdentifiers :: ChezDefinition -> Prim.Array Prim.String
 definitionIdentifiers (DefineValue i _) = [ i ]
 definitionIdentifiers (DefineCurriedFunction i _ _) = [ i ]
 definitionIdentifiers (DefineUncurriedFunction i _ _) = [ i ]
+definitionIdentifiers (DefineRecordType i [ x ]) =
+  [ recordTypeCurriedConstructor i
+  , recordTypePredicate i
+  , recordTypeAccessor i x
+  ]
 definitionIdentifiers (DefineRecordType i fields) =
   [ recordTypeUncurriedConstructor i
   , recordTypePredicate i
@@ -278,28 +283,20 @@ printDefinition = case _ of
       $ printNamedIndentedList
           (D.text "scm:lambda " <> printList (D.words $ map D.text args))
           (printChezExpr expr)
+  DefineRecordType ident [ field ] ->
+    printRecordDefinition
+      ident
+      (recordTypeName ident)
+      (recordTypeCurriedConstructor ident)
+      (recordTypePredicate ident)
+      [ field ]
   DefineRecordType ident fields ->
-    printNamedIndentedList
-      ( D.words
-          [ D.text "scm:define-record-type"
-          , printList
-              $ D.words
-              $ map D.text
-                  [ recordTypeName ident
-                  , recordTypeUncurriedConstructor ident
-                  , recordTypePredicate ident
-                  ]
-          ]
-      )
-      fieldsForm
-    where
-    fieldForm :: Prim.String -> Doc Void
-    fieldForm field =
-      printList $ D.words $ map D.text [ "scm:immutable", field, recordTypeAccessor ident field ]
-
-    fieldsForm :: Doc Void
-    fieldsForm = printList $ D.words $ Array.cons (D.text "scm:fields")
-      $ map fieldForm fields
+    printRecordDefinition
+      ident
+      (recordTypeName ident)
+      (recordTypeUncurriedConstructor ident)
+      (recordTypePredicate ident)
+      fields
 
 printCurriedApp :: Prim.Array Prim.String -> ChezExpr -> Doc Void
 printCurriedApp args body = case Array.uncons args of
@@ -317,6 +314,30 @@ printChezExpr e = case e of
   Boolean x -> D.text $ if x then "#t" else "#f"
   Identifier x -> D.text x
   List xs -> D.text "(" <> D.words (printChezExpr <$> xs) <> D.text ")"
+
+printRecordDefinition
+  :: Prim.String
+  -> Prim.String
+  -> Prim.String
+  -> Prim.String
+  -> Prim.Array Prim.String
+  -> Doc Void
+printRecordDefinition ident name constructor predicate fields =
+  printNamedIndentedList defineForm fieldsForm
+  where
+  defineForm :: Doc Void
+  defineForm = D.words
+    [ D.text "scm:define-record-type"
+    , printList $ D.words $ map D.text [ name, constructor, predicate ]
+    ]
+
+  fieldForm :: Prim.String -> Doc Void
+  fieldForm field = printList $ D.words
+    $ map D.text [ "scm:immutable", field, recordTypeAccessor ident field ]
+
+  fieldsForm :: Doc Void
+  fieldsForm = printList $ D.words $ Array.cons (D.text "scm:fields")
+    $ map fieldForm fields
 
 toChezIdent :: Maybe Ident -> Level -> Prim.String
 toChezIdent i (Level l) = case i of
@@ -416,6 +437,9 @@ vector = List <<< Array.cons (Identifier "scm:vector")
 
 recordTypeName :: Prim.String -> Prim.String
 recordTypeName i = i <> "$"
+
+recordTypeCurriedConstructor :: Prim.String -> Prim.String
+recordTypeCurriedConstructor i = i
 
 recordTypeUncurriedConstructor :: Prim.String -> Prim.String
 recordTypeUncurriedConstructor i = i <> "*"

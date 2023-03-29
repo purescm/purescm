@@ -3,7 +3,7 @@
 (library
   (Snapshot.ConstructorAccessor lib)
   (export
-    First*
+    First
     First-value0
     First?
     Foo
@@ -18,7 +18,7 @@
     HasArgs-value1
     HasArgs-value2
     HasArgs?
-    Last*
+    Last
     Last-value0
     Last?
     NoArgs
@@ -35,10 +35,10 @@
     (prefix (chezscheme) scm:)
     (prefix (_Chez_Runtime lib) rt:))
 
-  (scm:define-record-type (First$ First* First?)
+  (scm:define-record-type (First$ First First?)
     (scm:fields (scm:immutable value0 First-value0)))
 
-  (scm:define-record-type (Last$ Last* Last?)
+  (scm:define-record-type (Last$ Last Last?)
     (scm:fields (scm:immutable value0 Last-value0)))
 
   (scm:define NoArgs
