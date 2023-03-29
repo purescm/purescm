@@ -1,0 +1,110 @@
+package:
+  name: purescm
+  dependencies:
+    - aff
+    - argonaut
+    - arrays
+    - backend-optimizer
+    - bifunctors
+    - console
+    - control
+    - debug
+    - dodo-printer
+    - effect
+    - either
+    - foldable-traversable
+    - maybe
+    - newtype
+    - ordered-collections
+    - partial
+    - prelude
+    - profunctor
+    - safe-coerce
+    - strings
+    - transformers
+    - tuples
+  test:
+    main: Test.Main
+    dependencies:
+      - ansi
+      - argparse-basic
+      - filterable
+      - language-cst-parser
+      - lazy
+      - lists
+      - node-buffer
+      - node-child-process
+      - node-execa
+      - node-fs
+      - node-fs-aff
+      - node-glob-basic
+      - node-path
+      - node-process
+      - node-streams
+      - parallel
+      - posix-types
+      - refs
+workspace:
+  package_set:
+    registry: 19.1.0
+  extra_packages:
+    backend-optimizer:
+      git: https://github.com/aristanetworks/purescript-backend-optimizer
+      ref: purs-backend-es-v1.3.2
+      dependencies:
+        - aff
+        - ansi
+        - argonaut
+        - argonaut-codecs
+        - argparse-basic
+        - arrays
+        - bifunctors
+        - console
+        - control
+        - debug
+        - dodo-printer
+        - effect
+        - either
+        - enums
+        - filterable
+        - foldable-traversable
+        - foreign-object
+        - integers
+        - language-cst-parser
+        - lazy
+        - lists
+        - maybe
+        - newtype
+        - node-buffer
+        - node-child-process
+        - node-fs
+        - node-fs-aff
+        - node-glob-basic
+        - node-path
+        - node-process
+        - node-streams
+        - ordered-collections
+        - parallel
+        - partial
+        - posix-types
+        - prelude
+        - refs
+        - safe-coerce
+        - strings
+        - transformers
+        - tuples
+        - unsafe-coerce
+    node-glob-basic:
+      git: https://github.com/natefaubion/purescript-node-glob-basic.git
+      ref: v1.2.2
+      dependencies:
+        - aff
+        - console
+        - effect
+        - lists
+        - maybe
+        - node-fs-aff
+        - node-path
+        - node-process
+        - ordered-collections
+        - strings
