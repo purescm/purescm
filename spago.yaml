@@ -5,20 +5,15 @@ package:
     - argonaut
     - arrays
     - backend-optimizer
-    - bifunctors
     - console
     - control
-    - debug
     - dodo-printer
     - effect
-    - either
     - foldable-traversable
     - maybe
     - newtype
     - ordered-collections
-    - partial
     - prelude
-    - profunctor
     - safe-coerce
     - strings
     - transformers
@@ -28,6 +23,8 @@ package:
     dependencies:
       - ansi
       - argparse-basic
+      - bifunctors
+      - either
       - filterable
       - language-cst-parser
       - lazy
@@ -42,6 +39,7 @@ package:
       - node-process
       - node-streams
       - parallel
+      - partial
       - posix-types
       - refs
 workspace:
