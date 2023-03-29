@@ -1,11 +1,18 @@
-{ pkgs ? import <nixpkgs> { } }:
 let
+  nixpkgs = builtins.fetchTarball {
+    url = "https://github.com/NixOS/nixpkgs/archive/402cc3633cc60dfc50378197305c984518b30773.tar.gz";
+    sha256 = "0yvlprdkqg1kizg83j7nivlc58zk7llrbf82jqvgjimrwhsva1m9";
+  };
+
+  pkgs = import nixpkgs {};
+
   easy-ps = import
+    # On f-f's fork of easy-purescript-nix, as spago-next is not in mainline yet
     (pkgs.fetchFromGitHub {
-      owner = "justinwoo";
+      owner = "f-f";
       repo = "easy-purescript-nix";
-      rev = "0c10ff170461aed0c336f5c21ed0f430c2c3574b";
-      sha256 = "sha256-LLqaLPJNiap2U8I77K5XVPGJA/Be30Z8lyGOyYXmBlc=";
+      rev = "b02cff3db1671fc8fb76a680597a216a9c9b2d03";
+      sha256 = "sha256-vfzrVwBntXao3nMi2hkjYlWGUnuyUOVmYi95mQQ0EEY=";
     }) {
     inherit pkgs;
   };
@@ -13,11 +20,10 @@ in
 pkgs.mkShell {
   buildInputs = [
     easy-ps.purs-0_15_8
-    easy-ps.psc-package
     easy-ps.purs-tidy
     easy-ps.psa
-    easy-ps.spago
+    easy-ps.spago-next
     pkgs.nodejs-slim-16_x
-    pkgs.chez
+    pkgs.chez-racket
   ];
 }

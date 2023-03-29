@@ -1,0 +1,17 @@
+package:
+  name: purescm-snapshots
+  dependencies:
+    - partial
+    - prelude
+workspace:
+  package_set:
+    registry: 19.1.0
+  extra_packages:
+    prelude:
+      git: https://github.com/purescm/purescript-prelude.git
+      ref: 63ff5a24beba191c8fda919a58489f36bde2d506
+      dependencies: []
+    partial:
+      git: https://github.com/purescm/purescript-partial.git
+      ref: d8b6daf068e4aab0ad85a42d0f890ed37f416923
+      dependencies: []

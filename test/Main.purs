@@ -84,13 +84,13 @@ main = do
 runSnapshotTests :: TestArgs -> Aff Unit
 runSnapshotTests { accept, filter } = do
   liftEffect $ Process.chdir $ Path.concat [ "test-snapshots" ]
-  spawnFromParent "spago" [ "build", "-u", "-g corefn" ]
+  spawnFromParent "spago" [ "build", "--purs-args", "-g corefn" ]
   snapshotDir <- liftEffect Process.cwd
-  snapshotPaths <- expandGlobs (Path.concat [ snapshotDir, "snapshots-input" ])
+  snapshotPaths <- expandGlobs (Path.concat [ snapshotDir, "src", "snapshots-input" ])
     [ "Snapshot.*.purs" ]
   schemeBin <- getSchemeBinary
   outputRef <- liftEffect $ Ref.new Map.empty
-  let snapshotsOut = Path.concat [ snapshotDir, "snapshots-output" ]
+  let snapshotsOut = Path.concat [ snapshotDir, "src", "snapshots-output" ]
   let testOut = Path.concat [ snapshotDir, "test-out" ]
   mkdirp snapshotsOut
   mkdirp testOut
