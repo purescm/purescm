@@ -299,12 +299,12 @@ printDefinition = case _ of
       fields
 
 printCurriedApp :: Prim.Array Prim.String -> ChezExpr -> Doc Void
-printCurriedApp args body = case Array.uncons args of
-  Nothing -> printChezExpr body
-  Just { head, tail } ->
+printCurriedApp args body = Array.foldr foldFn (printChezExpr body) args
+  where
+  foldFn next bodyOrRest =
     printNamedIndentedList
-      (D.text "scm:lambda " <> printList (D.text head))
-      (printCurriedApp tail body)
+      (D.words [ D.text $ scmPrefixed "lambda", printList (D.text next) ])
+      bodyOrRest
 
 printChezExpr :: forall a. ChezExpr -> Doc a
 printChezExpr e = case e of
