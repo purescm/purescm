@@ -13,7 +13,7 @@ import Data.Newtype (class Newtype, un)
 import Dodo (Doc)
 import Dodo as D
 import Prim as Prim
-import PureScript.Backend.Optimizer.CoreFn (Ident(..), ModuleName(..), Prop(..))
+import PureScript.Backend.Optimizer.CoreFn (Ident(..), ModuleName(..), Prop(..), Qualified(..))
 import PureScript.Backend.Optimizer.Syntax (Level(..))
 import Safe.Coerce (coerce)
 
@@ -97,6 +97,12 @@ data ChezExpr
   | Boolean Prim.Boolean
   | Identifier Prim.String
   | List (Prim.Array ChezExpr)
+
+resolve :: ModuleName -> Qualified Ident -> Prim.String
+resolve _ (Qualified Nothing (Ident i)) = i
+resolve currentModule (Qualified (Just m) (Ident i))
+  | currentModule == m = i
+  | otherwise = coerce m <> "." <> i
 
 printWrap :: Doc Void -> Doc Void -> Doc Void -> Doc Void
 printWrap l r x = l <> x <> r
