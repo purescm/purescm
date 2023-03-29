@@ -49,8 +49,8 @@ let additions =
           , "unsafe-coerce"
           ]
         , repo =
-            "https://github.com/aristanetworks/purescript-backend-optimizer"
-        , version = "purs-backend-es-v1.3.2"
+            "https://github.com/JordanMartinez/purescript-backend-optimizer"
+        , version = "add-ty-con-info"
         }
       , node-glob-basic =
         { dependencies =
