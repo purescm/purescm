@@ -41,6 +41,7 @@ import Node.Library.Execa.Which (defaultWhichOptions, which)
 import Node.Path as Path
 import Node.Process as Process
 import Partial.Unsafe (unsafeCrashWith)
+import PureScript.Backend.Chez.Constants (moduleForeign, moduleLib)
 import PureScript.Backend.Chez.Convert (codegenModule)
 import PureScript.Backend.Chez.Runtime (runtimeModule)
 import PureScript.Backend.Chez.Syntax as S
@@ -119,14 +120,14 @@ runSnapshotTests { accept, filter } = do
                   $ S.printLibrary
                   $ codegenModule backend
             let testFileDir = Path.concat [ testOut, name ]
-            let testFilePath = Path.concat [ testFileDir, "lib.ss" ]
+            let testFilePath = Path.concat [ testFileDir, moduleLib <> ".ss" ]
             mkdirp testFileDir
             FS.writeTextFile UTF8 testFilePath formatted
             unless (Set.isEmpty backend.foreign) do
               let
                 foreignSiblingPath =
                   fromMaybe path (String.stripSuffix (Pattern (Path.extname path)) path) <> ".ss"
-              let foreignOutputPath = Path.concat [ testFileDir, "foreign.ss" ]
+              let foreignOutputPath = Path.concat [ testFileDir, moduleForeign <> ".ss" ]
               copyFile foreignSiblingPath foreignOutputPath
             let snapshotDirFile = Path.concat [ snapshotDir, path ]
             when (Set.member snapshotDirFile snapshotPaths) do

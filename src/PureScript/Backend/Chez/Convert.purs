@@ -13,6 +13,7 @@ import Data.String.CodeUnits as CodeUnits
 import Data.Tuple (Tuple(..), uncurry)
 import Data.Tuple as Tuple
 import Partial.Unsafe (unsafeCrashWith)
+import PureScript.Backend.Chez.Constants (moduleForeign, moduleLib)
 import PureScript.Backend.Chez.Syntax (ChezDefinition(..), ChezExport(..), ChezExpr, ChezImport(..), ChezImportSet(..), ChezLibrary)
 import PureScript.Backend.Chez.Syntax as S
 import PureScript.Backend.Optimizer.Convert (BackendModule, BackendBindingGroup)
@@ -45,7 +46,7 @@ codegenModule { name, bindings, imports, foreign: foreign_ } =
     pursImports = Array.fromFoldable imports <#> \importedModule ->
       ImportSet $ ImportPrefix
         ( ImportLibrary
-            { identifiers: NEA.cons' (coerce importedModule) [ "lib" ], version: Nothing }
+            { identifiers: NEA.cons' (coerce importedModule) [ moduleLib ], version: Nothing }
         )
         (coerce importedModule <> ".")
 
@@ -55,13 +56,13 @@ codegenModule { name, bindings, imports, foreign: foreign_ } =
       | otherwise =
           [ ImportSet $
               ImportLibrary
-                { identifiers: NEA.cons' (coerce name) [ "foreign" ], version: Nothing }
+                { identifiers: NEA.cons' (coerce name) [ moduleForeign ], version: Nothing }
           ]
   in
     { "#!r6rs": true
     , "#!chezscheme": true
     , name:
-        { identifiers: NEA.cons' (coerce name) [ "lib" ]
+        { identifiers: NEA.cons' (coerce name) [ moduleLib ]
         , version: []
         }
     , imports:
@@ -69,7 +70,9 @@ codegenModule { name, bindings, imports, foreign: foreign_ } =
             (ImportLibrary { identifiers: NEA.singleton "chezscheme", version: Nothing })
             "scm:"
         , ImportSet $ ImportPrefix
-            (ImportLibrary { identifiers: NEA.cons' "_Chez_Runtime" [ "lib" ], version: Nothing })
+            ( ImportLibrary
+                { identifiers: NEA.cons' "_Chez_Runtime" [ moduleLib ], version: Nothing }
+            )
             "rt:"
         ] <> pursImports <> foreignImport
     , exports: exports'
