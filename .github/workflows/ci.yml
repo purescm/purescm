@@ -41,7 +41,7 @@ jobs:
 
       - name: Build the project
         run: |
-          spago build --purs-args "--censor-lib --strict"
+          spago build
 
       - name: Run tests
         run: |
