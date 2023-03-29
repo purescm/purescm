@@ -9,6 +9,7 @@ import Data.Array.NonEmpty as NEA
 import Data.Maybe (Maybe(..))
 import Data.Traversable (sequence)
 import Data.Tuple (Tuple(..))
+import PureScript.Backend.Chez.Constants (libChezSchemePrefix, scmPrefixed)
 import PureScript.Backend.Chez.Syntax (ChezDefinition(..), ChezExport(..), ChezExpr, ChezImport(..), ChezImportSet(..), ChezLibrary)
 import PureScript.Backend.Chez.Syntax as S
 
@@ -29,7 +30,7 @@ makeBooleanComparison
 makeBooleanComparison suffix =
   makeExportedFunction ("boolean" <> suffix) [ "x", "y" ] $
     S.List
-      [ S.Identifier $ "scm:fx" <> suffix
+      [ S.Identifier $ scmPrefixed "fx" <> suffix
       , S.List [ S.Identifier "boolean->integer", S.Identifier "x" ]
       , S.List [ S.Identifier "boolean->integer", S.Identifier "y" ]
       ]
@@ -39,7 +40,7 @@ runtimeModule = do
   let
     Tuple definitions exports = flip runState [] $ sequence
       [ pure $ DefineUncurriedFunction "boolean->integer" [ "x" ] $ S.List
-          [ S.Identifier "scm:if"
+          [ S.Identifier $ scmPrefixed "if"
           , S.Identifier "x"
           , S.Integer $ S.LiteralDigit "1"
           , S.Integer $ S.LiteralDigit "0"
@@ -59,7 +60,7 @@ runtimeModule = do
   , imports:
       [ ImportSet $ ImportPrefix
           (ImportLibrary { identifiers: NEA.singleton "chezscheme", version: Nothing })
-          "scm:"
+          libChezSchemePrefix
       ]
   , body:
       { definitions
