@@ -1,4 +1,3 @@
--- @inline Snapshot.Function.f never
 module Snapshot.UncurriedFunction where
 
 import Data.Function.Uncurried (mkFn0, mkFn2, runFn0, runFn2)
