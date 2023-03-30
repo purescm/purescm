@@ -159,8 +159,10 @@ codegenExpr codegenEnv@{ currentModule } (NeutralExpr s) = case s of
 
   Accessor _ (GetProp _) ->
     S.Identifier $ "accessor-get-prop"
-  Accessor _ (GetIndex _) ->
-    S.Identifier $ "accessor-get-index"
+  Accessor e (GetIndex i) ->
+    S.chezUncurriedApplication
+      (S.Identifier $ scmPrefixed "vector-ref")
+      [ codegenExpr codegenEnv e, S.Integer $ wrap $ show i ]
   Accessor e (GetCtorField qi _ _ _ field _) ->
     S.recordAccessor (codegenExpr codegenEnv e) (S.resolve currentModule qi) field
   Update _ _ ->
