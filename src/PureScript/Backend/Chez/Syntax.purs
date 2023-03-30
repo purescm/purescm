@@ -13,6 +13,7 @@ import Data.Newtype (class Newtype, un)
 import Dodo (Doc)
 import Dodo as D
 import Prim as Prim
+import PureScript.Backend.Chez.Constants (libChezSchemePrefix, scmPrefixed)
 import PureScript.Backend.Optimizer.CoreFn (Ident(..), ModuleName(..), Prop(..), Qualified(..))
 import PureScript.Backend.Optimizer.Syntax (Level(..))
 import Safe.Coerce (coerce)
@@ -273,15 +274,15 @@ printNamedIndentedList firstLine body
 printDefinition :: ChezDefinition -> Doc Void
 printDefinition = case _ of
   DefineValue ident expr ->
-    printNamedIndentedList (D.words [ D.text "scm:define", D.text ident ])
+    printNamedIndentedList (D.words [ D.text $ scmPrefixed "define", D.text ident ])
       $ printChezExpr expr
   DefineCurriedFunction ident args expr ->
-    printNamedIndentedList (D.text "scm:define " <> D.text ident)
+    printNamedIndentedList (D.text (scmPrefixed "define ") <> D.text ident)
       $ printCurriedApp (NEA.toArray args) expr
   DefineUncurriedFunction ident args expr ->
-    printNamedIndentedList (D.text "scm:define " <> D.text ident)
+    printNamedIndentedList (D.text (scmPrefixed "define ") <> D.text ident)
       $ printNamedIndentedList
-          (D.text "scm:lambda " <> printList (D.words $ map D.text args))
+          (D.text (scmPrefixed "lambda ") <> printList (D.words $ map D.text args))
           (printChezExpr expr)
   DefineRecordType ident [ field ] ->
     printRecordDefinition
@@ -303,7 +304,7 @@ printCurriedApp args body = case Array.uncons args of
   Nothing -> printChezExpr body
   Just { head, tail } ->
     printNamedIndentedList
-      (D.text "scm:lambda " <> printList (D.text head))
+      (D.text (scmPrefixed "lambda ") <> printList (D.text head))
       (printCurriedApp tail body)
 
 printChezExpr :: forall a. ChezExpr -> Doc a
@@ -327,16 +328,16 @@ printRecordDefinition ident name constructor predicate fields =
   where
   defineForm :: Doc Void
   defineForm = D.words
-    [ D.text "scm:define-record-type"
+    [ D.text $ scmPrefixed "define-record-type"
     , printList $ D.words $ map D.text [ name, constructor, predicate ]
     ]
 
   fieldForm :: Prim.String -> Doc Void
   fieldForm field = printList $ D.words
-    $ map D.text [ "scm:immutable", field, recordTypeAccessor ident field ]
+    $ map D.text [ scmPrefixed "immutable", field, recordTypeAccessor ident field ]
 
   fieldsForm :: Doc Void
-  fieldsForm = printList $ D.words $ Array.cons (D.text "scm:fields")
+  fieldsForm = printList $ D.words $ Array.cons (D.text $ scmPrefixed "fields")
     $ map fieldForm fields
 
 toChezIdent :: Maybe Ident -> Level -> Prim.String
@@ -353,9 +354,9 @@ chezCond b o =
     b' = NonEmptyArray.toArray b <#> \{ c, e } -> List [ c, e ]
 
     o' :: Prim.Array ChezExpr
-    o' = Array.fromFoldable o <#> \x -> List [ Identifier "scm:else", x ]
+    o' = Array.fromFoldable o <#> \x -> List [ Identifier $ scmPrefixed "else", x ]
   in
-    List $ [ Identifier "scm:cond" ] <> b' <> o'
+    List $ [ Identifier $ scmPrefixed "cond" ] <> b' <> o'
 
 chezUncurriedApplication :: ChezExpr -> Prim.Array ChezExpr -> ChezExpr
 chezUncurriedApplication f args = List $ Array.cons f args
@@ -367,7 +368,7 @@ chezCurriedFunction :: NonEmptyArray Prim.String -> ChezExpr -> ChezExpr
 chezCurriedFunction a e = Array.foldr lambda e $ NonEmptyArray.toArray a
 
 chezLet :: Prim.String -> ChezExpr -> ChezExpr -> ChezExpr
-chezLet i v e = List [ Identifier "scm:letrec*", List [ List [ Identifier i, v ] ], e ]
+chezLet i v e = List [ Identifier $ scmPrefixed "letrec*", List [ List [ Identifier i, v ] ], e ]
 
 --
 
@@ -375,7 +376,7 @@ app :: ChezExpr -> ChezExpr -> ChezExpr
 app f x = List [ f, x ]
 
 define :: Ident -> ChezExpr -> ChezExpr
-define i e = List [ Identifier "scm:define", Identifier $ coerce i, e ]
+define i e = List [ Identifier $ scmPrefixed "define", Identifier $ coerce i, e ]
 
 library :: ModuleName -> Prim.Array Ident -> Prim.Array ChezExpr -> ChezExpr
 library moduleName exports bindings =
@@ -392,7 +393,7 @@ library moduleName exports bindings =
             , List
                 [ Identifier "chezscheme"
                 ]
-            , Identifier "scm:"
+            , Identifier libChezSchemePrefix
             ]
         ]
     ] <> bindings
@@ -403,37 +404,37 @@ record r =
     field :: Prop ChezExpr -> ChezExpr
     field (Prop k v) =
       List
-        [ Identifier "scm:hashtable-set!"
+        [ Identifier $ scmPrefixed "hashtable-set!"
         , Identifier "$record"
         , String $ Json.stringify $ Json.fromString k
         , v
         ]
   in
     List $
-      [ Identifier "scm:letrec*"
+      [ Identifier $ scmPrefixed "letrec*"
       , List
           [ List
               [ Identifier "$record"
               , List
-                  [ Identifier "scm:make-hashtable"
-                  , Identifier "scm:string-hash"
-                  , Identifier "scm:string=?"
+                  [ Identifier $ scmPrefixed "make-hashtable"
+                  , Identifier $ scmPrefixed "string-hash"
+                  , Identifier $ scmPrefixed "string=?"
                   ]
               ]
           ]
       ] <> (field <$> r) <> [ Identifier "$record" ]
 
 quote :: ChezExpr -> ChezExpr
-quote e = app (Identifier "scm:quote") e
+quote e = app (Identifier $ scmPrefixed "quote") e
 
 eqQ :: ChezExpr -> ChezExpr -> ChezExpr
-eqQ x y = chezUncurriedApplication (Identifier "scm:eq?") [ x, y ]
+eqQ x y = chezUncurriedApplication (Identifier $ scmPrefixed "eq?") [ x, y ]
 
 lambda :: Prim.String -> ChezExpr -> ChezExpr
-lambda a e = List [ Identifier "scm:lambda", List [ Identifier a ], e ]
+lambda a e = List [ Identifier $ scmPrefixed "lambda", List [ Identifier a ], e ]
 
 vector :: Prim.Array ChezExpr -> ChezExpr
-vector = List <<< Array.cons (Identifier "scm:vector")
+vector = List <<< Array.cons (Identifier $ scmPrefixed "vector")
 
 recordTypeName :: Prim.String -> Prim.String
 recordTypeName i = i <> "$"
