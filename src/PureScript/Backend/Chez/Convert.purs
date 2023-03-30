@@ -142,10 +142,15 @@ codegenExpr codegenEnv@{ currentModule } (NeutralExpr s) = case s of
   Abs a e -> do
     S.chezCurriedFunction (uncurry S.toChezIdent <$> a) (codegenExpr codegenEnv e)
 
-  UncurriedApp _ _ ->
-    S.Identifier "uncurried-app"
-  UncurriedAbs _ _ ->
-    S.Identifier "uncurried-abs"
+  UncurriedApp fn args ->
+    S.List $ Array.cons (codegenExpr codegenEnv fn) $
+      (codegenExpr codegenEnv <$> args)
+  UncurriedAbs args body ->
+    S.List
+      [ S.Identifier $ scmPrefixed "lambda"
+      , S.List $ (S.Identifier <<< uncurry S.toChezIdent) <$> args
+      , S.List [ codegenExpr codegenEnv body ]
+      ]
 
   UncurriedEffectApp _ _ ->
     S.Identifier "uncurried-effect-app"

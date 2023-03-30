@@ -3,6 +3,7 @@ package:
   dependencies:
     - partial
     - prelude
+    - functions
 workspace:
   package_set:
     registry: 19.1.0
@@ -15,3 +16,8 @@ workspace:
       git: https://github.com/purescm/purescript-partial.git
       ref: d8b6daf068e4aab0ad85a42d0f890ed37f416923
       dependencies: []
+    functions:
+      git: https://github.com/purescm/purescript-functions.git
+      ref: a43d127384ab568575fb9ee9e4a7a1844b21d39b
+      dependencies: 
+        - prelude
