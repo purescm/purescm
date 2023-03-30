@@ -18,6 +18,6 @@ workspace:
       dependencies: []
     functions:
       git: https://github.com/purescm/purescript-functions.git
-      ref: baa0375b8c77958f79787e4332d0ea2585cbd8fd
+      ref: a43d127384ab568575fb9ee9e4a7a1844b21d39b
       dependencies: 
         - prelude
