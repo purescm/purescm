@@ -277,7 +277,7 @@ printDefinition = case _ of
       $ printChezExpr expr
   DefineCurriedFunction ident args expr ->
     printNamedIndentedList (D.text "scm:define " <> D.text ident)
-      $ printCurriedApp (NEA.toArray args) expr
+      $ printCurriedAbs (NEA.toArray args) expr
   DefineUncurriedFunction ident args expr ->
     printNamedIndentedList (D.text "scm:define " <> D.text ident)
       $ printNamedIndentedList
@@ -298,8 +298,8 @@ printDefinition = case _ of
       (recordTypePredicate ident)
       fields
 
-printCurriedApp :: Prim.Array Prim.String -> ChezExpr -> Doc Void
-printCurriedApp args body = Array.foldr foldFn (printChezExpr body) args
+printCurriedAbs :: Prim.Array Prim.String -> ChezExpr -> Doc Void
+printCurriedAbs args body = Array.foldr foldFn (printChezExpr body) args
   where
   foldFn next bodyOrRest =
     printNamedIndentedList
