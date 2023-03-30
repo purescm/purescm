@@ -133,7 +133,7 @@ runSnapshotTests { accept, filter } = do
             let snapshotDirFile = Path.concat [ snapshotDir, path ]
             when (Set.member snapshotDirFile snapshotPaths) do
               originalFileSourceCode <- FS.readTextFile UTF8 snapshotDirFile
-              hasMain <- either (\_ -> unsafeCrashWith "canRunMain: parse failure") pure $
+              hasMain <- either unsafeCrashWith pure $
                 canRunMain originalFileSourceCode
               void $ liftEffect $ Ref.modify
                 (Map.insert name ({ formatted, failsWith: hasFails backend, hasMain }))
