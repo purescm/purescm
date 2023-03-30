@@ -19,3 +19,6 @@ moduleForeign = "foreign"
 
 moduleLib :: String
 moduleLib = "lib"
+
+schemeExt :: String
+schemeExt = ".ss"

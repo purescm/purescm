@@ -41,7 +41,7 @@ import Node.Library.Execa.Which (defaultWhichOptions, which)
 import Node.Path as Path
 import Node.Process as Process
 import Partial.Unsafe (unsafeCrashWith)
-import PureScript.Backend.Chez.Constants (moduleForeign, moduleLib)
+import PureScript.Backend.Chez.Constants (moduleForeign, moduleLib, schemeExt)
 import PureScript.Backend.Chez.Convert (codegenModule)
 import PureScript.Backend.Chez.Runtime (runtimeModule)
 import PureScript.Backend.Chez.Syntax as S
@@ -98,7 +98,7 @@ runSnapshotTests { accept, filter } = do
   -- RUNTIME
   let runtimePath = Path.concat [ testOut, "_Chez_Runtime" ]
   mkdirp runtimePath
-  let runtimeFilePath = Path.concat [ runtimePath, "lib.ss" ]
+  let runtimeFilePath = Path.concat [ runtimePath, moduleLib <> schemeExt ]
   let runtimeContents = Dodo.print plainText Dodo.twoSpaces $ S.printLibrary $ runtimeModule
   FS.writeTextFile UTF8 runtimeFilePath runtimeContents
   coreFnModulesFromOutput "output" filter >>= case _ of
@@ -120,14 +120,15 @@ runSnapshotTests { accept, filter } = do
                   $ S.printLibrary
                   $ codegenModule backend
             let testFileDir = Path.concat [ testOut, name ]
-            let testFilePath = Path.concat [ testFileDir, moduleLib <> ".ss" ]
+            let testFilePath = Path.concat [ testFileDir, moduleLib <> schemeExt ]
             mkdirp testFileDir
             FS.writeTextFile UTF8 testFilePath formatted
             unless (Set.isEmpty backend.foreign) do
               let
                 foreignSiblingPath =
-                  fromMaybe path (String.stripSuffix (Pattern (Path.extname path)) path) <> ".ss"
-              let foreignOutputPath = Path.concat [ testFileDir, moduleForeign <> ".ss" ]
+                  fromMaybe path (String.stripSuffix (Pattern (Path.extname path)) path) <>
+                    schemeExt
+              let foreignOutputPath = Path.concat [ testFileDir, moduleForeign <> schemeExt ]
               copyFile foreignSiblingPath foreignOutputPath
             let snapshotDirFile = Path.concat [ snapshotDir, path ]
             when (Set.member snapshotDirFile snapshotPaths) do
@@ -147,9 +148,9 @@ runSnapshotTests { accept, filter } = do
       outputModules <- liftEffect $ Ref.read outputRef
       results <- forWithIndex outputModules \name ({ formatted, failsWith, hasMain }) -> do
         let
-          snapshotFilePath = Path.concat [ snapshotsOut, name <> ".ss" ]
+          snapshotFilePath = Path.concat [ snapshotsOut, name <> schemeExt ]
           runAcceptedTest = do
-            schemeFile <- liftEffect $ Path.resolve [ testOut, name ] "lib.ss"
+            schemeFile <- liftEffect $ Path.resolve [ testOut, name ] $ moduleLib <> schemeExt
             result <- loadModuleMain testOut schemeBin hasMain schemeFile
             case result of
               Left err | matchesFail err.message failsWith -> do
