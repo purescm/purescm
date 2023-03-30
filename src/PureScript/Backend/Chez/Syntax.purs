@@ -278,7 +278,7 @@ printDefinition = case _ of
       $ printChezExpr expr
   DefineCurriedFunction ident args expr ->
     printNamedIndentedList (D.text (scmPrefixed "define ") <> D.text ident)
-      $ printCurriedApp (NEA.toArray args) expr
+      $ printCurriedAbs (NEA.toArray args) expr
   DefineUncurriedFunction ident args expr ->
     printNamedIndentedList (D.text (scmPrefixed "define ") <> D.text ident)
       $ printNamedIndentedList
@@ -299,13 +299,13 @@ printDefinition = case _ of
       (recordTypePredicate ident)
       fields
 
-printCurriedApp :: Prim.Array Prim.String -> ChezExpr -> Doc Void
-printCurriedApp args body = case Array.uncons args of
-  Nothing -> printChezExpr body
-  Just { head, tail } ->
+printCurriedAbs :: Prim.Array Prim.String -> ChezExpr -> Doc Void
+printCurriedAbs args body = Array.foldr foldFn (printChezExpr body) args
+  where
+  foldFn next bodyOrRest =
     printNamedIndentedList
-      (D.text (scmPrefixed "lambda ") <> printList (D.text head))
-      (printCurriedApp tail body)
+      (D.words [ D.text $ scmPrefixed "lambda", printList (D.text next) ])
+      bodyOrRest
 
 printChezExpr :: forall a. ChezExpr -> Doc a
 printChezExpr e = case e of
