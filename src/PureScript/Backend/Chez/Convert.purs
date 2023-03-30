@@ -10,9 +10,10 @@ import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap, wrap)
 import Data.Set as Set
 import Data.String.CodeUnits as CodeUnits
-import Data.Tuple as Tuple
 import Data.Tuple (Tuple(..), uncurry)
+import Data.Tuple as Tuple
 import Partial.Unsafe (unsafeCrashWith)
+import PureScript.Backend.Chez.Constants (libChezSchemePrefix, moduleForeign, moduleLib, runtimePrefix, scmPrefixed)
 import PureScript.Backend.Chez.Syntax (ChezDefinition(..), ChezExport(..), ChezExpr, ChezImport(..), ChezImportSet(..), ChezLibrary)
 import PureScript.Backend.Chez.Syntax as S
 import PureScript.Backend.Optimizer.Convert (BackendModule, BackendBindingGroup)
@@ -45,7 +46,7 @@ codegenModule { name, bindings, imports, foreign: foreign_ } =
     pursImports = Array.fromFoldable imports <#> \importedModule ->
       ImportSet $ ImportPrefix
         ( ImportLibrary
-            { identifiers: NEA.cons' (coerce importedModule) [ "lib" ], version: Nothing }
+            { identifiers: NEA.cons' (coerce importedModule) [ moduleLib ], version: Nothing }
         )
         (coerce importedModule <> ".")
 
@@ -55,22 +56,24 @@ codegenModule { name, bindings, imports, foreign: foreign_ } =
       | otherwise =
           [ ImportSet $
               ImportLibrary
-                { identifiers: NEA.cons' (coerce name) [ "foreign" ], version: Nothing }
+                { identifiers: NEA.cons' (coerce name) [ moduleForeign ], version: Nothing }
           ]
   in
     { "#!r6rs": true
     , "#!chezscheme": true
     , name:
-        { identifiers: NEA.cons' (coerce name) [ "lib" ]
+        { identifiers: NEA.cons' (coerce name) [ moduleLib ]
         , version: []
         }
     , imports:
         [ ImportSet $ ImportPrefix
             (ImportLibrary { identifiers: NEA.singleton "chezscheme", version: Nothing })
-            "scm:"
+            libChezSchemePrefix
         , ImportSet $ ImportPrefix
-            (ImportLibrary { identifiers: NEA.cons' "_Chez_Runtime" [ "lib" ], version: Nothing })
-            "rt:"
+            ( ImportLibrary
+                { identifiers: NEA.cons' "_Chez_Runtime" [ moduleLib ], version: Nothing }
+            )
+            runtimePrefix
         ] <> pursImports <> foreignImport
     , exports: exports'
     , body: { definitions, expressions: [] }
@@ -194,12 +197,12 @@ codegenExpr codegenEnv@{ currentModule } (NeutralExpr s) = case s of
     -- that we track where exactly this `Fail` is defined. We can
     -- make use of the `codegenEnv` for this.
     S.List
-      [ S.Identifier "scm:raise"
+      [ S.Identifier $ scmPrefixed "raise"
       , S.List
-          [ S.Identifier "scm:condition"
-          , S.List [ S.Identifier "scm:make-error" ]
+          [ S.Identifier $ scmPrefixed "condition"
+          , S.List [ S.Identifier $ scmPrefixed "make-error" ]
           , S.List
-              [ S.Identifier "scm:make-message-condition"
+              [ S.Identifier $ scmPrefixed "make-message-condition"
               , S.String $ Json.stringify $ Json.fromString i
               ]
           ]
@@ -222,15 +225,15 @@ codegenPrimOp codegenEnv@{ currentModule } = case _ of
       x' = codegenExpr codegenEnv x
     case o of
       OpBooleanNot ->
-        S.List [ S.Identifier "scm:not", x' ]
+        S.List [ S.Identifier $ scmPrefixed "not", x' ]
       OpIntBitNot ->
-        S.List [ S.Identifier "scm:fxlognot", x' ]
+        S.List [ S.Identifier $ scmPrefixed "fxlognot", x' ]
       OpIntNegate ->
-        S.List [ S.Identifier "scm:fx-", x' ]
+        S.List [ S.Identifier $ scmPrefixed "fx-", x' ]
       OpNumberNegate ->
-        S.List [ S.Identifier "scm:fl-", x' ]
+        S.List [ S.Identifier $ scmPrefixed "fl-", x' ]
       OpArrayLength ->
-        S.List [ S.Identifier "scm:vector-length", x' ]
+        S.List [ S.Identifier $ scmPrefixed "vector-length", x' ]
       OpIsTag qi ->
         S.app
           (S.Identifier $ S.recordTypePredicate $ S.resolve currentModule qi)
@@ -241,26 +244,26 @@ codegenPrimOp codegenEnv@{ currentModule } = case _ of
       y' = codegenExpr codegenEnv y
 
       opFixNum = case _ of
-        OpAdd -> S.Identifier "scm:fx+"
-        OpSubtract -> S.Identifier "scm:fx-"
-        OpMultiply -> S.Identifier "scm:fx*"
-        OpDivide -> S.Identifier "scm:fx/"
+        OpAdd -> S.Identifier $ scmPrefixed "fx+"
+        OpSubtract -> S.Identifier $ scmPrefixed "fx-"
+        OpMultiply -> S.Identifier $ scmPrefixed "fx*"
+        OpDivide -> S.Identifier $ scmPrefixed "fx/"
 
       opFloNum = case _ of
-        OpAdd -> S.Identifier "scm:fl+"
-        OpSubtract -> S.Identifier "scm:fl-"
-        OpMultiply -> S.Identifier "scm:fl*"
-        OpDivide -> S.Identifier "scm:fl/"
+        OpAdd -> S.Identifier $ scmPrefixed "fl+"
+        OpSubtract -> S.Identifier $ scmPrefixed "fl-"
+        OpMultiply -> S.Identifier $ scmPrefixed "fl*"
+        OpDivide -> S.Identifier $ scmPrefixed "fl/"
 
       makeComparison :: String -> BackendOperatorOrd -> ChezExpr
       makeComparison tyName = do
         let
           comparisonExpression :: String -> ChezExpr
           comparisonExpression opName =
-            S.List [ S.Identifier $ Array.fold [ "scm:", tyName, opName ], x', y' ]
+            S.List [ S.Identifier $ Array.fold [ scmPrefixed tyName, opName ], x', y' ]
         case _ of
           OpEq -> comparisonExpression "=?"
-          OpNotEq -> S.List [ S.Identifier "scm:not", comparisonExpression "=?" ]
+          OpNotEq -> S.List [ S.Identifier $ scmPrefixed "not", comparisonExpression "=?" ]
           OpGt -> comparisonExpression ">?"
           OpGte -> comparisonExpression ">=?"
           OpLt -> comparisonExpression "<?"
@@ -268,11 +271,11 @@ codegenPrimOp codegenEnv@{ currentModule } = case _ of
     in
       case o of
         OpArrayIndex ->
-          S.List [ S.Identifier "scm:vector-ref", x', y' ]
+          S.List [ S.Identifier $ scmPrefixed "vector-ref", x', y' ]
         OpBooleanAnd ->
-          S.List [ S.Identifier "scm:and", x', y' ]
+          S.List [ S.Identifier $ scmPrefixed "and", x', y' ]
         OpBooleanOr ->
-          S.List [ S.Identifier "scm:or", x', y' ]
+          S.List [ S.Identifier $ scmPrefixed "or", x', y' ]
         OpBooleanOrd o' -> do
           -- Gt, Gte, Lt, Lte are defined under rt:
           let
@@ -280,26 +283,27 @@ codegenPrimOp codegenEnv@{ currentModule } = case _ of
             comparisonExpression prefix opName =
               S.List [ S.Identifier $ Array.fold [ prefix, "boolean", opName ], x', y' ]
           case o' of
-            OpEq -> comparisonExpression "scm:" "=?"
-            OpNotEq -> S.List [ S.Identifier "scm:not", comparisonExpression "scm:" "=?" ]
-            OpGt -> comparisonExpression "rt:" ">?"
-            OpGte -> comparisonExpression "rt:" ">=?"
-            OpLt -> comparisonExpression "rt:" "<?"
-            OpLte -> comparisonExpression "rt:" "<=?"
+            OpEq -> comparisonExpression libChezSchemePrefix "=?"
+            OpNotEq -> S.List
+              [ S.Identifier $ scmPrefixed "not", comparisonExpression libChezSchemePrefix "=?" ]
+            OpGt -> comparisonExpression runtimePrefix ">?"
+            OpGte -> comparisonExpression runtimePrefix ">=?"
+            OpLt -> comparisonExpression runtimePrefix "<?"
+            OpLte -> comparisonExpression runtimePrefix "<=?"
         OpCharOrd o' ->
           makeComparison "char" o'
         OpIntBitAnd ->
-          S.List [ S.Identifier "scm:fxlogand", x', y' ]
+          S.List [ S.Identifier $ scmPrefixed "fxlogand", x', y' ]
         OpIntBitOr ->
-          S.List [ S.Identifier "scm:fxlogor", x', y' ]
+          S.List [ S.Identifier $ scmPrefixed "fxlogor", x', y' ]
         OpIntBitShiftLeft ->
           -- shift-left-logical = shift-left-arithmetic
-          S.List [ S.Identifier "scm:fxsll", x', y' ]
+          S.List [ S.Identifier $ scmPrefixed "fxsll", x', y' ]
         OpIntBitShiftRight ->
           -- shift-right-arithmetic preserves signs
-          S.List [ S.Identifier "scm:fxsra", x', y' ]
+          S.List [ S.Identifier $ scmPrefixed "fxsra", x', y' ]
         OpIntBitXor ->
-          S.List [ S.Identifier "scm:fxlogxor", x', y' ]
+          S.List [ S.Identifier $ scmPrefixed "fxlogxor", x', y' ]
         OpIntBitZeroFillShiftRight ->
           -- shift-right-logical follows the invariant:
           --
@@ -308,7 +312,7 @@ codegenPrimOp codegenEnv@{ currentModule } = case _ of
           -- or:
           --
           -- top == zshr (-1) 1
-          S.List [ S.Identifier "scm:fxsrl", x', y' ]
+          S.List [ S.Identifier $ scmPrefixed "fxsrl", x', y' ]
         OpIntNum o' ->
           S.List [ opFixNum o', x', y' ]
         OpIntOrd o' ->
@@ -318,6 +322,6 @@ codegenPrimOp codegenEnv@{ currentModule } = case _ of
         OpNumberOrd o' ->
           makeComparison "fl" o'
         OpStringAppend ->
-          S.List [ S.Identifier "scm:string-append", x', y' ]
+          S.List [ S.Identifier $ scmPrefixed "string-append", x', y' ]
         OpStringOrd o' ->
           makeComparison "string" o'
