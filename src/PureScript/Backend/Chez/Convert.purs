@@ -147,7 +147,7 @@ codegenExpr codegenEnv@{ currentModule } (NeutralExpr s) = case s of
       (codegenExpr codegenEnv <$> args)
   UncurriedAbs args body ->
     S.List
-      [ S.Identifier "scm:lambda"
+      [ S.Identifier $ scmPrefixed "lambda"
       , S.List $ (S.Identifier <<< uncurry S.toChezIdent) <$> args
       , S.List [ codegenExpr codegenEnv body ]
       ]
