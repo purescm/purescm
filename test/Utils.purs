@@ -48,6 +48,7 @@ import PureScript.Backend.Optimizer.CoreFn (Ann, Module, ModuleName(..))
 import PureScript.Backend.Optimizer.CoreFn.Json (decodeModule)
 import PureScript.Backend.Optimizer.CoreFn.Sort (emptyPull, pullResult, resumePull, sortModules)
 import PureScript.CST (RecoveredParserResult(..), parseModule)
+import PureScript.CST.Errors (printParseError)
 import PureScript.CST.Types as CSTT
 
 spawnFromParent :: String -> Array String -> Aff Unit
@@ -153,11 +154,22 @@ canRunMain sourceCode =
   case parseModule sourceCode of
     ParseSucceeded (CSTT.Module { body: CSTT.ModuleBody { decls } }) ->
       pure $ Array.any isMain decls
-    ParseSucceededWithErrors _ _ ->
-      Left "Could not completely parse file."
-    ParseFailed _ ->
-      Left "Could not parse file."
+    ParseSucceededWithErrors _ errs ->
+      Left $ Array.intercalate "\n"
+        [ "canRunMain - could not completely parse file."
+        , Array.intercalate "\n" $ map printPositionedError $ NonEmptyArray.toArray errs
+        ]
+    ParseFailed err ->
+      Left $ Array.intercalate "\n"
+        [ "canRunMain - could not parse file."
+        , printPositionedError err
+        ]
   where
+  printPositionedError err = Array.intercalate "\n"
+    [ ""
+    , "Position: " <> show err.position
+    , "Reason: " <> printParseError err.error
+    ]
   isMain = case _ of
     CSTT.DeclSignature
       ( CSTT.Labeled
