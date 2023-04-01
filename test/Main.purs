@@ -151,7 +151,13 @@ runSnapshotTests { accept, filter } = do
           snapshotFilePath = Path.concat [ snapshotsOut, name <> schemeExt ]
           runAcceptedTest = do
             schemeFile <- liftEffect $ Path.resolve [ testOut, name ] $ moduleLib <> schemeExt
-            result <- loadModuleMain testOut schemeBin hasMain schemeFile
+            result <- loadModuleMain
+              { libdir: testOut
+              , scheme: schemeBin
+              , hasMain
+              , modulePath: schemeFile
+              , moduleName: name
+              }
             case result of
               Left err | matchesFail err.message failsWith -> do
                 Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <> " failed."
