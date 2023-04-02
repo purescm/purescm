@@ -361,7 +361,11 @@ chezCond b o =
     List $ [ Identifier $ scmPrefixed "cond" ] <> b' <> o'
 
 chezUncurriedApplication :: ChezExpr -> Prim.Array ChezExpr -> ChezExpr
-chezUncurriedApplication f args = List $ Array.cons f args
+chezUncurriedApplication f s = List $ Array.cons f s
+
+chezUncurriedFunction :: Prim.Array Prim.String -> ChezExpr -> ChezExpr
+chezUncurriedFunction a e = List
+  [ Identifier $ scmPrefixed "lambda", List $ Identifier <$> a, e ]
 
 chezCurriedApplication :: ChezExpr -> NonEmptyArray ChezExpr -> ChezExpr
 chezCurriedApplication f s = NonEmptyArray.foldl1 app $ NonEmptyArray.cons f s

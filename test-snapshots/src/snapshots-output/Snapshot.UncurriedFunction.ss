@@ -8,11 +8,20 @@
     test2a
     test2b
     test3a
-    test3b)
+    test3b
+    test4a
+    test4b)
   (import
     (prefix (chezscheme) scm:)
     (prefix (_Chez_Runtime lib) rt:)
-    (prefix (Data.Function.Uncurried lib) Data.Function.Uncurried.))
+    (prefix (Data.Function.Uncurried lib) Data.Function.Uncurried.)
+    (prefix (Effect.Console lib) Effect.Console.))
+
+  (scm:define test4a
+    (scm:lambda (a0) ((Effect.Console.log a0))))
+
+  (scm:define test4b
+    (scm:lambda () (test4a "test4b")))
 
   (scm:define test3a
     (scm:lambda (v0 b1)
@@ -28,8 +37,8 @@
   (scm:define test2b
     (test2a 1 2))
 
-  (scm:define test1b
-    Data.Function.Uncurried.runFn0)
-
   (scm:define test1a
-    (Data.Function.Uncurried.mkFn0 (scm:lambda (v0) 1))))
+    (Data.Function.Uncurried.mkFn0 (scm:lambda (v0) 1)))
+
+  (scm:define test1b
+    (Data.Function.Uncurried.runFn0 test1a)))

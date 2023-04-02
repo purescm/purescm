@@ -137,28 +137,26 @@ codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
     S.Identifier $ coerce $ S.toChezIdent i l
   Lit l ->
     codegenLiteral codegenEnv l
+
   App f p ->
     S.chezCurriedApplication (codegenExpr codegenEnv f) (codegenExpr codegenEnv <$> p)
   Abs a e -> do
     S.chezCurriedFunction (uncurry S.toChezIdent <$> a) (codegenExpr codegenEnv e)
+  UncurriedApp f p ->
+    S.chezUncurriedApplication (codegenExpr codegenEnv f) (codegenExpr codegenEnv <$> p)
+  UncurriedAbs a e ->
+    S.chezUncurriedFunction (uncurry S.toChezIdent <$> a) (codegenExpr codegenEnv e)
+  UncurriedEffectApp f p ->
+    S.chezThunk $ S.chezUncurriedApplication (codegenExpr codegenEnv f)
+      (codegenExpr codegenEnv <$> p)
+  UncurriedEffectAbs a e ->
+    S.chezUncurriedFunction (uncurry S.toChezIdent <$> a)
+      (S.chezUnthunk $ codegenPureChain codegenEnv e)
 
-  UncurriedApp fn args ->
-    S.List $ Array.cons (codegenExpr codegenEnv fn) $
-      (codegenExpr codegenEnv <$> args)
-  UncurriedAbs args body ->
-    S.List
-      [ S.Identifier $ scmPrefixed "lambda"
-      , S.List $ (S.Identifier <<< uncurry S.toChezIdent) <$> args
-      , S.List [ codegenExpr codegenEnv body ]
-      ]
-
-  UncurriedEffectApp _ _ ->
-    S.Identifier "uncurried-effect-app"
-  UncurriedEffectAbs _ _ ->
-    S.Identifier "uncurried-effect-ab"
-
-  Accessor _ (GetProp _) ->
-    S.Identifier $ "accessor-get-prop"
+  Accessor e (GetProp i) ->
+    S.chezUncurriedApplication
+      (S.Identifier $ scmPrefixed "hashtable-ref")
+      [ codegenExpr codegenEnv e, S.String $ Json.stringify $ Json.fromString i, S.Boolean false ]
   Accessor e (GetIndex i) ->
     S.chezUncurriedApplication
       (S.Identifier $ scmPrefixed "vector-ref")
