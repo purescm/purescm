@@ -44,7 +44,7 @@ package:
       - refs
 workspace:
   package_set:
-    registry: 19.1.0
+    registry: 20.0.1
   extra_packages:
     backend-optimizer:
       git: https://github.com/JordanMartinez/purescript-backend-optimizer
