@@ -178,7 +178,7 @@ codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
   LetRec _ _ _ ->
     S.Identifier "let-rec"
   Let _ _ _ _ ->
-    codegenChain pureBlockMode codegenEnv s
+    codegenPureChain codegenEnv s
   Branch b o -> do
     let
       goPair :: Pair NeutralExpr -> { c :: _, e :: _ }
@@ -234,7 +234,7 @@ effectBlockMode :: BlockMode
 effectBlockMode = { effect: true }
 
 codegenPureChain :: CodegenEnv -> NeutralExpr -> ChezExpr
-codegenPureChain = codegenChain pureBlockMode
+codegenPureChain codegenEnv = codegenChain pureBlockMode codegenEnv
 
 codegenEffectChain :: CodegenEnv -> NeutralExpr -> ChezExpr
 codegenEffectChain codegenEnv = S.chezThunk <<< codegenChain effectBlockMode codegenEnv
@@ -256,7 +256,7 @@ codegenChain blockMode codegenEnv = go []
       codegenExpr codegenEnv expression
     _ ->
       S.List $
-        [ S.Identifier "scm:let*"
+        [ S.Identifier $ scmPrefixed "let*"
         , S.List $ Array.reverse bindings <#> \binding ->
             S.List [ S.Identifier $ S.toChezIdent binding.i binding.l, binding.v ]
         , codegenExpr codegenEnv expression
