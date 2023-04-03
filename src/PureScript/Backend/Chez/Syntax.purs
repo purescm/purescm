@@ -11,13 +11,14 @@ import Data.Array.NonEmpty as NonEmptyArray
 import Data.Maybe (Maybe(..), maybe)
 import Data.Newtype (class Newtype, un)
 import Data.String.Regex as R
-import Data.String.Regex.Unsafe as R.Unsafe
 import Data.String.Regex.Flags as R.Flags
+import Data.String.Regex.Unsafe as R.Unsafe
 import Dodo (Doc)
 import Dodo as D
 import Partial.Unsafe (unsafeCrashWith)
 import Prim as Prim
 import PureScript.Backend.Chez.Constants (libChezSchemePrefix, scmPrefixed)
+import PureScript.Backend.Chez.Syntax.ChezIdent (EscapedIdent, chezIdent, unEscape)
 import PureScript.Backend.Optimizer.CoreFn (Ident(..), ModuleName(..), Prop(..), Qualified(..))
 import PureScript.Backend.Optimizer.Syntax (Level(..))
 import Safe.Coerce (coerce)
@@ -32,7 +33,7 @@ type ChezLibrary =
   }
 
 type LibraryName =
-  { identifiers :: NonEmptyArray Prim.String
+  { identifiers :: NonEmptyArray EscapedIdent
   , version :: Prim.Array LibraryVersion
   }
 
@@ -41,11 +42,11 @@ newtype LibraryVersion = LibraryVersion Prim.Int
 derive instance Newtype LibraryVersion _
 
 data ChezExport
-  = ExportIdentifier Prim.String
-  | ExportRename (Prim.Array { original :: Prim.String, rename :: Prim.String })
+  = ExportIdentifier EscapedIdent
+  | ExportRename (Prim.Array { original :: EscapedIdent, rename :: EscapedIdent })
 
 type LibraryReference =
-  { identifiers :: NonEmptyArray Prim.String
+  { identifiers :: NonEmptyArray EscapedIdent
   , version :: Maybe VersionReference
   }
 
@@ -74,10 +75,10 @@ data ChezImportLevel
 
 data ChezImportSet
   = ImportLibrary LibraryReference
-  | ImportOnly ChezImportSet (Prim.Array Prim.String)
-  | ImportExcept ChezImportSet (Prim.Array Prim.String)
-  | ImportPrefix ChezImportSet Prim.String
-  | ImportRename ChezImportSet (Prim.Array { original :: Prim.String, rename :: Prim.String })
+  | ImportOnly ChezImportSet (Prim.Array EscapedIdent)
+  | ImportExcept ChezImportSet (Prim.Array EscapedIdent)
+  | ImportPrefix ChezImportSet EscapedIdent
+  | ImportRename ChezImportSet (Prim.Array { original :: EscapedIdent, rename :: EscapedIdent })
 
 type LibraryBody =
   { definitions :: Prim.Array ChezDefinition
@@ -85,10 +86,10 @@ type LibraryBody =
   }
 
 data ChezDefinition
-  = DefineValue Prim.String ChezExpr
-  | DefineCurriedFunction Prim.String (NonEmptyArray Prim.String) ChezExpr
-  | DefineUncurriedFunction Prim.String (Prim.Array Prim.String) ChezExpr
-  | DefineRecordType Prim.String (Prim.Array Prim.String)
+  = DefineValue EscapedIdent ChezExpr
+  | DefineCurriedFunction EscapedIdent (NonEmptyArray EscapedIdent) ChezExpr
+  | DefineUncurriedFunction EscapedIdent (Prim.Array EscapedIdent) ChezExpr
+  | DefineRecordType EscapedIdent (Prim.Array EscapedIdent)
 
 newtype LiteralDigit = LiteralDigit Prim.String
 
@@ -101,22 +102,22 @@ data ChezExpr
   | Float LiteralDigit
   | String Prim.String
   | Boolean Prim.Boolean
-  | Identifier Prim.String
+  | Identifier EscapedIdent
   | List (Prim.Array ChezExpr)
 
-definitionIdentifiers :: ChezDefinition -> Prim.Array Prim.String
+definitionIdentifiers :: ChezDefinition -> Prim.Array EscapedIdent
 definitionIdentifiers (DefineValue i _) = [ i ]
 definitionIdentifiers (DefineCurriedFunction i _ _) = [ i ]
 definitionIdentifiers (DefineUncurriedFunction i _ _) = [ i ]
 definitionIdentifiers (DefineRecordType i [ x ]) =
-  [ recordTypeCurriedConstructor i
-  , recordTypePredicate i
-  , recordTypeAccessor i x
+  [ chezIdent $ recordTypeCurriedConstructor $ unEscape i
+  , chezIdent $ recordTypePredicate $ unEscape i
+  , chezIdent $ recordTypeAccessor (unEscape i) $ unEscape x
   ]
 definitionIdentifiers (DefineRecordType i fields) =
-  [ recordTypeUncurriedConstructor i
-  , recordTypePredicate i
-  ] <> map (recordTypeAccessor i) fields
+  [ chezIdent $ recordTypeUncurriedConstructor $ unEscape i
+  , chezIdent $ recordTypePredicate $ unEscape i
+  ] <> map (\field -> chezIdent $ recordTypeAccessor (unEscape i) $ unEscape field) fields
 
 resolve :: ModuleName -> Qualified Ident -> Prim.String
 resolve _ (Qualified Nothing (Ident i)) = i
@@ -171,7 +172,7 @@ printLibrary lib =
 printLibraryName :: LibraryName -> Doc Void
 printLibraryName { identifiers, version } =
   printList $ D.words
-    [ D.words $ map D.text identifiers
+    [ D.words $ map (D.text <<< unEscape) identifiers
     , case version of
         [] -> mempty
         _ -> printList $ D.words $ map printLibraryVersion version
@@ -182,11 +183,12 @@ printLibraryVersion = D.text <<< show <<< un LibraryVersion
 
 printExport :: ChezExport -> Doc Void
 printExport = case _ of
-  ExportIdentifier s -> D.text s
+  ExportIdentifier s -> D.text $ unEscape s
   ExportRename arr ->
     printNamedList "rename"
       $ D.words
-      $ map (\r -> printList $ D.words [ D.text r.original, D.text r.rename ]) arr
+      $ map (\r -> printList $ D.words [ D.text $ unEscape r.original, D.text $ unEscape r.rename ])
+          arr
 
 printImport :: ChezImport -> Doc Void
 printImport = case _ of
@@ -209,16 +211,17 @@ printImportSet = case _ of
     printLibraryReference libRef
   ImportOnly impSet identifiers ->
     printNamedList "only" $ D.words
-      [ printImportSet impSet, D.words $ map D.text identifiers ]
+      [ printImportSet impSet, D.words $ map (D.text <<< unEscape) identifiers ]
   ImportExcept impSet identifiers ->
     printNamedList "except" $ D.words
-      [ printImportSet impSet, D.words $ map D.text identifiers ]
+      [ printImportSet impSet, D.words $ map (D.text <<< unEscape) identifiers ]
   ImportPrefix impSet rename ->
-    printNamedList "prefix" $ D.words [ printImportSet impSet, D.text rename ]
+    printNamedList "prefix" $ D.words [ printImportSet impSet, (D.text <<< unEscape) rename ]
   ImportRename impSet identifiers ->
     printNamedList "rename" $ D.words
       [ printImportSet impSet
-      , D.words $ map (\r -> printList $ D.words $ map D.text [ r.original, r.rename ])
+      , D.words $ map
+          (\r -> printList $ D.words $ map (D.text <<< unEscape) [ r.original, r.rename ])
           identifiers
       ]
 
@@ -226,13 +229,13 @@ printLibraryReference :: LibraryReference -> Doc Void
 printLibraryReference lib = do
   let
     printListFn
-      | Array.elem (NEA.head lib.identifiers)
+      | Array.elem (unEscape $ NEA.head lib.identifiers)
           [ "for", "library", "only", "except", "prefix", "rename" ] =
           printNamedList "library"
       | otherwise =
           printList
   printListFn $ D.words
-    [ D.words $ map D.text lib.identifiers
+    [ D.words $ map (D.text <<< unEscape) lib.identifiers
     , maybe mempty printVersionReference lib.version
     ]
 
@@ -278,30 +281,30 @@ printNamedIndentedList firstLine body
 printDefinition :: ChezDefinition -> Doc Void
 printDefinition = case _ of
   DefineValue ident expr ->
-    printNamedIndentedList (D.words [ D.text $ scmPrefixed "define", D.text ident ])
+    printNamedIndentedList (D.words [ D.text $ scmPrefixed "define", D.text $ unEscape ident ])
       $ printChezExpr expr
   DefineCurriedFunction ident args expr ->
-    printNamedIndentedList (D.text (scmPrefixed "define ") <> D.text ident)
-      $ printCurriedAbs (NEA.toArray args) expr
+    printNamedIndentedList (D.text (scmPrefixed "define ") <> (D.text $ unEscape ident))
+      $ printCurriedAbs (map unEscape $ NEA.toArray args) expr
   DefineUncurriedFunction ident args expr ->
-    printNamedIndentedList (D.text (scmPrefixed "define ") <> D.text ident)
+    printNamedIndentedList (D.text (scmPrefixed "define ") <> (D.text $ unEscape ident))
       $ printNamedIndentedList
-          (D.text (scmPrefixed "lambda ") <> printList (D.words $ map D.text args))
+          (D.text (scmPrefixed "lambda ") <> printList (D.words $ map (D.text <<< unEscape) args))
           (printChezExpr expr)
   DefineRecordType ident [ field ] ->
     printRecordDefinition
-      ident
-      (recordTypeName ident)
-      (recordTypeCurriedConstructor ident)
-      (recordTypePredicate ident)
-      [ field ]
+      (unEscape ident)
+      (recordTypeName $ unEscape ident)
+      (recordTypeCurriedConstructor $ unEscape ident)
+      (recordTypePredicate $ unEscape ident)
+      [ unEscape field ]
   DefineRecordType ident fields ->
     printRecordDefinition
-      ident
-      (recordTypeName ident)
-      (recordTypeUncurriedConstructor ident)
-      (recordTypePredicate ident)
-      fields
+      (unEscape ident)
+      (recordTypeName $ unEscape ident)
+      (recordTypeUncurriedConstructor $ unEscape ident)
+      (recordTypePredicate $ unEscape ident)
+      (map unEscape fields)
 
 printCurriedAbs :: Prim.Array Prim.String -> ChezExpr -> Doc Void
 printCurriedAbs args body = Array.foldr foldFn (printChezExpr body) args
@@ -317,7 +320,7 @@ printChezExpr e = case e of
   Float (LiteralDigit x) -> D.text x
   String x -> D.text x
   Boolean x -> D.text $ if x then "#t" else "#f"
-  Identifier x -> D.text x
+  Identifier x -> D.text $ unEscape x
   List xs -> D.text "(" <> D.words (printChezExpr <$> xs) <> D.text ")"
 
 printRecordDefinition
@@ -377,9 +380,9 @@ chezCond b o =
     b' = NonEmptyArray.toArray b <#> \{ c, e } -> List [ c, e ]
 
     o' :: Prim.Array ChezExpr
-    o' = Array.fromFoldable o <#> \x -> List [ Identifier $ scmPrefixed "else", x ]
+    o' = Array.fromFoldable o <#> \x -> List [ Identifier $ chezIdent $ scmPrefixed "else", x ]
   in
-    List $ [ Identifier $ scmPrefixed "cond" ] <> b' <> o'
+    List $ [ Identifier $ chezIdent $ scmPrefixed "cond" ] <> b' <> o'
 
 chezUncurriedApplication :: ChezExpr -> Prim.Array ChezExpr -> ChezExpr
 chezUncurriedApplication f args = List $ Array.cons f args
@@ -391,7 +394,7 @@ chezCurriedFunction :: NonEmptyArray Prim.String -> ChezExpr -> ChezExpr
 chezCurriedFunction a e = Array.foldr lambda e $ NonEmptyArray.toArray a
 
 chezThunk :: ChezExpr -> ChezExpr
-chezThunk e = List [ Identifier $ scmPrefixed "lambda", List [], e ]
+chezThunk e = List [ Identifier $ chezIdent $ scmPrefixed "lambda", List [], e ]
 
 chezUnthunk :: ChezExpr -> ChezExpr
 chezUnthunk e = List [ e ]
@@ -402,24 +405,25 @@ app :: ChezExpr -> ChezExpr -> ChezExpr
 app f x = List [ f, x ]
 
 define :: Ident -> ChezExpr -> ChezExpr
-define i e = List [ Identifier $ scmPrefixed "define", Identifier $ coerce i, e ]
+define i e = List
+  [ Identifier $ chezIdent $ scmPrefixed "define", Identifier $ chezIdent $ coerce i, e ]
 
 library :: ModuleName -> Prim.Array Ident -> Prim.Array ChezExpr -> ChezExpr
 library moduleName exports bindings =
   List $
-    [ Identifier "library"
-    , Identifier $ "(" <> coerce moduleName <> " lib" <> ")"
+    [ Identifier $ chezIdent "library"
+    , List [ Identifier $ chezIdent (coerce moduleName), Identifier $ chezIdent "lib" ]
     , List $
-        [ Identifier "export"
-        ] <> (Identifier <$> coerce exports)
+        [ Identifier $ chezIdent "export"
+        ] <> (Identifier <<< chezIdent <$> coerce exports)
     , List
-        [ Identifier "import"
+        [ Identifier $ chezIdent "import"
         , List
-            [ Identifier "prefix"
+            [ Identifier $ chezIdent "prefix"
             , List
-                [ Identifier "chezscheme"
+                [ Identifier $ chezIdent "chezscheme"
                 ]
-            , Identifier libChezSchemePrefix
+            , Identifier $ chezIdent libChezSchemePrefix
             ]
         ]
     ] <> bindings
@@ -430,37 +434,38 @@ record r =
     field :: Prop ChezExpr -> ChezExpr
     field (Prop k v) =
       List
-        [ Identifier $ scmPrefixed "hashtable-set!"
-        , Identifier "$record"
+        [ Identifier $ chezIdent $ scmPrefixed "hashtable-set!"
+        , Identifier $ chezIdent "$record"
         , String $ Json.stringify $ Json.fromString k
         , v
         ]
   in
     List $
-      [ Identifier $ scmPrefixed "letrec*"
+      [ Identifier $ chezIdent $ scmPrefixed "letrec*"
       , List
           [ List
-              [ Identifier "$record"
+              [ Identifier $ chezIdent "$record"
               , List
-                  [ Identifier $ scmPrefixed "make-hashtable"
-                  , Identifier $ scmPrefixed "string-hash"
-                  , Identifier $ scmPrefixed "string=?"
+                  [ Identifier $ chezIdent $ scmPrefixed "make-hashtable"
+                  , Identifier $ chezIdent $ scmPrefixed "string-hash"
+                  , Identifier $ chezIdent $ scmPrefixed "string=?"
                   ]
               ]
           ]
-      ] <> (field <$> r) <> [ Identifier "$record" ]
+      ] <> (field <$> r) <> [ Identifier $ chezIdent "$record" ]
 
 quote :: ChezExpr -> ChezExpr
-quote e = app (Identifier $ scmPrefixed "quote") e
+quote e = app (Identifier $ chezIdent $ scmPrefixed "quote") e
 
 eqQ :: ChezExpr -> ChezExpr -> ChezExpr
-eqQ x y = chezUncurriedApplication (Identifier $ scmPrefixed "eq?") [ x, y ]
+eqQ x y = chezUncurriedApplication (Identifier $ chezIdent $ scmPrefixed "eq?") [ x, y ]
 
 lambda :: Prim.String -> ChezExpr -> ChezExpr
-lambda a e = List [ Identifier $ scmPrefixed "lambda", List [ Identifier a ], e ]
+lambda a e = List
+  [ Identifier $ chezIdent $ scmPrefixed "lambda", List [ Identifier $ chezIdent a ], e ]
 
 vector :: Prim.Array ChezExpr -> ChezExpr
-vector = List <<< Array.cons (Identifier $ scmPrefixed "vector")
+vector = List <<< Array.cons (Identifier $ chezIdent $ scmPrefixed "vector")
 
 recordTypeName :: Prim.String -> Prim.String
 recordTypeName i = i <> "$"
@@ -479,4 +484,4 @@ recordTypeAccessor i field = i <> "-" <> field
 
 recordAccessor :: ChezExpr -> Prim.String -> Prim.String -> ChezExpr
 recordAccessor expr name field =
-  chezUncurriedApplication (Identifier $ recordTypeAccessor name field) [ expr ]
+  chezUncurriedApplication (Identifier $ chezIdent $ recordTypeAccessor name field) [ expr ]

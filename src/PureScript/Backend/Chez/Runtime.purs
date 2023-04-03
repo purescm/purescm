@@ -12,6 +12,7 @@ import Data.Tuple (Tuple(..))
 import PureScript.Backend.Chez.Constants (libChezSchemePrefix, scmPrefixed)
 import PureScript.Backend.Chez.Syntax (ChezDefinition(..), ChezExport(..), ChezExpr, ChezImport(..), ChezImportSet(..), ChezLibrary)
 import PureScript.Backend.Chez.Syntax as S
+import PureScript.Backend.Chez.Syntax.ChezIdent (chezIdent)
 
 makeExportedFunction
   :: forall m
@@ -22,26 +23,26 @@ makeExportedFunction
   -> ChezExpr
   -> m ChezDefinition
 makeExportedFunction name args expr = do
-  modify_ $ Array.cons $ ExportIdentifier name
-  pure $ DefineUncurriedFunction name args expr
+  modify_ $ Array.cons $ ExportIdentifier $ chezIdent name
+  pure $ DefineUncurriedFunction (chezIdent name) (map chezIdent args) expr
 
 makeBooleanComparison
   :: forall m. Monad m => MonadState (Array ChezExport) m => String -> m ChezDefinition
 makeBooleanComparison suffix =
   makeExportedFunction ("boolean" <> suffix) [ "x", "y" ] $
     S.List
-      [ S.Identifier $ scmPrefixed "fx" <> suffix
-      , S.List [ S.Identifier "boolean->integer", S.Identifier "x" ]
-      , S.List [ S.Identifier "boolean->integer", S.Identifier "y" ]
+      [ S.Identifier $ chezIdent $ scmPrefixed "fx" <> suffix
+      , S.List [ S.Identifier $ chezIdent "boolean->integer", S.Identifier $ chezIdent "x" ]
+      , S.List [ S.Identifier $ chezIdent "boolean->integer", S.Identifier $ chezIdent "y" ]
       ]
 
 runtimeModule :: ChezLibrary
 runtimeModule = do
   let
     Tuple definitions exports = flip runState [] $ sequence
-      [ pure $ DefineUncurriedFunction "boolean->integer" [ "x" ] $ S.List
-          [ S.Identifier $ scmPrefixed "if"
-          , S.Identifier "x"
+      [ pure $ DefineUncurriedFunction (chezIdent "boolean->integer") [ chezIdent "x" ] $ S.List
+          [ S.Identifier $ chezIdent $ scmPrefixed "if"
+          , S.Identifier $ chezIdent "x"
           , S.Integer $ S.LiteralDigit "1"
           , S.Integer $ S.LiteralDigit "0"
           ]
@@ -53,14 +54,14 @@ runtimeModule = do
   { "#!chezscheme": true
   , "#!r6rs": true
   , name:
-      { identifiers: NEA.cons' "_Chez_Runtime" [ "lib" ]
+      { identifiers: NEA.cons' (chezIdent "_Chez_Runtime") [ chezIdent "lib" ]
       , version: []
       }
   , exports
   , imports:
       [ ImportSet $ ImportPrefix
-          (ImportLibrary { identifiers: NEA.singleton "chezscheme", version: Nothing })
-          libChezSchemePrefix
+          (ImportLibrary { identifiers: NEA.singleton $ chezIdent "chezscheme", version: Nothing })
+          (chezIdent libChezSchemePrefix)
       ]
   , body:
       { definitions
