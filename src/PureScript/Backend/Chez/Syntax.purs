@@ -10,8 +10,12 @@ import Data.Array.NonEmpty as NEA
 import Data.Array.NonEmpty as NonEmptyArray
 import Data.Maybe (Maybe(..), maybe)
 import Data.Newtype (class Newtype, un)
+import Data.String.Regex as R
+import Data.String.Regex.Unsafe as R.Unsafe
+import Data.String.Regex.Flags as R.Flags
 import Dodo (Doc)
 import Dodo as D
+import Partial.Unsafe (unsafeCrashWith)
 import Prim as Prim
 import PureScript.Backend.Chez.Constants (libChezSchemePrefix, scmPrefixed)
 import PureScript.Backend.Optimizer.CoreFn (Ident(..), ModuleName(..), Prop(..), Qualified(..))
@@ -346,6 +350,23 @@ toChezIdent i (Level l) = case i of
     "$__unused" -> "_"
     _ -> i' <> show l
   Nothing -> "_" <> show l
+
+jsonToChezString :: Prim.String -> Prim.String
+jsonToChezString str = unicodeReplace str
+  where
+  unicodeRegex :: R.Regex
+  unicodeRegex = R.Unsafe.unsafeRegex """\\u([A-F\d]{4})""" R.Flags.global
+
+  unicodeReplace :: Prim.String -> Prim.String
+  unicodeReplace s = R.replace' unicodeRegex unicodeReplaceMatch s
+
+  unicodeReplaceMatch
+    :: Prim.String
+    -> Prim.Array (Maybe Prim.String)
+    -> Prim.String
+  unicodeReplaceMatch _ = case _ of
+    [ (Just x) ] -> "\\x" <> x <> ";"
+    _ -> unsafeCrashWith "Error matching at unicodeReplaceMatch in jsonToChezString"
 
 --
 
