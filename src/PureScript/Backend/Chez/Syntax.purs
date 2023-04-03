@@ -10,9 +10,11 @@ import Data.Array.NonEmpty as NEA
 import Data.Array.NonEmpty as NonEmptyArray
 import Data.Maybe (Maybe(..), maybe)
 import Data.Newtype (class Newtype, un)
+import Data.String (Pattern(..), Replacement(..))
+import Data.String as String
 import Data.String.Regex as R
-import Data.String.Regex.Unsafe as R.Unsafe
 import Data.String.Regex.Flags as R.Flags
+import Data.String.Regex.Unsafe as R.Unsafe
 import Dodo (Doc)
 import Dodo as D
 import Partial.Unsafe (unsafeCrashWith)
@@ -152,8 +154,63 @@ linesSeparated = Array.intercalate twoLineBreaks
   where
   twoLineBreaks = D.break <> D.break
 
+escapeIdentifiers :: ChezLibrary -> ChezLibrary
+escapeIdentifiers lib = lib
+  { name = lib.name { identifiers = map escapeIdent lib.name.identifiers }
+  , exports = map escapeExport lib.exports
+  , imports = map escapeImport lib.imports
+  , body =
+      { definitions: escapeDefinition <$> lib.body.definitions
+      , expressions: escapeExpr <$> lib.body.expressions
+      }
+  }
+  where
+  escapeIdent = String.replaceAll (Pattern "'") (Replacement "$p")
+  escapeExport = case _ of
+    ExportIdentifier x -> ExportIdentifier $ escapeIdent x
+    ExportRename arr -> ExportRename $ arr <#> \r ->
+      { original: escapeIdent r.original, rename: escapeIdent r.rename }
+
+  escapeImport = case _ of
+    ImportSet set -> ImportSet $ escapeImportSet set
+    ImportFor set lvls -> ImportFor (escapeImportSet set) lvls
+
+  escapeImportSet = case _ of
+    ImportLibrary libRef ->
+      ImportLibrary $ escapeLibRef libRef
+    ImportOnly set idents ->
+      ImportOnly (escapeImportSet set) $ map escapeIdent idents
+    ImportExcept set idents ->
+      ImportExcept (escapeImportSet set) $ map escapeIdent idents
+    ImportPrefix set ident ->
+      ImportPrefix (escapeImportSet set) $ escapeIdent ident
+    ImportRename set renames ->
+      ImportRename (escapeImportSet set) $ renames <#> \r ->
+        { original: escapeIdent r.original, rename: escapeIdent r.rename }
+
+  escapeLibRef libRef = libRef { identifiers = map escapeIdent libRef.identifiers }
+
+  escapeDefinition = case _ of
+    DefineValue i expr -> DefineValue (escapeIdent i) $ escapeExpr expr
+    DefineCurriedFunction i args expr ->
+      DefineCurriedFunction (escapeIdent i) (map escapeIdent args) $ escapeExpr expr
+    DefineUncurriedFunction i args expr ->
+      DefineUncurriedFunction (escapeIdent i) (map escapeIdent args) $ escapeExpr expr
+    DefineRecordType i fields -> DefineRecordType (escapeIdent i) $ map escapeIdent fields
+
+  escapeExpr = case _ of
+    Identifier i -> Identifier $ escapeIdent i
+    List exprs -> List $ map escapeExpr exprs
+    x@(Integer _) -> x
+    x@(Float _) -> x
+    x@(String _) -> x
+    x@(Boolean _) -> x
+
 printLibrary :: ChezLibrary -> Doc Void
-printLibrary lib =
+printLibrary = escapeIdentifiers >>> printLibrary'
+
+printLibrary' :: ChezLibrary -> Doc Void
+printLibrary' lib =
   flip append D.break
     $ D.lines
     $ Array.catMaybes
