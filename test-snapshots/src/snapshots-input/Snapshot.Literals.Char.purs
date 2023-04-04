@@ -3,11 +3,11 @@ module Snapshot.Literals.Char where
 null = '\x0000' :: Char
 alarm = '\x0007' :: Char
 backspace = '\x0008' :: Char
-tab = '\t' :: Char
-newline = '\n' :: Char
+tab = '\x0009' :: Char
+newline = '\x000A' :: Char
 vtab = '\x000B' :: Char
 page = '\x000C' :: Char
-return = '\r' :: Char
+return = '\x00D' :: Char
 escape = '\x001B' :: Char
 space = ' ' :: Char
 delete = '\x007F' :: Char
