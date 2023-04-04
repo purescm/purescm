@@ -217,7 +217,7 @@ codegenLiteral :: CodegenEnv -> Literal NeutralExpr -> ChezExpr
 codegenLiteral codegenEnv = case _ of
   LitInt i -> S.Integer $ wrap $ show i
   LitNumber n -> S.Float $ wrap $ show n
-  LitString s -> S.String $ Json.stringify $ Json.fromString s
+  LitString s -> S.String $ S.jsonToChezString $ Json.stringify $ Json.fromString s
   LitChar c -> S.Identifier $ "#\\" <> CodeUnits.singleton c
   LitBoolean b -> S.Identifier $ if b then "#t" else "#f"
   LitArray a -> S.vector $ codegenExpr codegenEnv <$> a
