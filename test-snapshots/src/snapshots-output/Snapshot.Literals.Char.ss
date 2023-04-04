@@ -48,7 +48,7 @@
     #\page)
 
   (scm:define null
-    #\null)
+    #\nul)
 
   (scm:define newline
     #\linefeed)

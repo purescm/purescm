@@ -240,7 +240,7 @@ codegenChar :: Char -> ChezExpr
 codegenChar c = S.Char $ append """#\""" $ escapeChar $ toCharCode c
   where
   escapeChar code
-    | code == toCharCode '\x0000' = "null" -- nul
+    | code == toCharCode '\x0000' = "nul"
     | code == toCharCode '\x0007' = "alarm" -- bel
     | code == toCharCode '\x0008' = "backspace"
     | code == toCharCode '\t' = "tab"
