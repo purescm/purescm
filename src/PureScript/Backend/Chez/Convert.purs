@@ -157,8 +157,10 @@ codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
   UncurriedEffectAbs _ _ ->
     S.Identifier "uncurried-effect-ab"
 
-  Accessor _ (GetProp _) ->
-    S.Identifier $ "accessor-get-prop"
+  Accessor e (GetProp i) ->
+    S.chezUncurriedApplication
+      (S.Identifier $ scmPrefixed "hashtable-ref")
+      [ codegenExpr codegenEnv e, S.String $ Json.stringify $ Json.fromString i, S.Boolean false ]
   Accessor e (GetIndex i) ->
     S.chezUncurriedApplication
       (S.Identifier $ scmPrefixed "vector-ref")
