@@ -13,7 +13,7 @@ import Data.String.CodeUnits as CodeUnits
 import Data.Tuple (Tuple(..), uncurry)
 import Data.Tuple as Tuple
 import Partial.Unsafe (unsafeCrashWith)
-import PureScript.Backend.Chez.Constants (libChezSchemePrefix, moduleForeign, moduleLib, runtimePrefix, scmPrefixed)
+import PureScript.Backend.Chez.Constants (libChezSchemePrefix, moduleForeign, moduleLib, runtimePrefix, rtPrefixed, scmPrefixed)
 import PureScript.Backend.Chez.Syntax (ChezDefinition(..), ChezExport(..), ChezExpr, ChezImport(..), ChezImportSet(..), ChezLibrary)
 import PureScript.Backend.Chez.Syntax as S
 import PureScript.Backend.Optimizer.Convert (BackendModule, BackendBindingGroup)
@@ -159,8 +159,10 @@ codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
 
   Accessor e (GetProp i) ->
     S.chezUncurriedApplication
-      (S.Identifier $ scmPrefixed "hashtable-ref")
-      [ codegenExpr codegenEnv e, S.String $ Json.stringify $ Json.fromString i, S.Boolean false ]
+      (S.Identifier $ rtPrefixed "hashtable-get")
+      [ codegenExpr codegenEnv e
+      , S.String $ Json.stringify $ Json.fromString i
+      ]
   Accessor e (GetIndex i) ->
     S.chezUncurriedApplication
       (S.Identifier $ scmPrefixed "vector-ref")

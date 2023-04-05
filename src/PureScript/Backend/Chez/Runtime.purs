@@ -4,6 +4,7 @@ import Prelude
 
 import Control.Monad.State (runState)
 import Control.Monad.State.Class (class MonadState, modify_)
+import Data.Argonaut as Json
 import Data.Array as Array
 import Data.Array.NonEmpty as NEA
 import Data.Maybe (Maybe(..))
@@ -12,6 +13,17 @@ import Data.Tuple (Tuple(..))
 import PureScript.Backend.Chez.Constants (libChezSchemePrefix, scmPrefixed)
 import PureScript.Backend.Chez.Syntax (ChezDefinition(..), ChezExport(..), ChezExpr, ChezImport(..), ChezImportSet(..), ChezLibrary)
 import PureScript.Backend.Chez.Syntax as S
+
+makeExportedValue
+  :: forall m
+   . Monad m
+  => MonadState (Array ChezExport) m
+  => String
+  -> ChezExpr
+  -> m ChezDefinition
+makeExportedValue name expr = do
+  modify_ $ Array.cons $ ExportIdentifier name
+  pure $ DefineValue name expr
 
 makeExportedFunction
   :: forall m
@@ -26,7 +38,11 @@ makeExportedFunction name args expr = do
   pure $ DefineUncurriedFunction name args expr
 
 makeBooleanComparison
-  :: forall m. Monad m => MonadState (Array ChezExport) m => String -> m ChezDefinition
+  :: forall m
+   . Monad m
+  => MonadState (Array ChezExport) m
+  => String
+  -> m ChezDefinition
 makeBooleanComparison suffix =
   makeExportedFunction ("boolean" <> suffix) [ "x", "y" ] $
     S.List
@@ -49,6 +65,8 @@ runtimeModule = do
       , makeBooleanComparison ">=?"
       , makeBooleanComparison "<=?"
       , makeBooleanComparison "<?"
+      , defaultHashtableValue
+      , hashtableGet
       ]
   { "#!chezscheme": true
   , "#!r6rs": true
@@ -67,3 +85,42 @@ runtimeModule = do
       , expressions: []
       }
   }
+
+defaultHashtableValue
+  :: forall m
+   . Monad m
+  => MonadState (Array ChezExport) m
+  => m ChezDefinition
+defaultHashtableValue = makeExportedValue "default-ht-value" $
+  S.chezUncurriedApplication
+    (S.Identifier $ scmPrefixed "gensym")
+    [ S.String "default-ht-value" ]
+
+hashtableGet
+  :: forall m
+   . Monad m
+  => MonadState (Array ChezExport) m
+  => m ChezDefinition
+hashtableGet = makeExportedFunction "hashtable-get" [ "ht", "key" ]
+  $ S.let_
+      [ Tuple
+          "value" $
+          S.hashtableRef
+            (S.Identifier "ht")
+            (S.Identifier "key")
+            (S.Identifier "default-ht-value")
+      ]
+  $ S.chezCond
+      ( NEA.singleton
+          { c: S.eqQ
+              (S.Identifier "value")
+              (S.Identifier "default-ht-value")
+          , e: S.chezUncurriedApplication
+              (S.Identifier $ scmPrefixed "error")
+              [ S.Boolean false
+              , S.String $ Json.stringify $ Json.fromString "oops!"
+              , S.Boolean false
+              ]
+          }
+      )
+      (Just (S.Identifier "value"))

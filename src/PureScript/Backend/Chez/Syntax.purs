@@ -15,6 +15,7 @@ import Data.String as String
 import Data.String.Regex as R
 import Data.String.Regex.Flags as R.Flags
 import Data.String.Regex.Unsafe as R.Unsafe
+import Data.Tuple (Tuple(..))
 import Dodo (Doc)
 import Dodo as D
 import Partial.Unsafe (unsafeCrashWith)
@@ -513,6 +514,14 @@ quote e = app (Identifier $ scmPrefixed "quote") e
 eqQ :: ChezExpr -> ChezExpr -> ChezExpr
 eqQ x y = chezUncurriedApplication (Identifier $ scmPrefixed "eq?") [ x, y ]
 
+let_ :: Prim.Array (Tuple Prim.String ChezExpr) -> ChezExpr -> ChezExpr
+let_ xs e =
+  List
+    [ Identifier $ scmPrefixed "let"
+    , List $ (map \(Tuple n v) -> List [ Identifier n, v ]) xs
+    , e
+    ]
+
 lambda :: Prim.String -> ChezExpr -> ChezExpr
 lambda a e = List [ Identifier $ scmPrefixed "lambda", List [ Identifier a ], e ]
 
@@ -537,3 +546,8 @@ recordTypeAccessor i field = i <> "-" <> field
 recordAccessor :: ChezExpr -> Prim.String -> Prim.String -> ChezExpr
 recordAccessor expr name field =
   chezUncurriedApplication (Identifier $ recordTypeAccessor name field) [ expr ]
+
+hashtableRef :: ChezExpr -> ChezExpr -> ChezExpr -> ChezExpr
+hashtableRef ht key default = chezUncurriedApplication
+  (Identifier $ scmPrefixed "hashtable-ref")
+  [ ht, key, default ]
