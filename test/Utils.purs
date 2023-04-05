@@ -94,7 +94,7 @@ loadModuleMain options = do
   spawned <- execa options.scheme arguments identity
   when options.hasMain do
     spawned.stdin.writeUtf8End $ Array.fold
-      [ "(import (", options.moduleName, " lib)) (main)" ]
+      [ "(import (", options.moduleName, " lib)) (with-exception-handler (lambda (e) (display-condition e (console-error-port)) (newline (console-error-port)) (exit -1)) (lambda () (main)))" ]
   spawned.result
 
 copyFile :: FilePath -> FilePath -> Aff Unit

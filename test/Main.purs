@@ -159,15 +159,18 @@ runSnapshotTests { accept, filter } = do
               , moduleName: name
               }
             case result of
-              Left err | matchesFail err.message failsWith -> do
+              Left { message } | matchesFail message failsWith -> do
+                pure true
+              Left { message } -> do
                 Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <> " failed."
-                Console.log err.message
+                Console.log message
                 pure false
               Right _ | isJust failsWith -> do
-                Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <>
-                  " succeeded when it should have failed."
+                Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <> " succeeded when it should have failed."
                 pure false
-              _ ->
+              Right { stdout } -> do
+                when hasMain do
+                  Console.log stdout
                 pure true
         attempt (FS.readTextFile UTF8 snapshotFilePath) >>= case _ of
           Left _ -> do
@@ -203,9 +206,9 @@ hasFails = findMap go <<< _.comments
 matchesFail :: String -> Maybe String -> Boolean
 matchesFail errMsg = case _ of
   Just msg ->
-    not $ String.contains (Pattern msg) errMsg
+    String.contains (Pattern msg) errMsg
   Nothing ->
-    true
+    false
 
 getSchemeBinary :: Aff String
 getSchemeBinary = do

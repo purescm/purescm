@@ -1,10 +1,13 @@
 module Snapshot.UncurriedFunction where
 
+import Prelude
+
 import Data.Function.Uncurried (Fn0, Fn2, mkFn0, mkFn2, runFn0, runFn2)
 import Data.Unit (Unit)
 import Effect (Effect)
 import Effect.Console (log)
 import Effect.Uncurried (EffectFn1, mkEffectFn1, runEffectFn1)
+import Test.Assert (assert)
 
 test1a :: Fn0 Int
 test1a = mkFn0 \_ -> 1
@@ -29,3 +32,9 @@ test4a = mkEffectFn1 (\a -> log a)
 
 test4b :: Effect Unit
 test4b = runEffectFn1 test4a "test4b"
+
+main :: Effect Unit
+main = do
+  assert $ test1b == 1
+  assert $ test2b == 1
+  assert $ test3b == 2
