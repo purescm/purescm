@@ -102,6 +102,7 @@ escapeIdentifiers lib = lib
     Cond b o -> Cond (map (bimap escapeExpr escapeExpr) b) (map escapeExpr o)
     Let recursive bindings expr ->
       Let recursive (map (bimap escapeIdent escapeExpr) bindings) $ escapeExpr expr
+    Lambda args expr -> Lambda (map escapeIdent args) $ escapeExpr expr
     x@(Integer _) -> x
     x@(Float _) -> x
     x@(StringExpr _) -> x
@@ -281,6 +282,7 @@ printChezExpr e = case e of
   List xs -> D.text "(" <> D.words (printChezExpr <$> xs) <> D.text ")"
   Cond branches fallback -> printCond branches fallback
   Let recursive bindings' expr -> printLet recursive bindings' expr
+  Lambda args expr -> printLambda args expr
 
 printRecordDefinition
   :: Prim.String
@@ -329,6 +331,12 @@ printLet recursive bindings' expr = do
             , D.indent $ printChezExpr expr <> D.text ")"
             ]
         ]
+
+printLambda :: Array String -> ChezExpr -> Doc Void
+printLambda args expr =
+  printNamedIndentedList
+    (D.words [ D.text $ scmPrefixed "lambda", printList $ D.words $ map D.text args ])
+    $ printChezExpr expr
 
 printCond :: NonEmptyArray (Tuple ChezExpr ChezExpr) -> Maybe ChezExpr -> Doc Void
 printCond branches fallback = do

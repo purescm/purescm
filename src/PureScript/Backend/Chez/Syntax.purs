@@ -97,6 +97,7 @@ data ChezExpr
   | List (Array ChezExpr)
   | Cond (NonEmptyArray (Tuple ChezExpr ChezExpr)) (Maybe ChezExpr)
   | Let Boolean (NonEmptyArray (Tuple String ChezExpr)) ChezExpr
+  | Lambda (Array String) ChezExpr
 
 --
 
@@ -104,17 +105,16 @@ chezUncurriedApplication :: ChezExpr -> Array ChezExpr -> ChezExpr
 chezUncurriedApplication f s = List $ Array.cons f s
 
 chezUncurriedFunction :: Array String -> ChezExpr -> ChezExpr
-chezUncurriedFunction a e = List
-  [ Identifier $ scmPrefixed "lambda", List $ Identifier <$> a, e ]
+chezUncurriedFunction a e = Lambda a e
 
 chezCurriedApplication :: ChezExpr -> NonEmptyArray ChezExpr -> ChezExpr
 chezCurriedApplication f s = NonEmptyArray.foldl1 app $ NonEmptyArray.cons f s
 
 chezCurriedFunction :: NonEmptyArray String -> ChezExpr -> ChezExpr
-chezCurriedFunction a e = Array.foldr lambda e $ NonEmptyArray.toArray a
+chezCurriedFunction a e = Array.foldr (Lambda <<< Array.singleton) e $ NonEmptyArray.toArray a
 
 chezThunk :: ChezExpr -> ChezExpr
-chezThunk e = List [ Identifier $ scmPrefixed "lambda", List [], e ]
+chezThunk e = Lambda [] e
 
 chezUnthunk :: ChezExpr -> ChezExpr
 chezUnthunk e = List [ e ]
@@ -158,9 +158,6 @@ quote e = app (Identifier $ scmPrefixed "quote") e
 
 eqQ :: ChezExpr -> ChezExpr -> ChezExpr
 eqQ x y = chezUncurriedApplication (Identifier $ scmPrefixed "eq?") [ x, y ]
-
-lambda :: String -> ChezExpr -> ChezExpr
-lambda a e = List [ Identifier $ scmPrefixed "lambda", List [ Identifier a ], e ]
 
 vector :: Array ChezExpr -> ChezExpr
 vector = List <<< Array.cons (Identifier $ scmPrefixed "vector")
