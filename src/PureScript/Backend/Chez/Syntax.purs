@@ -100,23 +100,23 @@ data ChezExpr
 
 --
 
-chezUncurriedApplication :: ChezExpr -> Array ChezExpr -> ChezExpr
-chezUncurriedApplication f s = List $ Array.cons f s
+runUncurriedFn :: ChezExpr -> Array ChezExpr -> ChezExpr
+runUncurriedFn f s = List $ Array.cons f s
 
-chezUncurriedFunction :: Array String -> ChezExpr -> ChezExpr
-chezUncurriedFunction a e = Lambda a e
+mkUncurriedFn :: Array String -> ChezExpr -> ChezExpr
+mkUncurriedFn a e = Lambda a e
 
-chezCurriedApplication :: ChezExpr -> NonEmptyArray ChezExpr -> ChezExpr
-chezCurriedApplication f s = NonEmptyArray.foldl1 app $ NonEmptyArray.cons f s
+runCurriedFn :: ChezExpr -> NonEmptyArray ChezExpr -> ChezExpr
+runCurriedFn f s = NonEmptyArray.foldl1 app $ NonEmptyArray.cons f s
 
-chezCurriedFunction :: NonEmptyArray String -> ChezExpr -> ChezExpr
-chezCurriedFunction a e = Array.foldr (Lambda <<< Array.singleton) e $ NonEmptyArray.toArray a
+mkCurriedFn :: NonEmptyArray String -> ChezExpr -> ChezExpr
+mkCurriedFn a e = Array.foldr (Lambda <<< Array.singleton) e $ NonEmptyArray.toArray a
 
-chezThunk :: ChezExpr -> ChezExpr
-chezThunk e = Lambda [] e
+thunk :: ChezExpr -> ChezExpr
+thunk e = Lambda [] e
 
-chezUnthunk :: ChezExpr -> ChezExpr
-chezUnthunk e = List [ e ]
+unthunk :: ChezExpr -> ChezExpr
+unthunk e = List [ e ]
 
 --
 
@@ -153,7 +153,7 @@ quote :: ChezExpr -> ChezExpr
 quote e = app (Identifier $ scmPrefixed "quote") e
 
 eqQ :: ChezExpr -> ChezExpr -> ChezExpr
-eqQ x y = chezUncurriedApplication (Identifier $ scmPrefixed "eq?") [ x, y ]
+eqQ x y = runUncurriedFn (Identifier $ scmPrefixed "eq?") [ x, y ]
 
 vector :: Array ChezExpr -> ChezExpr
 vector = List <<< Array.cons (Identifier $ scmPrefixed "vector")
@@ -175,4 +175,4 @@ recordTypeAccessor i field = i <> "-" <> field
 
 recordAccessor :: ChezExpr -> String -> String -> ChezExpr
 recordAccessor expr name field =
-  chezUncurriedApplication (Identifier $ recordTypeAccessor name field) [ expr ]
+  runUncurriedFn (Identifier $ recordTypeAccessor name field) [ expr ]

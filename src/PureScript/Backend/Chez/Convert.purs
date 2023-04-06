@@ -156,7 +156,7 @@ codegenTopLevelBinding codegenEnv (Tuple (Ident i) n) =
           | otherwise ->
               [ DefineRecordType i ss
               , DefineCurriedFunction i xs
-                  $ S.chezUncurriedApplication
+                  $ S.runUncurriedFn
                       (S.Identifier $ S.recordTypeUncurriedConstructor i)
                       (map S.Identifier ss)
               ]
@@ -172,29 +172,29 @@ codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
   Lit l ->
     codegenLiteral codegenEnv l
   App f p ->
-    S.chezCurriedApplication (codegenExpr codegenEnv f) (codegenExpr codegenEnv <$> p)
+    S.runCurriedFn (codegenExpr codegenEnv f) (codegenExpr codegenEnv <$> p)
   Abs a e -> do
-    S.chezCurriedFunction (uncurry toChezIdent <$> a) (codegenExpr codegenEnv e)
+    S.mkCurriedFn (uncurry toChezIdent <$> a) (codegenExpr codegenEnv e)
   UncurriedApp f p ->
-    S.chezUncurriedApplication (codegenExpr codegenEnv f) (codegenExpr codegenEnv <$> p)
+    S.runUncurriedFn (codegenExpr codegenEnv f) (codegenExpr codegenEnv <$> p)
   UncurriedAbs a e ->
-    S.chezUncurriedFunction (uncurry toChezIdent <$> a) (codegenExpr codegenEnv e)
+    S.mkUncurriedFn (uncurry toChezIdent <$> a) (codegenExpr codegenEnv e)
   UncurriedEffectApp f p ->
-    S.chezThunk $ S.chezUncurriedApplication (codegenExpr codegenEnv f)
+    S.thunk $ S.runUncurriedFn (codegenExpr codegenEnv f)
       (codegenExpr codegenEnv <$> p)
   UncurriedEffectAbs a e ->
-    S.chezUncurriedFunction (uncurry toChezIdent <$> a)
+    S.mkUncurriedFn (uncurry toChezIdent <$> a)
       (codegenChain effectChainMode codegenEnv e)
 
   Accessor e (GetProp i) ->
-    S.chezUncurriedApplication
+    S.runUncurriedFn
       (S.Identifier $ scmPrefixed "hashtable-ref")
       [ codegenExpr codegenEnv e
       , S.StringExpr $ Json.stringify $ Json.fromString i
       , S.Bool false
       ]
   Accessor e (GetIndex i) ->
-    S.chezUncurriedApplication
+    S.runUncurriedFn
       (S.Identifier $ scmPrefixed "vector-ref")
       [ codegenExpr codegenEnv e, S.Integer $ wrap $ show i ]
   Accessor e (GetCtorField qi _ _ _ field _) ->
@@ -203,7 +203,7 @@ codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
     S.Identifier "object-update"
 
   CtorSaturated qi _ _ _ xs ->
-    S.chezUncurriedApplication
+    S.runUncurriedFn
       (S.Identifier $ S.recordTypeUncurriedConstructor $ resolve currentModule qi)
       (map (codegenExpr codegenEnv <<< Tuple.snd) xs)
   CtorDef _ _ _ _ ->
@@ -314,7 +314,7 @@ codegenPureChain :: CodegenEnv -> NeutralExpr -> ChezExpr
 codegenPureChain codegenEnv = codegenChain pureChainMode codegenEnv
 
 codegenEffectChain :: CodegenEnv -> NeutralExpr -> ChezExpr
-codegenEffectChain codegenEnv = S.chezThunk <<< codegenChain effectChainMode codegenEnv
+codegenEffectChain codegenEnv = S.thunk <<< codegenChain effectChainMode codegenEnv
 
 codegenChain :: ChainMode -> CodegenEnv -> NeutralExpr -> ChezExpr
 codegenChain chainMode codegenEnv = collect []
@@ -325,7 +325,7 @@ codegenChain chainMode codegenEnv = collect []
   finish shouldUnthunk bindings expression = do
     let
       maybeUnthunk :: ChezExpr -> ChezExpr
-      maybeUnthunk = if shouldUnthunk then S.chezUnthunk else identity
+      maybeUnthunk = if shouldUnthunk then S.unthunk else identity
     case NEA.fromArray bindings of
       Nothing -> maybeUnthunk $ codegenExpr codegenEnv expression
       Just bindings' -> S.Let recursive bindings' $ maybeUnthunk $ codegenExpr codegenEnv expression
@@ -338,7 +338,7 @@ codegenChain chainMode codegenEnv = collect []
       finish false bindings e'
     EffectBind i l v e' | chainMode.effect ->
       collect
-        (Array.snoc bindings $ Tuple (toChezIdent i l) (S.chezUnthunk $ codegenExpr codegenEnv v))
+        (Array.snoc bindings $ Tuple (toChezIdent i l) (S.unthunk $ codegenExpr codegenEnv v))
         e'
     EffectDefer e' | chainMode.effect ->
       collect bindings e'
