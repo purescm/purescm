@@ -101,6 +101,7 @@ derive newtype instance Ord LiteralDigit
 data ChezExpr
   = Integer LiteralDigit
   | Float LiteralDigit
+  | Char Prim.String
   | String Prim.String
   | Boolean Prim.Boolean
   | Identifier Prim.String
@@ -204,6 +205,7 @@ escapeIdentifiers lib = lib
     x@(Integer _) -> x
     x@(Float _) -> x
     x@(String _) -> x
+    x@(Char _) -> x
     x@(Boolean _) -> x
 
 printLibrary :: ChezLibrary -> Doc Void
@@ -372,6 +374,7 @@ printChezExpr :: forall a. ChezExpr -> Doc a
 printChezExpr e = case e of
   Integer (LiteralDigit x) -> D.text x
   Float (LiteralDigit x) -> D.text x
+  Char x -> D.text x
   String x -> D.text x
   Boolean x -> D.text $ if x then "#t" else "#f"
   Identifier x -> D.text x

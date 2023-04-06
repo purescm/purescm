@@ -6,9 +6,13 @@ import Data.Argonaut as Json
 import Data.Array as Array
 import Data.Array.NonEmpty as NEA
 import Data.Array.NonEmpty as NonEmptyArray
+import Data.Char (toCharCode)
+import Data.Int as Int
 import Data.Maybe (Maybe(..))
+import Data.Monoid (power)
 import Data.Newtype (unwrap, wrap)
 import Data.Set as Set
+import Data.String as String
 import Data.String.CodeUnits as CodeUnits
 import Data.Tuple (Tuple(..), uncurry)
 import Data.Tuple as Tuple
@@ -217,10 +221,36 @@ codegenLiteral codegenEnv = case _ of
   LitInt i -> S.Integer $ wrap $ show i
   LitNumber n -> S.Float $ wrap $ show n
   LitString s -> S.String $ S.jsonToChezString $ Json.stringify $ Json.fromString s
-  LitChar c -> S.Identifier $ "#\\" <> CodeUnits.singleton c
+  LitChar c -> codegenChar c
   LitBoolean b -> S.Identifier $ if b then "#t" else "#f"
   LitArray a -> S.vector $ codegenExpr codegenEnv <$> a
   LitRecord r -> S.record $ (map $ codegenExpr codegenEnv) <$> r
+
+-- > In addition to the standard named characters 
+-- > #\alarm, #\backspace, #\delete, #\esc, #\linefeed, #\newline, #\page, #\return, #\space, and #\tab, 
+-- > Chez Scheme recognizes #\bel, #\ls, #\nel, #\nul, #\rubout, and #\vt (or #\vtab).
+--
+-- Source: https://cisco.github.io/ChezScheme/csug9.5/intro.html#./intro:h1, 6th paragraph
+codegenChar :: Char -> ChezExpr
+codegenChar c = S.Char $ append """#\""" $ escapeChar $ toCharCode c
+  where
+  escapeChar code
+    | code == toCharCode '\x0000' = "nul"
+    | code == toCharCode '\x0007' = "alarm" -- bel
+    | code == toCharCode '\x0008' = "backspace"
+    | code == toCharCode '\t' = "tab"
+    | code == toCharCode '\n' = "linefeed" -- nel/newline; per R6Rs, newline is deprecated
+    | code == toCharCode '\x000B' = "vtab"
+    | code == toCharCode '\x000C' = "page"
+    | code == toCharCode '\r' = "return"
+    | code == toCharCode '\x001B' = "esc"
+    | code == toCharCode ' ' = "space"
+    | code == toCharCode '\x007F' = "delete" -- rubout
+    | code == toCharCode '\x2028' = "ls"
+    | code < 20 || code > 127 = "x" <> (padLeft "0" 4 $ Int.toStringAs Int.hexadecimal code)
+    | otherwise = CodeUnits.singleton c
+
+  padLeft char i s = power char (i - String.length s) <> s
 
 type ChainMode = { effect :: Boolean }
 
