@@ -137,7 +137,6 @@ codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
     S.Identifier $ coerce $ S.toChezIdent i l
   Lit l ->
     codegenLiteral codegenEnv l
-
   App f p ->
     S.chezCurriedApplication (codegenExpr codegenEnv f) (codegenExpr codegenEnv <$> p)
   Abs a e -> do
