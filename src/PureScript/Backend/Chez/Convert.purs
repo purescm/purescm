@@ -87,18 +87,19 @@ codegenModule { name, bindings, imports, foreign: foreign_ } =
     }
 
 definitionIdentifiers :: ChezDefinition -> Array String
-definitionIdentifiers (DefineValue i _) = [ i ]
-definitionIdentifiers (DefineCurriedFunction i _ _) = [ i ]
-definitionIdentifiers (DefineUncurriedFunction i _ _) = [ i ]
-definitionIdentifiers (DefineRecordType i [ x ]) =
-  [ recordTypeCurriedConstructor i
-  , recordTypePredicate i
-  , recordTypeAccessor i x
-  ]
-definitionIdentifiers (DefineRecordType i fields) =
-  [ recordTypeUncurriedConstructor i
-  , recordTypePredicate i
-  ] <> map (recordTypeAccessor i) fields
+definitionIdentifiers = case _ of
+  DefineValue i _ -> [ i ]
+  DefineCurriedFunction i _ _ -> [ i ]
+  DefineUncurriedFunction i _ _ -> [ i ]
+  DefineRecordType i [ x ] ->
+    [ recordTypeCurriedConstructor i
+    , recordTypePredicate i
+    , recordTypeAccessor i x
+    ]
+  DefineRecordType i fields ->
+    [ recordTypeUncurriedConstructor i
+    , recordTypePredicate i
+    ] <> map (recordTypeAccessor i) fields
 
 resolve :: ModuleName -> Qualified Ident -> String
 resolve _ (Qualified Nothing (Ident i)) = i
