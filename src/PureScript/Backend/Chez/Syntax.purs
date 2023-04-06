@@ -10,8 +10,7 @@ import Data.Maybe (Maybe)
 import Data.Newtype (class Newtype)
 import Data.Tuple (Tuple)
 import PureScript.Backend.Chez.Constants (scmPrefixed)
-import PureScript.Backend.Optimizer.CoreFn (Ident(..), Prop(..))
-import Safe.Coerce (coerce)
+import PureScript.Backend.Optimizer.CoreFn (Prop(..))
 
 type ChezLibrary =
   { "#!r6rs" :: Boolean
@@ -123,9 +122,6 @@ chezUnthunk e = List [ e ]
 
 app :: ChezExpr -> ChezExpr -> ChezExpr
 app f x = List [ f, x ]
-
-define :: Ident -> ChezExpr -> ChezExpr
-define i e = List [ Identifier $ scmPrefixed "define", Identifier $ coerce i, e ]
 
 record :: Array (Prop ChezExpr) -> ChezExpr
 record r =
