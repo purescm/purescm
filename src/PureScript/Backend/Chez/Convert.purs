@@ -319,29 +319,27 @@ codegenEffectChain codegenEnv = S.chezThunk <<< codegenChain effectChainMode cod
 codegenChain :: ChainMode -> CodegenEnv -> NeutralExpr -> ChezExpr
 codegenChain chainMode codegenEnv = collect []
   where
+  recursive = false
+
   finish :: Boolean -> Array _ -> NeutralExpr -> ChezExpr
   finish shouldUnthunk bindings expression = do
     let
       maybeUnthunk :: ChezExpr -> ChezExpr
       maybeUnthunk = if shouldUnthunk then S.chezUnthunk else identity
-    if Array.null bindings then
-      maybeUnthunk $ codegenExpr codegenEnv expression
-    else
-      S.List $
-        [ S.Identifier $ scmPrefixed "let*"
-        , S.List $ bindings <#> \binding ->
-            S.List [ S.Identifier $ toChezIdent binding.i binding.l, binding.v ]
-        , maybeUnthunk $ codegenExpr codegenEnv expression
-        ]
+    case NEA.fromArray bindings of
+      Nothing -> maybeUnthunk $ codegenExpr codegenEnv expression
+      Just bindings' -> S.Let recursive bindings' $ maybeUnthunk $ codegenExpr codegenEnv expression
 
   collect :: Array _ -> NeutralExpr -> ChezExpr
   collect bindings expression = case unwrap expression of
     Let i l v e' ->
-      collect (Array.snoc bindings { i, l, v: codegenExpr codegenEnv v }) e'
+      collect (Array.snoc bindings $ Tuple (toChezIdent i l) (codegenExpr codegenEnv v)) e'
     EffectPure e' | chainMode.effect ->
       finish false bindings e'
     EffectBind i l v e' | chainMode.effect ->
-      collect (Array.snoc bindings { i, l, v: S.chezUnthunk $ codegenExpr codegenEnv v }) e'
+      collect
+        (Array.snoc bindings $ Tuple (toChezIdent i l) (S.chezUnthunk $ codegenExpr codegenEnv v))
+        e'
     EffectDefer e' | chainMode.effect ->
       collect bindings e'
     _ ->

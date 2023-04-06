@@ -100,6 +100,8 @@ escapeIdentifiers lib = lib
     Identifier i -> Identifier $ escapeIdent i
     List exprs -> List $ map escapeExpr exprs
     Cond b o -> Cond (map (bimap escapeExpr escapeExpr) b) (map escapeExpr o)
+    Let recursive bindings expr ->
+      Let recursive (map (bimap escapeIdent escapeExpr) bindings) $ escapeExpr expr
     x@(Integer _) -> x
     x@(Float _) -> x
     x@(StringExpr _) -> x
@@ -278,6 +280,7 @@ printChezExpr e = case e of
   Identifier x -> D.text x
   List xs -> D.text "(" <> D.words (printChezExpr <$> xs) <> D.text ")"
   Cond branches fallback -> printCond branches fallback
+  Let recursive bindings' expr -> printLet recursive bindings' expr
 
 printRecordDefinition
   :: Prim.String
@@ -302,6 +305,30 @@ printRecordDefinition ident name constructor predicate fields =
   fieldsForm :: Doc Void
   fieldsForm = printList $ D.words $ Array.cons (D.text $ scmPrefixed "fields")
     $ map fieldForm fields
+
+printLet :: Boolean -> NonEmptyArray (Tuple String ChezExpr) -> ChezExpr -> Doc Void
+printLet recursive bindings' expr = do
+  let
+    multiLetKeyword
+      | recursive = D.text $ scmPrefixed "letrec*"
+      | otherwise = D.text $ scmPrefixed "let*"
+    printBinding (Tuple b e) = printBrackets $ D.words [ D.text b, printChezExpr e ]
+
+  case NEA.uncons $ map printBinding bindings' of
+    { head, tail: [] } ->
+      D.lines
+        [ D.text "(" <> D.words [ D.text (scmPrefixed "let"), printList head ]
+        , D.indent $ printChezExpr expr <> D.text ")"
+        ]
+    { head, tail } ->
+      D.lines
+        [ D.text "(" <> multiLetKeyword
+        , D.indent $ D.lines
+            [ D.text "(" <> head
+            , D.lines tail <> D.text ")"
+            , D.indent $ printChezExpr expr <> D.text ")"
+            ]
+        ]
 
 printCond :: NonEmptyArray (Tuple ChezExpr ChezExpr) -> Maybe ChezExpr -> Doc Void
 printCond branches fallback = do
