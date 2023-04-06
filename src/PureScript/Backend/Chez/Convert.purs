@@ -227,42 +227,50 @@ codegenLiteral codegenEnv = case _ of
   LitArray a -> S.vector $ codegenExpr codegenEnv <$> a
   LitRecord r -> S.record $ (map $ codegenExpr codegenEnv) <$> r
 
-type BlockMode = { effect :: Boolean }
+type ChainMode = { effect :: Boolean }
 
-pureBlockMode :: BlockMode
-pureBlockMode = { effect: false }
+pureChainMode :: ChainMode
+pureChainMode = { effect: false }
 
-effectBlockMode :: BlockMode
-effectBlockMode = { effect: true }
+effectChainMode :: ChainMode
+effectChainMode = { effect: true }
 
 codegenPureChain :: CodegenEnv -> NeutralExpr -> ChezExpr
-codegenPureChain codegenEnv = codegenChain pureBlockMode codegenEnv
+codegenPureChain codegenEnv = codegenChain pureChainMode codegenEnv
 
 codegenEffectChain :: CodegenEnv -> NeutralExpr -> ChezExpr
-codegenEffectChain codegenEnv = S.chezThunk <<< codegenChain effectBlockMode codegenEnv
+codegenEffectChain codegenEnv = S.chezThunk <<< codegenChain effectChainMode codegenEnv
 
-codegenChain :: BlockMode -> CodegenEnv -> NeutralExpr -> ChezExpr
-codegenChain blockMode codegenEnv = go []
+codegenChain :: ChainMode -> CodegenEnv -> NeutralExpr -> ChezExpr
+codegenChain chainMode codegenEnv = collect []
   where
-  go :: Array _ -> NeutralExpr -> ChezExpr
-  go bindings expression = case unwrap expression of
-    Let i l v e' ->
-      go (Array.cons { i, l, v: codegenExpr codegenEnv v } bindings) e'
-    EffectBind i l v e' | blockMode.effect ->
-      go (Array.cons { i, l, v: S.chezUnthunk $ codegenExpr codegenEnv v } bindings) e'
-    EffectPure e' | blockMode.effect ->
-      go bindings e'
-    EffectDefer e' | blockMode.effect ->
-      go bindings e'
-    _ | Array.null bindings ->
-      codegenExpr codegenEnv expression
-    _ ->
+  finish :: Boolean -> Array _ -> NeutralExpr -> ChezExpr
+  finish shouldUnthunk bindings expression = do
+    let
+      maybeUnthunk :: ChezExpr -> ChezExpr
+      maybeUnthunk = if shouldUnthunk then S.chezUnthunk else identity
+    if Array.null bindings then
+      maybeUnthunk $ codegenExpr codegenEnv expression
+    else
       S.List $
         [ S.Identifier $ scmPrefixed "let*"
-        , S.List $ Array.reverse bindings <#> \binding ->
+        , S.List $ bindings <#> \binding ->
             S.List [ S.Identifier $ S.toChezIdent binding.i binding.l, binding.v ]
-        , codegenExpr codegenEnv expression
+        , maybeUnthunk $ codegenExpr codegenEnv expression
         ]
+
+  collect :: Array _ -> NeutralExpr -> ChezExpr
+  collect bindings expression = case unwrap expression of
+    Let i l v e' ->
+      collect (Array.snoc bindings { i, l, v: codegenExpr codegenEnv v }) e'
+    EffectPure e' | chainMode.effect ->
+      finish false bindings e'
+    EffectBind i l v e' | chainMode.effect ->
+      collect (Array.snoc bindings { i, l, v: S.chezUnthunk $ codegenExpr codegenEnv v }) e'
+    EffectDefer e' | chainMode.effect ->
+      collect bindings e'
+    _ ->
+      finish chainMode.effect bindings expression
 
 codegenPrimOp :: CodegenEnv -> BackendOperator NeutralExpr -> ChezExpr
 codegenPrimOp codegenEnv@{ currentModule } = case _ of
