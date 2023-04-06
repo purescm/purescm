@@ -159,7 +159,10 @@ codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
   Accessor e (GetProp i) ->
     S.chezUncurriedApplication
       (S.Identifier $ scmPrefixed "hashtable-ref")
-      [ codegenExpr codegenEnv e, S.String $ Json.stringify $ Json.fromString i, S.Boolean false ]
+      [ codegenExpr codegenEnv e
+      , S.StringExpr $ Json.stringify $ Json.fromString i
+      , S.Bool false
+      ]
   Accessor e (GetIndex i) ->
     S.chezUncurriedApplication
       (S.Identifier $ scmPrefixed "vector-ref")
@@ -211,7 +214,7 @@ codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
           , S.List [ S.Identifier $ scmPrefixed "make-error" ]
           , S.List
               [ S.Identifier $ scmPrefixed "make-message-condition"
-              , S.String $ Json.stringify $ Json.fromString i
+              , S.StringExpr $ Json.stringify $ Json.fromString i
               ]
           ]
       ]
@@ -220,7 +223,7 @@ codegenLiteral :: CodegenEnv -> Literal NeutralExpr -> ChezExpr
 codegenLiteral codegenEnv = case _ of
   LitInt i -> S.Integer $ wrap $ show i
   LitNumber n -> S.Float $ wrap $ show n
-  LitString s -> S.String $ S.jsonToChezString $ Json.stringify $ Json.fromString s
+  LitString s -> S.StringExpr $ S.jsonToChezString $ Json.stringify $ Json.fromString s
   LitChar c -> codegenChar c
   LitBoolean b -> S.Identifier $ if b then "#t" else "#f"
   LitArray a -> S.vector $ codegenExpr codegenEnv <$> a

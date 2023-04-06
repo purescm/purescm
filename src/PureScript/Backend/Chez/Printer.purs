@@ -94,9 +94,9 @@ escapeIdentifiers lib = lib
     List exprs -> List $ map escapeExpr exprs
     x@(Integer _) -> x
     x@(Float _) -> x
-    x@(String _) -> x
+    x@(StringExpr _) -> x
     x@(Char _) -> x
-    x@(Boolean _) -> x
+    x@(Bool _) -> x
 
 printLibrary :: ChezLibrary -> Doc Void
 printLibrary = escapeIdentifiers >>> printLibrary'
@@ -265,8 +265,8 @@ printChezExpr e = case e of
   Integer (LiteralDigit x) -> D.text x
   Float (LiteralDigit x) -> D.text x
   Char x -> D.text x
-  String x -> D.text x
-  Boolean x -> D.text $ if x then "#t" else "#f"
+  StringExpr x -> D.text x
+  Bool x -> D.text $ if x then "#t" else "#f"
   Identifier x -> D.text x
   List xs -> D.text "(" <> D.words (printChezExpr <$> xs) <> D.text ")"
 
