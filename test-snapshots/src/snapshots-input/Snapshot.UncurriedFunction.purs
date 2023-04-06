@@ -1,3 +1,4 @@
+-- @inline Snapshot.UncurriedFunction.pure' never
 module Snapshot.UncurriedFunction where
 
 import Prelude
@@ -27,10 +28,12 @@ test3a = mkFn2 \_ b -> b
 test3b :: Int
 test3b = runFn2 test3a 1 2
 
-test4a :: EffectFn1 String Unit
-test4a = mkEffectFn1 (\a -> log a)
+test4a :: EffectFn1 String String
+test4a = mkEffectFn1 $ \a -> do 
+  log a
+  pure a
 
-test4b :: Effect Unit
+test4b :: Effect String
 test4b = runEffectFn1 test4a "test4b"
 
 main :: Effect Unit
@@ -38,3 +41,6 @@ main = do
   assert $ test1b == 1
   assert $ test2b == 1
   assert $ test3b == 2
+
+  v <- test4b
+  assert $ v == "test4b"

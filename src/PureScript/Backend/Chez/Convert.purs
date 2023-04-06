@@ -151,7 +151,7 @@ codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
       (codegenExpr codegenEnv <$> p)
   UncurriedEffectAbs a e ->
     S.chezUncurriedFunction (uncurry S.toChezIdent <$> a)
-      (S.chezUnthunk $ codegenPureChain codegenEnv e)
+      (codegenChain effectChainMode codegenEnv e)
 
   Accessor e (GetProp i) ->
     S.chezUncurriedApplication
