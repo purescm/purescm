@@ -6,15 +6,10 @@ import Data.Argonaut as Json
 import Data.Array as Array
 import Data.Array.NonEmpty (NonEmptyArray)
 import Data.Array.NonEmpty as NonEmptyArray
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe)
 import Data.Newtype (class Newtype)
-import Data.String.Regex as R
-import Data.String.Regex.Flags as R.Flags
-import Data.String.Regex.Unsafe as R.Unsafe
-import Partial.Unsafe (unsafeCrashWith)
 import PureScript.Backend.Chez.Constants (libChezSchemePrefix, scmPrefixed)
-import PureScript.Backend.Optimizer.CoreFn (Ident(..), ModuleName(..), Prop(..), Qualified(..))
-import PureScript.Backend.Optimizer.Syntax (Level(..))
+import PureScript.Backend.Optimizer.CoreFn (Ident(..), ModuleName(..), Prop(..))
 import Safe.Coerce (coerce)
 
 type ChezLibrary =
@@ -99,50 +94,6 @@ data ChezExpr
   | Bool Boolean
   | Identifier String
   | List (Array ChezExpr)
-
-definitionIdentifiers :: ChezDefinition -> Array String
-definitionIdentifiers (DefineValue i _) = [ i ]
-definitionIdentifiers (DefineCurriedFunction i _ _) = [ i ]
-definitionIdentifiers (DefineUncurriedFunction i _ _) = [ i ]
-definitionIdentifiers (DefineRecordType i [ x ]) =
-  [ recordTypeCurriedConstructor i
-  , recordTypePredicate i
-  , recordTypeAccessor i x
-  ]
-definitionIdentifiers (DefineRecordType i fields) =
-  [ recordTypeUncurriedConstructor i
-  , recordTypePredicate i
-  ] <> map (recordTypeAccessor i) fields
-
-resolve :: ModuleName -> Qualified Ident -> String
-resolve _ (Qualified Nothing (Ident i)) = i
-resolve currentModule (Qualified (Just m) (Ident i))
-  | currentModule == m = i
-  | otherwise = coerce m <> "." <> i
-
-toChezIdent :: Maybe Ident -> Level -> String
-toChezIdent i (Level l) = case i of
-  Just (Ident i') -> case i' of
-    "$__unused" -> "_"
-    _ -> i' <> show l
-  Nothing -> "_" <> show l
-
-jsonToChezString :: String -> String
-jsonToChezString str = unicodeReplace str
-  where
-  unicodeRegex :: R.Regex
-  unicodeRegex = R.Unsafe.unsafeRegex """\\u([A-F\d]{4})""" R.Flags.global
-
-  unicodeReplace :: String -> String
-  unicodeReplace s = R.replace' unicodeRegex unicodeReplaceMatch s
-
-  unicodeReplaceMatch
-    :: String
-    -> Array (Maybe String)
-    -> String
-  unicodeReplaceMatch _ = case _ of
-    [ (Just x) ] -> "\\x" <> x <> ";"
-    _ -> unsafeCrashWith "Error matching at unicodeReplaceMatch in jsonToChezString"
 
 --
 
