@@ -159,18 +159,20 @@ runSnapshotTests { accept, filter } = do
               , moduleName: name
               }
             case result of
-              Left { message } | matchesFail message failsWith -> do
-                pure true
-              Left { message } -> do
-                Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <> " failed."
-                Console.log message
-                pure false
-              Right _ | isJust failsWith -> do
-                Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <>
-                  " succeeded when it should have failed."
-                pure false
-              Right _ -> do
-                pure true
+              Left { message }
+                | matchesFail message failsWith ->
+                    pure true
+                | otherwise -> do
+                    Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <> " failed."
+                    Console.log message
+                    pure false
+              Right _
+                | isJust failsWith -> do
+                    Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <>
+                      " succeeded when it should have failed."
+                    pure false
+                | otherwise ->
+                    pure true
         attempt (FS.readTextFile UTF8 snapshotFilePath) >>= case _ of
           Left _ -> do
             Console.log $ withGraphics (foreground Yellow) "✓" <> " " <> name <> " saved."
