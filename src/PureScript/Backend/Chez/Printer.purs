@@ -279,7 +279,7 @@ printChezExpr e = case e of
   StringExpr x -> D.text x
   Bool x -> D.text $ if x then "#t" else "#f"
   Identifier x -> D.text x
-  List xs -> D.text "(" <> D.words (printChezExpr <$> xs) <> D.text ")"
+  List xs -> printList $ D.words (printChezExpr <$> xs)
   Cond branches fallback -> printCond branches fallback
   Let recursive bindings' expr -> printLet recursive bindings' expr
   Lambda args expr -> printLambda args expr
