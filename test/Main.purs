@@ -168,9 +168,7 @@ runSnapshotTests { accept, filter } = do
               Right _ | isJust failsWith -> do
                 Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <> " succeeded when it should have failed."
                 pure false
-              Right { stdout } -> do
-                when hasMain do
-                  Console.log stdout
+              Right _ -> do
                 pure true
         attempt (FS.readTextFile UTF8 snapshotFilePath) >>= case _ of
           Left _ -> do
