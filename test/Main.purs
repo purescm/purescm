@@ -166,7 +166,8 @@ runSnapshotTests { accept, filter } = do
                 Console.log message
                 pure false
               Right _ | isJust failsWith -> do
-                Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <> " succeeded when it should have failed."
+                Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <>
+                  " succeeded when it should have failed."
                 pure false
               Right _ -> do
                 pure true
