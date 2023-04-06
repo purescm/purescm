@@ -254,7 +254,7 @@ codegenChain chainMode codegenEnv = collect []
     else
       S.List $
         [ S.Identifier $ scmPrefixed "let*"
-        , S.List $ Array.reverse bindings <#> \binding ->
+        , S.List $ bindings <#> \binding ->
             S.List [ S.Identifier $ S.toChezIdent binding.i binding.l, binding.v ]
         , maybeUnthunk $ codegenExpr codegenEnv expression
         ]
@@ -262,11 +262,11 @@ codegenChain chainMode codegenEnv = collect []
   collect :: Array _ -> NeutralExpr -> ChezExpr
   collect bindings expression = case unwrap expression of
     Let i l v e' ->
-      collect (Array.cons { i, l, v: codegenExpr codegenEnv v } bindings) e'
+      collect (Array.snoc bindings { i, l, v: codegenExpr codegenEnv v }) e'
     EffectPure e' | chainMode.effect ->
       finish false bindings e'
     EffectBind i l v e' | chainMode.effect ->
-      collect (Array.cons { i, l, v: S.chezUnthunk $ codegenExpr codegenEnv v } bindings) e'
+      collect (Array.snoc bindings { i, l, v: S.chezUnthunk $ codegenExpr codegenEnv v }) e'
     EffectDefer e' | chainMode.effect ->
       collect bindings e'
     _ ->
