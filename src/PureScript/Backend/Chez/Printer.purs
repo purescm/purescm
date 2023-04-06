@@ -27,6 +27,9 @@ printWrap l r x = l <> x <> r
 printList :: Doc Void -> Doc Void
 printList = printWrap (D.text "(") (D.text ")")
 
+printBrackets :: Doc Void -> Doc Void
+printBrackets = printWrap (D.text "[") (D.text "]")
+
 printNamedList :: Prim.String -> Doc Void -> Doc Void
 printNamedList name body
   | D.isEmpty body =
@@ -305,11 +308,11 @@ printCond branches fallback = do
   let
     b' :: Array (Doc Void)
     b' = NonEmptyArray.toArray branches <#> \(Tuple cond expr) ->
-      printList $ D.words [ printChezExpr cond, printChezExpr expr ]
+      printBrackets $ D.words [ printChezExpr cond, printChezExpr expr ]
 
     o' :: Doc Void
     o' = fallback # foldMap \x ->
-      printNamedList (scmPrefixed "else") $ printChezExpr x
+      printBrackets $ D.words [ D.text $ scmPrefixed "else", printChezExpr x ]
 
   printNamedIndentedList (D.text $ scmPrefixed "cond")
     $ D.lines

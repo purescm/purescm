@@ -105,9 +105,9 @@
 
   (scm:define instanceName$p
     (scm:letrec* (($record (scm:make-hashtable scm:string-hash scm:string=?))) (scm:hashtable-set! $record "normal" (scm:lambda (v0) (scm:cond
-      ((F1? v0) "F1")
-      ((F2? v0) "F2")
-      (scm:else (scm:raise (scm:condition (scm:make-error) (scm:make-message-condition "Failed pattern match"))))))) $record))
+      [(F1? v0) "F1"]
+      [(F2? v0) "F2"]
+      [scm:else (scm:raise (scm:condition (scm:make-error) (scm:make-message-condition "Failed pattern match")))]))) $record))
 
   (scm:define useInstance
     "F1F2")
