@@ -78,15 +78,22 @@
   (scm:define test5
     (scm:lambda (_)
       (scm:lambda (v1)
-        (scm:cond ((First? v1) (First-value0 v1)) (scm:else (scm:raise (scm:condition (scm:make-error) (scm:make-message-condition "Failed pattern match"))))))))
+        (scm:cond
+          ((First? v1) (First-value0 v1))
+          (scm:else (scm:raise (scm:condition (scm:make-error) (scm:make-message-condition "Failed pattern match"))))))))
 
   (scm:define test4
     (scm:lambda (v0)
-      (scm:cond ((First? v0) (First-value0 v0)) ((Last? v0) (Last-value0 v0)) (scm:else (scm:raise (scm:condition (scm:make-error) (scm:make-message-condition "Failed pattern match")))))))
+      (scm:cond
+        ((First? v0) (First-value0 v0))
+        ((Last? v0) (Last-value0 v0))
+        (scm:else (scm:raise (scm:condition (scm:make-error) (scm:make-message-condition "Failed pattern match")))))))
 
   (scm:define test3
     (scm:lambda (v0)
-      (scm:cond ((scm:fx<? (HasArgs-value0 v0) (HasArgs-value2 v0)) (HasArgs-value0 v0)) (scm:else (HasArgs-value1 v0)))))
+      (scm:cond
+        ((scm:fx<? (HasArgs-value0 v0) (HasArgs-value2 v0)) (HasArgs-value0 v0))
+        (scm:else (HasArgs-value1 v0)))))
 
   (scm:define test2
     (scm:lambda (v0)

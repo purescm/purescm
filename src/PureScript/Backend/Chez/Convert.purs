@@ -215,9 +215,9 @@ codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
     codegenPureChain codegenEnv s
   Branch b o -> do
     let
-      goPair :: Pair NeutralExpr -> { c :: _, e :: _ }
-      goPair (Pair c e) = { c: codegenExpr codegenEnv c, e: codegenExpr codegenEnv e }
-    S.chezCond (goPair <$> b) (codegenExpr codegenEnv <$> o)
+      goPair :: Pair NeutralExpr -> Tuple ChezExpr ChezExpr
+      goPair (Pair c e) = Tuple (codegenExpr codegenEnv c) (codegenExpr codegenEnv e)
+    S.Cond (goPair <$> b) (codegenExpr codegenEnv <$> o)
 
   EffectBind _ _ _ _ ->
     codegenEffectChain codegenEnv s

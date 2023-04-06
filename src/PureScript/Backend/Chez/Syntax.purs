@@ -8,6 +8,7 @@ import Data.Array.NonEmpty (NonEmptyArray)
 import Data.Array.NonEmpty as NonEmptyArray
 import Data.Maybe (Maybe)
 import Data.Newtype (class Newtype)
+import Data.Tuple (Tuple)
 import PureScript.Backend.Chez.Constants (scmPrefixed)
 import PureScript.Backend.Optimizer.CoreFn (Ident(..), Prop(..))
 import Safe.Coerce (coerce)
@@ -94,19 +95,9 @@ data ChezExpr
   | Bool Boolean
   | Identifier String
   | List (Array ChezExpr)
+  | Cond (NonEmptyArray (Tuple ChezExpr ChezExpr)) (Maybe ChezExpr)
 
 --
-
-chezCond :: NonEmptyArray { c :: ChezExpr, e :: ChezExpr } -> Maybe ChezExpr -> ChezExpr
-chezCond b o =
-  let
-    b' :: Array ChezExpr
-    b' = NonEmptyArray.toArray b <#> \{ c, e } -> List [ c, e ]
-
-    o' :: Array ChezExpr
-    o' = Array.fromFoldable o <#> \x -> List [ Identifier $ scmPrefixed "else", x ]
-  in
-    List $ [ Identifier $ scmPrefixed "cond" ] <> b' <> o'
 
 chezUncurriedApplication :: ChezExpr -> Array ChezExpr -> ChezExpr
 chezUncurriedApplication f s = List $ Array.cons f s

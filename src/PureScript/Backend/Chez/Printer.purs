@@ -6,14 +6,18 @@ import Prelude
 
 import Control.Alternative as Alternative
 import Data.Array as Array
+import Data.Array.NonEmpty (NonEmptyArray)
 import Data.Array.NonEmpty as NEA
+import Data.Array.NonEmpty as NonEmptyArray
+import Data.Bifunctor (bimap)
+import Data.Foldable (foldMap)
 import Data.Maybe (Maybe(..), maybe)
 import Data.Newtype (un)
 import Data.String (Pattern(..), Replacement(..))
 import Data.String as String
+import Data.Tuple (Tuple(..))
 import Dodo (Doc)
 import Dodo as D
-import Prim as Prim
 import PureScript.Backend.Chez.Constants (scmPrefixed)
 import PureScript.Backend.Chez.Syntax (ChezDefinition(..), ChezExport(..), ChezExpr(..), ChezImport(..), ChezImportLevel(..), ChezImportSet(..), ChezLibrary, LibraryBody, LibraryName, LibraryReference, LibraryVersion(..), LiteralDigit(..), SubVersionReference(..), VersionReference(..), recordTypeAccessor, recordTypeCurriedConstructor, recordTypeName, recordTypePredicate, recordTypeUncurriedConstructor)
 
@@ -92,6 +96,7 @@ escapeIdentifiers lib = lib
   escapeExpr = case _ of
     Identifier i -> Identifier $ escapeIdent i
     List exprs -> List $ map escapeExpr exprs
+    Cond b o -> Cond (map (bimap escapeExpr escapeExpr) b) (map escapeExpr o)
     x@(Integer _) -> x
     x@(Float _) -> x
     x@(StringExpr _) -> x
@@ -260,7 +265,7 @@ printCurriedAbs args body = Array.foldr foldFn (printChezExpr body) args
       (D.words [ D.text $ scmPrefixed "lambda", printList (D.text next) ])
       bodyOrRest
 
-printChezExpr :: forall a. ChezExpr -> Doc a
+printChezExpr :: ChezExpr -> Doc Void
 printChezExpr e = case e of
   Integer (LiteralDigit x) -> D.text x
   Float (LiteralDigit x) -> D.text x
@@ -269,6 +274,7 @@ printChezExpr e = case e of
   Bool x -> D.text $ if x then "#t" else "#f"
   Identifier x -> D.text x
   List xs -> D.text "(" <> D.words (printChezExpr <$> xs) <> D.text ")"
+  Cond branches fallback -> printCond branches fallback
 
 printRecordDefinition
   :: Prim.String
@@ -293,3 +299,18 @@ printRecordDefinition ident name constructor predicate fields =
   fieldsForm :: Doc Void
   fieldsForm = printList $ D.words $ Array.cons (D.text $ scmPrefixed "fields")
     $ map fieldForm fields
+
+printCond :: NonEmptyArray (Tuple ChezExpr ChezExpr) -> Maybe ChezExpr -> Doc Void
+printCond branches fallback = do
+  let
+    b' :: Array (Doc Void)
+    b' = NonEmptyArray.toArray branches <#> \(Tuple cond expr) ->
+      printList $ D.words [ printChezExpr cond, printChezExpr expr ]
+
+    o' :: Doc Void
+    o' = fallback # foldMap \x ->
+      printNamedList (scmPrefixed "else") $ printChezExpr x
+
+  printNamedIndentedList (D.text $ scmPrefixed "cond")
+    $ D.lines
+    $ Array.snoc b' o'
