@@ -8,8 +8,8 @@ import Data.Array.NonEmpty (NonEmptyArray)
 import Data.Array.NonEmpty as NonEmptyArray
 import Data.Maybe (Maybe)
 import Data.Newtype (class Newtype)
-import PureScript.Backend.Chez.Constants (libChezSchemePrefix, scmPrefixed)
-import PureScript.Backend.Optimizer.CoreFn (Ident(..), ModuleName(..), Prop(..))
+import PureScript.Backend.Chez.Constants (scmPrefixed)
+import PureScript.Backend.Optimizer.CoreFn (Ident(..), Prop(..))
 import Safe.Coerce (coerce)
 
 type ChezLibrary =
@@ -134,26 +134,6 @@ app f x = List [ f, x ]
 
 define :: Ident -> ChezExpr -> ChezExpr
 define i e = List [ Identifier $ scmPrefixed "define", Identifier $ coerce i, e ]
-
-library :: ModuleName -> Array Ident -> Array ChezExpr -> ChezExpr
-library moduleName exports bindings =
-  List $
-    [ Identifier "library"
-    , Identifier $ "(" <> coerce moduleName <> " lib" <> ")"
-    , List $
-        [ Identifier "export"
-        ] <> (Identifier <$> coerce exports)
-    , List
-        [ Identifier "import"
-        , List
-            [ Identifier "prefix"
-            , List
-                [ Identifier "chezscheme"
-                ]
-            , Identifier libChezSchemePrefix
-            ]
-        ]
-    ] <> bindings
 
 record :: Array (Prop ChezExpr) -> ChezExpr
 record r =
