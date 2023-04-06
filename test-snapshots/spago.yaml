@@ -1,6 +1,8 @@
 package:
   name: purescm-snapshots
   dependencies:
+    - assert
+    - console
     - effect
     - functions
     - partial
@@ -19,11 +21,24 @@ workspace:
       dependencies: []
     functions:
       git: https://github.com/purescm/purescript-functions.git
-      ref: a43d127384ab568575fb9ee9e4a7a1844b21d39b
+      ref: 94e0a9a3b7f831abebcb1bf65587fca03f04e034
       dependencies:
         - prelude
     effect:
       git: https://github.com/purescm/purescript-effect.git
       ref: 8aee2c2fbf5425bf8fa4537a5ad2070170622acf
       dependencies:
+        - prelude
+    console:
+      git: https://github.com/purescm/purescript-console.git
+      ref: 4a30427e490b6f38be16bb5e0bc8f68ecc1c9999
+      dependencies:
+        - effect
+        - prelude
+    assert:
+      git: https://github.com/purescm/purescript-assert.git
+      ref: 348b91f4542cf75efab232e8eb52dd5d3e6a9435
+      dependencies:
+        - console
+        - effect
         - prelude
