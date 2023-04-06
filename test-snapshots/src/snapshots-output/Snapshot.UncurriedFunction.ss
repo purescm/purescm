@@ -46,4 +46,4 @@
     (Data.Function.Uncurried.runFn0 test1a))
 
   (scm:define main
-    (scm:let* ((_0 (Test.Assert.assert (scm:fx=? test1b 1)))) (scm:lambda () (scm:let* ((_ (_0)) (_ ((Test.Assert.assert (scm:fx=? test2b 1))))) (Test.Assert.assert (scm:fx=? test3b 2)))))))
+    (scm:let* ((_0 (Test.Assert.assert (scm:fx=? test1b 1)))) (scm:lambda () (scm:let* ((_ (_0)) (_ ((Test.Assert.assert (scm:fx=? test2b 1))))) ((Test.Assert.assert (scm:fx=? test3b 2))))))))
