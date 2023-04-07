@@ -22,7 +22,7 @@
       (scm:lambda ()
         (scm:let*
           ([_ (_0)]
-          [_ ((dontInlineMe "b"))])
+           [_ ((dontInlineMe "b"))])
             ((dontInlineMe "c"))))))
 
   (scm:define lastPureIsUnwrapped
@@ -30,7 +30,7 @@
       (scm:lambda ()
         (scm:let*
           ([value1 (_0)]
-          [_ ((dontInlineMe "b"))])
+           [_ ((dontInlineMe "b"))])
             value1))))
 
   (scm:define main

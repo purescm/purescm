@@ -316,18 +316,18 @@ printLet recursive bindings' expr = do
       | otherwise = D.text $ scmPrefixed "let*"
     printBinding (Tuple b e) = printBrackets $ D.words [ D.text b, printChezExpr e ]
 
-  case NEA.uncons $ map printBinding bindings' of
+  case NEA.uncons bindings' of
     { head, tail: [] } ->
       D.lines
-        [ D.text "(" <> D.words [ D.text (scmPrefixed "let"), printList head ]
+        [ D.text "(" <> D.words [ D.text (scmPrefixed "let"), printList $ printBinding head ]
         , D.indent $ printChezExpr expr <> D.text ")"
         ]
     { head, tail } ->
       D.lines
         [ D.text "(" <> multiLetKeyword
         , D.indent $ D.lines
-            [ D.text "(" <> head
-            , D.lines tail <> D.text ")"
+            [ D.text "(" <> printBinding head
+            , (D.lines $ map (append D.space <<< printBinding) tail) <> D.text ")"
             , D.indent $ printChezExpr expr <> D.text ")"
             ]
         ]

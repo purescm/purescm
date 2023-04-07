@@ -23,7 +23,7 @@
     (scm:lambda (a0)
       (scm:let*
         ([_1 (Effect.Console.log a0)]
-        [_ (_1)])
+         [_ (_1)])
           a0)))
 
   (scm:define test4b
@@ -56,7 +56,7 @@
       (scm:lambda ()
         (scm:let*
           ([_ (_0)]
-          [_ ((Test.Assert.assert (scm:fx=? test2b 1)))]
-          [_ ((Test.Assert.assert (scm:fx=? test3b 2)))]
-          [v4 (test4b)])
+           [_ ((Test.Assert.assert (scm:fx=? test2b 1)))]
+           [_ ((Test.Assert.assert (scm:fx=? test3b 2)))]
+           [v4 (test4b)])
             ((Test.Assert.assert (scm:string=? v4 "test4b"))))))))
