@@ -101,9 +101,9 @@ definitionIdentifiers = case _ of
     , recordTypePredicate i
     ] <> map (recordTypeAccessor i) fields
 
-resolve :: ModuleName -> Qualified Ident -> String
-resolve _ (Qualified Nothing (Ident i)) = i
-resolve currentModule (Qualified (Just m) (Ident i))
+flattenQualified :: ModuleName -> Qualified Ident -> String
+flattenQualified _ (Qualified Nothing (Ident i)) = i
+flattenQualified currentModule (Qualified (Just m) (Ident i))
   | currentModule == m = i
   | otherwise = coerce m <> "." <> i
 
@@ -167,7 +167,7 @@ codegenTopLevelBinding codegenEnv (Tuple (Ident i) n) =
 codegenExpr :: CodegenEnv -> NeutralExpr -> ChezExpr
 codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
   Var qi ->
-    S.Identifier $ resolve currentModule qi
+    S.Identifier $ flattenQualified currentModule qi
   Local i l ->
     S.Identifier $ coerce $ toChezIdent i l
   Lit l ->
@@ -199,13 +199,13 @@ codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
       (S.Identifier $ scmPrefixed "vector-ref")
       [ codegenExpr codegenEnv e, S.Integer $ wrap $ show i ]
   Accessor e (GetCtorField qi _ _ _ field _) ->
-    S.recordAccessor (codegenExpr codegenEnv e) (resolve currentModule qi) field
+    S.recordAccessor (codegenExpr codegenEnv e) (flattenQualified currentModule qi) field
   Update _ _ ->
     S.Identifier "object-update"
 
   CtorSaturated qi _ _ _ xs ->
     S.runUncurriedFn
-      (S.Identifier $ S.recordTypeUncurriedConstructor $ resolve currentModule qi)
+      (S.Identifier $ S.recordTypeUncurriedConstructor $ flattenQualified currentModule qi)
       (map (codegenExpr codegenEnv <<< Tuple.snd) xs)
   CtorDef _ _ _ _ ->
     unsafeCrashWith "codegenExpr:CtorDef - handled by codegenTopLevelBinding!"
@@ -364,7 +364,7 @@ codegenPrimOp codegenEnv@{ currentModule } = case _ of
         S.List [ S.Identifier $ scmPrefixed "vector-length", x' ]
       OpIsTag qi ->
         S.app
-          (S.Identifier $ S.recordTypePredicate $ resolve currentModule qi)
+          (S.Identifier $ S.recordTypePredicate $ flattenQualified currentModule qi)
           x'
   Op2 o x y ->
     let
