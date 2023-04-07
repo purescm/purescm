@@ -10,4 +10,8 @@
 
   (scm:define letChain
     (scm:lambda (x0)
-      (scm:let* ((a1 (scm:fx+ x0 x0)) (b2 (scm:fx+ a1 a1)) (c3 (scm:fx+ b2 b2))) (scm:fx+ (scm:fx+ (scm:fx+ a1 b2) c3) (scm:fx* c3 c3))))))
+      (scm:let*
+        ([a1 (scm:fx+ x0 x0)]
+         [b2 (scm:fx+ a1 a1)]
+         [c3 (scm:fx+ b2 b2)])
+          (scm:fx+ (scm:fx+ (scm:fx+ a1 b2) c3) (scm:fx* c3 c3))))))

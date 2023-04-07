@@ -43,8 +43,8 @@ import Node.Process as Process
 import Partial.Unsafe (unsafeCrashWith)
 import PureScript.Backend.Chez.Constants (moduleForeign, moduleLib, schemeExt)
 import PureScript.Backend.Chez.Convert (codegenModule)
+import PureScript.Backend.Chez.Printer as P
 import PureScript.Backend.Chez.Runtime (runtimeModule)
-import PureScript.Backend.Chez.Syntax as S
 import PureScript.Backend.Optimizer.Builder (buildModules)
 import PureScript.Backend.Optimizer.Convert (BackendModule)
 import PureScript.Backend.Optimizer.CoreFn (Comment(..), Module(..), ModuleName(..))
@@ -99,7 +99,7 @@ runSnapshotTests { accept, filter } = do
   let runtimePath = Path.concat [ testOut, "_Chez_Runtime" ]
   mkdirp runtimePath
   let runtimeFilePath = Path.concat [ runtimePath, moduleLib <> schemeExt ]
-  let runtimeContents = Dodo.print plainText Dodo.twoSpaces $ S.printLibrary $ runtimeModule
+  let runtimeContents = Dodo.print plainText Dodo.twoSpaces $ P.printLibrary $ runtimeModule
   FS.writeTextFile UTF8 runtimeFilePath runtimeContents
   coreFnModulesFromOutput "output" filter >>= case _ of
     Left errors -> do
@@ -117,7 +117,7 @@ runSnapshotTests { accept, filter } = do
             let
               formatted =
                 Dodo.print plainText Dodo.twoSpaces
-                  $ S.printLibrary
+                  $ P.printLibrary
                   $ codegenModule backend
             let testFileDir = Path.concat [ testOut, name ]
             let testFilePath = Path.concat [ testFileDir, moduleLib <> schemeExt ]
