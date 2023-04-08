@@ -76,8 +76,6 @@ type LibraryBody =
 
 data ChezDefinition
   = DefineValue String ChezExpr
-  | DefineCurriedFunction String (NonEmptyArray String) ChezExpr
-  | DefineUncurriedFunction String (Array String) ChezExpr
   | DefineRecordType String (Array String)
 
 newtype LiteralDigit = LiteralDigit String

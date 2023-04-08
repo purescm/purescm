@@ -6,6 +6,7 @@ import Data.Argonaut as Json
 import Data.Array as Array
 import Data.Array.NonEmpty as NEA
 import Data.Array.NonEmpty as NonEmptyArray
+import Data.Bifunctor (bimap)
 import Data.Char (toCharCode)
 import Data.Int as Int
 import Data.Maybe (Maybe(..))
@@ -116,11 +117,8 @@ codegenTopLevelBindingGroup
   :: CodegenEnv
   -> BackendBindingGroup Ident NeutralExpr
   -> Array ChezDefinition
-codegenTopLevelBindingGroup codegenEnv { recursive, bindings }
-  | recursive, Just bindings' <- NonEmptyArray.fromArray bindings =
-      [ DefineValue "rtlbg" $ S.Identifier "recursive-top-level-binding-group" ]
-  | otherwise =
-      Array.concatMap (codegenTopLevelBinding codegenEnv) bindings
+codegenTopLevelBindingGroup codegenEnv { bindings } =
+  Array.concatMap (codegenTopLevelBinding codegenEnv) bindings
 
 codegenTopLevelBinding
   :: CodegenEnv
@@ -194,9 +192,9 @@ codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
       (map (codegenExpr codegenEnv <<< Tuple.snd) xs)
   CtorDef _ _ _ _ ->
     unsafeCrashWith "codegenExpr:CtorDef - handled by codegenTopLevelBinding!"
-
-  LetRec _ _ _ ->
-    S.Identifier "let-rec"
+  LetRec lvl bindings expr ->
+    S.Let true (map (bimap (flip toChezIdent lvl <<< Just) (codegenExpr codegenEnv)) bindings) $
+      codegenExpr codegenEnv expr
   Let _ _ _ _ ->
     codegenPureChain codegenEnv s
   Branch b o -> do
