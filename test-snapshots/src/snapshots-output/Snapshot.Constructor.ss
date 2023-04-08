@@ -3,6 +3,12 @@
 (library
   (Snapshot.Constructor lib)
   (export
+    Continue1
+    Continue1-value0
+    Continue1?
+    Continue2
+    Continue2-value0
+    Continue2?
     Just
     Just-value0
     Just?
@@ -15,7 +21,11 @@
     Node-value2
     Node?
     Nothing
-    Nothing?)
+    Nothing?
+    Stop1
+    Stop1?
+    Stop2
+    Stop2?)
   (import
     (prefix (chezscheme) scm:)
     (prefix (_Chez_Runtime lib) rt:))
@@ -35,6 +45,26 @@
       (scm:lambda (value1)
         (scm:lambda (value2)
           (Node* value0 value1 value2)))))
+
+  (scm:define Stop1
+    (scm:quote Stop1))
+
+  (scm:define Stop1?
+    (scm:lambda (v)
+      (scm:eq? (scm:quote Stop1) v)))
+
+  (scm:define-record-type (Continue1$ Continue1 Continue1?)
+    (scm:fields (scm:immutable value0 Continue1-value0)))
+
+  (scm:define Stop2
+    (scm:quote Stop2))
+
+  (scm:define Stop2?
+    (scm:lambda (v)
+      (scm:eq? (scm:quote Stop2) v)))
+
+  (scm:define-record-type (Continue2$ Continue2 Continue2?)
+    (scm:fields (scm:immutable value0 Continue2-value0)))
 
   (scm:define-record-type (Just$ Just Just?)
     (scm:fields (scm:immutable value0 Just-value0)))
