@@ -89,8 +89,6 @@ codegenModule { name, bindings, imports, foreign: foreign_ } =
 definitionIdentifiers :: ChezDefinition -> Array String
 definitionIdentifiers = case _ of
   DefineValue i _ -> [ i ]
-  DefineCurriedFunction i _ _ -> [ i ]
-  DefineUncurriedFunction i _ _ -> [ i ]
   DefineRecordType i [ x ] ->
     [ recordTypeCurriedConstructor i
     , recordTypePredicate i
@@ -130,25 +128,12 @@ codegenTopLevelBinding
   -> Array ChezDefinition
 codegenTopLevelBinding codegenEnv (Tuple (Ident i) n) =
   case unwrap n of
-    Abs a e ->
-      [ DefineCurriedFunction
-          i
-          (uncurry toChezIdent <$> a)
-          (codegenExpr codegenEnv e)
-      ]
-    UncurriedAbs a e ->
-      [ DefineUncurriedFunction
-          i
-          (uncurry toChezIdent <$> a)
-          (codegenExpr codegenEnv e)
-      ]
     CtorDef _ _ _ ss ->
       case NonEmptyArray.fromArray ss of
         Nothing ->
           [ DefineValue i (S.quote $ S.Identifier i)
-          , DefineUncurriedFunction
-              (S.recordTypePredicate i)
-              [ "v" ]
+          , DefineValue (S.recordTypePredicate i)
+              $ S.mkUncurriedFn [ "v" ]
               $ S.eqQ (S.quote $ S.Identifier i) (S.Identifier "v")
           ]
         Just xs
@@ -156,7 +141,7 @@ codegenTopLevelBinding codegenEnv (Tuple (Ident i) n) =
               [ DefineRecordType i ss ]
           | otherwise ->
               [ DefineRecordType i ss
-              , DefineCurriedFunction i xs
+              , DefineValue i $ S.mkCurriedFn xs
                   $ S.runUncurriedFn
                       (S.Identifier $ S.recordTypeUncurriedConstructor i)
                       (map S.Identifier ss)

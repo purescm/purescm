@@ -90,10 +90,6 @@ escapeIdentifiers lib = lib
 
   escapeDefinition = case _ of
     DefineValue i expr -> DefineValue (escapeIdent i) $ escapeExpr expr
-    DefineCurriedFunction i args expr ->
-      DefineCurriedFunction (escapeIdent i) (map escapeIdent args) $ escapeExpr expr
-    DefineUncurriedFunction i args expr ->
-      DefineUncurriedFunction (escapeIdent i) (map escapeIdent args) $ escapeExpr expr
     DefineRecordType i fields -> DefineRecordType (escapeIdent i) $ map escapeIdent fields
 
   escapeExpr = case _ of
@@ -240,14 +236,6 @@ printDefinition = case _ of
   DefineValue ident expr ->
     printNamedIndentedList (D.words [ D.text $ scmPrefixed "define", D.text ident ])
       $ printChezExpr expr
-  DefineCurriedFunction ident args expr ->
-    printNamedIndentedList (D.text (scmPrefixed "define ") <> D.text ident)
-      $ printCurriedAbs (NEA.toArray args) expr
-  DefineUncurriedFunction ident args expr ->
-    printNamedIndentedList (D.text (scmPrefixed "define ") <> D.text ident)
-      $ printNamedIndentedList
-          (D.text (scmPrefixed "lambda ") <> printList (D.words $ map D.text args))
-          (printChezExpr expr)
   DefineRecordType ident [ field ] ->
     printRecordDefinition
       ident
@@ -262,14 +250,6 @@ printDefinition = case _ of
       (recordTypeUncurriedConstructor ident)
       (recordTypePredicate ident)
       fields
-
-printCurriedAbs :: Prim.Array Prim.String -> ChezExpr -> Doc Void
-printCurriedAbs args body = Array.foldr foldFn (printChezExpr body) args
-  where
-  foldFn next bodyOrRest =
-    printNamedIndentedList
-      (D.words [ D.text $ scmPrefixed "lambda", printList (D.text next) ])
-      bodyOrRest
 
 printChezExpr :: ChezExpr -> Doc Void
 printChezExpr e = case e of
