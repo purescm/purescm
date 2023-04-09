@@ -226,11 +226,11 @@ codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
     codegenEffectChain codegenEnv s
   EffectDefer _ ->
     codegenEffectChain codegenEnv s
+  PrimEffect _ ->
+    codegenEffectChain codegenEnv s
 
   PrimOp o ->
     codegenPrimOp codegenEnv o
-  PrimEffect e ->
-    codegenPrimEffect codegenEnv e
   PrimUndefined ->
     S.Identifier "prim-undefined"
 
@@ -320,7 +320,18 @@ codegenEffectChain codegenEnv = S.thunk <<< codegenChain effectChainMode codegen
 codegenChain :: ChainMode -> CodegenEnv -> NeutralExpr -> ChezExpr
 codegenChain chainMode codegenEnv = collect []
   where
+  recursive :: Boolean
   recursive = false
+
+  -- `expression` has type `Effect ..`, so we can confidently unthunk here
+  codegenEffectBind :: NeutralExpr -> ChezExpr 
+  codegenEffectBind expression = case unwrap expression of
+    PrimEffect e' ->
+      codegenPrimEffect codegenEnv e'
+    UncurriedEffectApp f p ->
+      S.runUncurriedFn (codegenExpr codegenEnv f) (codegenExpr codegenEnv <$> p)
+    _ ->
+      S.unthunk $ codegenExpr codegenEnv expression      
 
   finish :: Boolean -> Array _ -> NeutralExpr -> ChezExpr
   finish shouldUnthunk bindings expression = do
@@ -337,9 +348,11 @@ codegenChain chainMode codegenEnv = collect []
       collect (Array.snoc bindings $ Tuple (toChezIdent i l) (codegenExpr codegenEnv v)) e'
     EffectPure e' | chainMode.effect ->
       finish false bindings e'
+    PrimEffect e' | chainMode.effect ->
+      codegenPrimEffect codegenEnv e'
     EffectBind i l v e' | chainMode.effect ->
       collect
-        (Array.snoc bindings $ Tuple (toChezIdent i l) (S.unthunk $ codegenExpr codegenEnv v))
+        (Array.snoc bindings $ Tuple (toChezIdent i l) (codegenEffectBind v))
         e'
     EffectDefer e' | chainMode.effect ->
       collect bindings e'
@@ -457,9 +470,9 @@ codegenPrimOp codegenEnv@{ currentModule } = case _ of
 codegenPrimEffect :: CodegenEnv -> BackendEffect NeutralExpr -> ChezExpr
 codegenPrimEffect codegenEnv = case _ of
   EffectRefNew v ->
-    S.thunk $ S.app (S.Identifier $ scmPrefixed "box") (codegenExpr codegenEnv v)
+    S.app (S.Identifier $ scmPrefixed "box") (codegenExpr codegenEnv v)
   EffectRefRead r ->
-    S.thunk $ S.app (S.Identifier $ scmPrefixed "unbox") (codegenExpr codegenEnv r)
+    S.app (S.Identifier $ scmPrefixed "unbox") (codegenExpr codegenEnv r)
   EffectRefWrite r v ->
-    S.thunk $ S.List
+    S.List
       [ S.Identifier $ scmPrefixed "set-box!", codegenExpr codegenEnv r, codegenExpr codegenEnv v ]

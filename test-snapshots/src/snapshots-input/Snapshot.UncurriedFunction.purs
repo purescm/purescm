@@ -44,3 +44,6 @@ main = do
 
   v <- test4b
   assert $ v == "test4b"
+
+  w <- runEffectFn1 test4a "test4b"
+  assert $ w == "test4b"
