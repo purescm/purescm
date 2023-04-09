@@ -324,14 +324,14 @@ codegenChain chainMode codegenEnv = collect []
   recursive = false
 
   -- `expression` has type `Effect ..`, so we can confidently unthunk here
-  codegenEffectBind :: NeutralExpr -> ChezExpr 
+  codegenEffectBind :: NeutralExpr -> ChezExpr
   codegenEffectBind expression = case unwrap expression of
     PrimEffect e' ->
       codegenPrimEffect codegenEnv e'
     UncurriedEffectApp f p ->
       S.runUncurriedFn (codegenExpr codegenEnv f) (codegenExpr codegenEnv <$> p)
     _ ->
-      S.unthunk $ codegenExpr codegenEnv expression      
+      S.unthunk $ codegenExpr codegenEnv expression
 
   finish :: Boolean -> Array _ -> NeutralExpr -> ChezExpr
   finish shouldUnthunk bindings expression = do
