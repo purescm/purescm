@@ -26,7 +26,7 @@ import PureScript.Backend.Chez.Syntax as S
 import PureScript.Backend.Optimizer.Convert (BackendModule, BackendBindingGroup)
 import PureScript.Backend.Optimizer.CoreFn (Ident(..), Literal(..), ModuleName(..), Qualified(..))
 import PureScript.Backend.Optimizer.Semantics (NeutralExpr)
-import PureScript.Backend.Optimizer.Syntax (BackendAccessor(..), BackendOperator(..), BackendOperator1(..), BackendOperator2(..), BackendOperatorNum(..), BackendOperatorOrd(..), BackendSyntax(..), Level(..), Pair(..))
+import PureScript.Backend.Optimizer.Syntax (BackendAccessor(..), BackendEffect(..), BackendOperator(..), BackendOperator1(..), BackendOperator2(..), BackendOperatorNum(..), BackendOperatorOrd(..), BackendSyntax(..), Level(..), Pair(..))
 import Safe.Coerce (coerce)
 
 type CodegenEnv =
@@ -229,8 +229,8 @@ codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
 
   PrimOp o ->
     codegenPrimOp codegenEnv o
-  PrimEffect _ ->
-    S.Identifier "prim-effect"
+  PrimEffect e ->
+    codegenPrimEffect codegenEnv e
   PrimUndefined ->
     S.Identifier "prim-undefined"
 
@@ -453,3 +453,13 @@ codegenPrimOp codegenEnv@{ currentModule } = case _ of
           S.List [ S.Identifier $ scmPrefixed "string-append", x', y' ]
         OpStringOrd o' ->
           makeComparison "string" o'
+
+codegenPrimEffect :: CodegenEnv -> BackendEffect NeutralExpr -> ChezExpr
+codegenPrimEffect codegenEnv = case _ of
+  EffectRefNew v ->
+    S.thunk $ S.app (S.Identifier $ scmPrefixed "box") (codegenExpr codegenEnv v)
+  EffectRefRead r ->
+    S.thunk $ S.app (S.Identifier $ scmPrefixed "unbox") (codegenExpr codegenEnv r)
+  EffectRefWrite r v ->
+    S.thunk $ S.List
+      [ S.Identifier $ scmPrefixed "set-box!", codegenExpr codegenEnv r, codegenExpr codegenEnv v ]
