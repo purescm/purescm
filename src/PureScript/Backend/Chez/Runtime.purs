@@ -24,7 +24,7 @@ makeExportedFunction
   -> m ChezDefinition
 makeExportedFunction name args expr = do
   modify_ $ Array.cons $ ExportIdentifier name
-  pure $ DefineValue name $ S.mkCurriedFn args expr
+  pure $ Define name $ S.mkCurriedFn args expr
 
 makeBooleanComparison
   :: forall m. Monad m => MonadState (Array ChezExport) m => String -> m ChezDefinition
@@ -40,7 +40,7 @@ runtimeModule :: ChezLibrary
 runtimeModule = do
   let
     Tuple definitions exports = flip runState [] $ sequence
-      [ pure $ S.DefineValue "boolean->integer" $ S.mkCurriedFn (pure "x") $ S.List
+      [ pure $ S.Define "boolean->integer" $ S.mkCurriedFn (pure "x") $ S.List
           [ S.Identifier $ scmPrefixed "if"
           , S.Identifier "x"
           , S.Integer $ S.LiteralDigit "1"

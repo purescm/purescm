@@ -89,7 +89,7 @@ escapeIdentifiers lib = lib
   escapeLibRef libRef = libRef { identifiers = map escapeIdent libRef.identifiers }
 
   escapeDefinition = case _ of
-    DefineValue i expr -> DefineValue (escapeIdent i) $ escapeExpr expr
+    Define i expr -> Define (escapeIdent i) $ escapeExpr expr
     DefineRecordType i fields -> DefineRecordType (escapeIdent i) $ map escapeIdent fields
 
   escapeExpr = case _ of
@@ -233,7 +233,7 @@ printNamedIndentedList firstLine body
 
 printDefinition :: ChezDefinition -> Doc Void
 printDefinition = case _ of
-  DefineValue ident expr ->
+  Define ident expr ->
     printNamedIndentedList (D.words [ D.text $ scmPrefixed "define", D.text ident ])
       $ printChezExpr expr
   DefineRecordType ident [ field ] ->
