@@ -1,3 +1,4 @@
+-- @inline Snapshot.EffectRef.onLet never
 module Snapshot.EffectRef where
 
 import Prelude

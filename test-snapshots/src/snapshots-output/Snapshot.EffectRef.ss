@@ -26,11 +26,12 @@
             (scm:box _2)))))
 
   (scm:define onLetTest
-    (scm:lambda ()
-      (scm:let*
-        ([n0 (scm:box 5)]
-         [v1 (scm:unbox n0)])
-          ((Test.Assert.assert (scm:fx=? v1 5))))))
+    (scm:let ([_0 (onLet 1)])
+      (scm:lambda ()
+        (scm:let*
+          ([n1 (_0)]
+           [v2 (scm:unbox n1)])
+            ((Test.Assert.assert (scm:fx=? v2 5)))))))
 
   (scm:define basicTest
     (scm:lambda ()
