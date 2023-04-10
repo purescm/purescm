@@ -7,6 +7,7 @@ package:
     - functions
     - partial
     - prelude
+    - refs
 workspace:
   package_set:
     registry: 19.1.0
@@ -40,5 +41,11 @@ workspace:
       ref: 348b91f4542cf75efab232e8eb52dd5d3e6a9435
       dependencies:
         - console
+        - effect
+        - prelude
+    refs:
+      git: https://github.com/purescm/purescript-refs.git
+      ref: 2ac82d3867e8ac02df03b6a04d635e0acd4b95db
+      dependencies:
         - effect
         - prelude
