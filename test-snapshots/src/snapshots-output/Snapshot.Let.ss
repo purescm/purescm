@@ -27,11 +27,15 @@
 
   (scm:define isOdd
     (scm:lambda (x0)
-      (scm:or (scm:fx=? x0 1) (scm:not (isEven (scm:fx- x0 1))))))
+      (scm:cond
+        [(scm:fx=? x0 1) #f]
+        [scm:else (isEven (scm:fx- x0 1))])))
 
   (scm:define isEven
     (scm:lambda (x0)
       (scm:cond
         [(scm:fx=? x0 0) #t]
         [scm:else (scm:let ([_1 (scm:fx- x0 1)])
-          (scm:not (scm:or (scm:fx=? _1 1) (scm:not (isEven (scm:fx- _1 1))))))]))))
+          (scm:cond
+            [(scm:fx=? _1 1) #f]
+            [scm:else (isEven (scm:fx- _1 1))]))]))))
