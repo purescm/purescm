@@ -6,6 +6,7 @@ import Data.Argonaut as Json
 import Data.Array as Array
 import Data.Array.NonEmpty as NEA
 import Data.Array.NonEmpty as NonEmptyArray
+import Data.Bifunctor (bimap)
 import Data.Char (toCharCode)
 import Data.Int as Int
 import Data.Maybe (Maybe(..))
@@ -88,9 +89,7 @@ codegenModule { name, bindings, imports, foreign: foreign_ } =
 
 definitionIdentifiers :: ChezDefinition -> Array String
 definitionIdentifiers = case _ of
-  DefineValue i _ -> [ i ]
-  DefineCurriedFunction i _ _ -> [ i ]
-  DefineUncurriedFunction i _ _ -> [ i ]
+  Define i _ -> [ i ]
   DefineRecordType i [ x ] ->
     [ recordTypeCurriedConstructor i
     , recordTypePredicate i
@@ -118,11 +117,8 @@ codegenTopLevelBindingGroup
   :: CodegenEnv
   -> BackendBindingGroup Ident NeutralExpr
   -> Array ChezDefinition
-codegenTopLevelBindingGroup codegenEnv { recursive, bindings }
-  | recursive, Just bindings' <- NonEmptyArray.fromArray bindings =
-      [ DefineValue "rtlbg" $ S.Identifier "recursive-top-level-binding-group" ]
-  | otherwise =
-      Array.concatMap (codegenTopLevelBinding codegenEnv) bindings
+codegenTopLevelBindingGroup codegenEnv { bindings } =
+  Array.concatMap (codegenTopLevelBinding codegenEnv) bindings
 
 codegenTopLevelBinding
   :: CodegenEnv
@@ -130,25 +126,12 @@ codegenTopLevelBinding
   -> Array ChezDefinition
 codegenTopLevelBinding codegenEnv (Tuple (Ident i) n) =
   case unwrap n of
-    Abs a e ->
-      [ DefineCurriedFunction
-          i
-          (uncurry toChezIdent <$> a)
-          (codegenExpr codegenEnv e)
-      ]
-    UncurriedAbs a e ->
-      [ DefineUncurriedFunction
-          i
-          (uncurry toChezIdent <$> a)
-          (codegenExpr codegenEnv e)
-      ]
     CtorDef _ _ _ ss ->
       case NonEmptyArray.fromArray ss of
         Nothing ->
-          [ DefineValue i (S.quote $ S.Identifier i)
-          , DefineUncurriedFunction
-              (S.recordTypePredicate i)
-              [ "v" ]
+          [ Define i (S.quote $ S.Identifier i)
+          , Define (S.recordTypePredicate i)
+              $ S.mkUncurriedFn [ "v" ]
               $ S.eqQ (S.quote $ S.Identifier i) (S.Identifier "v")
           ]
         Just xs
@@ -156,13 +139,13 @@ codegenTopLevelBinding codegenEnv (Tuple (Ident i) n) =
               [ DefineRecordType i ss ]
           | otherwise ->
               [ DefineRecordType i ss
-              , DefineCurriedFunction i xs
+              , Define i $ S.mkCurriedFn xs
                   $ S.runUncurriedFn
                       (S.Identifier $ S.recordTypeUncurriedConstructor i)
                       (map S.Identifier ss)
               ]
     _ ->
-      [ DefineValue i $ codegenExpr codegenEnv n ]
+      [ Define i $ codegenExpr codegenEnv n ]
 
 codegenExpr :: CodegenEnv -> NeutralExpr -> ChezExpr
 codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
@@ -209,9 +192,9 @@ codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
       (map (codegenExpr codegenEnv <<< Tuple.snd) xs)
   CtorDef _ _ _ _ ->
     unsafeCrashWith "codegenExpr:CtorDef - handled by codegenTopLevelBinding!"
-
-  LetRec _ _ _ ->
-    S.Identifier "let-rec"
+  LetRec lvl bindings expr ->
+    S.Let true (map (bimap (flip toChezIdent lvl <<< Just) (codegenExpr codegenEnv)) bindings) $
+      codegenExpr codegenEnv expr
   Let _ _ _ _ ->
     codegenPureChain codegenEnv s
   Branch b o -> do
