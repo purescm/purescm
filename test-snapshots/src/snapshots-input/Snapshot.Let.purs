@@ -24,5 +24,5 @@ isEven x
 
 isOdd :: Int -> Boolean
 isOdd x
-  | x == 1 = true
+  | x == 1 = false
   | otherwise = not $ isEven (x - 1)
