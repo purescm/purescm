@@ -20,9 +20,9 @@ letRecursive x
 isEven :: Int -> Boolean
 isEven x
   | x == 0 = true
-  | otherwise = not $ isOdd (x - 1)
+  | otherwise = isOdd (x - 1)
 
 isOdd :: Int -> Boolean
 isOdd x
   | x == 1 = false
-  | otherwise = not $ isEven (x - 1)
+  | otherwise = isEven (x - 1)
