@@ -58,5 +58,7 @@
           ([_ (_0)]
            [_ ((Test.Assert.assert (scm:fx=? test2b 1)))]
            [_ ((Test.Assert.assert (scm:fx=? test3b 2)))]
-           [v4 (test4b)])
-            ((Test.Assert.assert (scm:string=? v4 "test4b"))))))))
+           [v4 (test4b)]
+           [_ ((Test.Assert.assert (scm:string=? v4 "test4b")))]
+           [w6 (test4a "test4b")])
+            ((Test.Assert.assert (scm:string=? w6 "test4b"))))))))
