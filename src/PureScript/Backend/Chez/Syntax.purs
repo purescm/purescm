@@ -93,6 +93,7 @@ data ChezExpr
   | Identifier String
   | List (Array ChezExpr)
   | Cond (NonEmptyArray (Tuple ChezExpr ChezExpr)) (Maybe ChezExpr)
+  | If ChezExpr ChezExpr (Maybe ChezExpr)
   | Let Boolean (NonEmptyArray (Tuple String ChezExpr)) ChezExpr
   | Lambda (Array String) ChezExpr
 

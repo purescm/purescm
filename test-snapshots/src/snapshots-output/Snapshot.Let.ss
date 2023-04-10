@@ -13,9 +13,9 @@
 
   (scm:define letRecursive
     (scm:lambda (x0)
-      (scm:cond
-        [(scm:fx=? x0 0) 0]
-        [scm:else (letRecursive (scm:fx- x0 1))])))
+      (scm:if (scm:fx=? x0 0)
+              0
+              (letRecursive (scm:fx- x0 1)))))
 
   (scm:define letChain
     (scm:lambda (x0)
@@ -27,15 +27,15 @@
 
   (scm:define isOdd
     (scm:lambda (x0)
-      (scm:cond
-        [(scm:fx=? x0 1) #f]
-        [scm:else (isEven (scm:fx- x0 1))])))
+      (scm:if (scm:fx=? x0 1)
+              #f
+              (isEven (scm:fx- x0 1)))))
 
   (scm:define isEven
     (scm:lambda (x0)
-      (scm:cond
-        [(scm:fx=? x0 0) #t]
-        [scm:else (scm:let ([_1 (scm:fx- x0 1)])
-          (scm:cond
-            [(scm:fx=? _1 1) #f]
-            [scm:else (isEven (scm:fx- _1 1))]))]))))
+      (scm:if (scm:fx=? x0 0)
+              #t
+              (scm:let ([_1 (scm:fx- x0 1)])
+                (scm:if (scm:fx=? _1 1)
+                        #f
+                        (isEven (scm:fx- _1 1))))))))

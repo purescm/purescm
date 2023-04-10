@@ -4,6 +4,7 @@ import Prelude
 
 import Data.Argonaut as Json
 import Data.Array as Array
+import Data.Array.NonEmpty (NonEmptyArray)
 import Data.Array.NonEmpty as NEA
 import Data.Array.NonEmpty as NonEmptyArray
 import Data.Bifunctor (bimap)
@@ -198,10 +199,7 @@ codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
   Let _ _ _ _ ->
     codegenPureChain codegenEnv s
   Branch b o -> do
-    let
-      goPair :: Pair NeutralExpr -> Tuple ChezExpr ChezExpr
-      goPair (Pair c e) = Tuple (codegenExpr codegenEnv c) (codegenExpr codegenEnv e)
-    S.Cond (goPair <$> b) (codegenExpr codegenEnv <$> o)
+    codegenBranch codegenEnv b o
 
   EffectBind _ _ _ _ ->
     codegenEffectChain codegenEnv s
@@ -285,6 +283,16 @@ codegenChar c = S.Char $ append """#\""" $ escapeChar $ toCharCode c
     | otherwise = CodeUnits.singleton c
 
   padLeft char i s = power char (i - String.length s) <> s
+
+codegenBranch :: CodegenEnv -> NonEmptyArray (Pair NeutralExpr) -> Maybe NeutralExpr -> ChezExpr
+codegenBranch codegenEnv b o = do
+  let
+    goPair :: Pair NeutralExpr -> Tuple ChezExpr ChezExpr
+    goPair (Pair c e) = Tuple (codegenExpr codegenEnv c) (codegenExpr codegenEnv e)
+  case NEA.uncons b of
+    { head, tail }
+      | Array.null tail -> uncurry S.If (goPair head) (codegenExpr codegenEnv <$> o)
+      | otherwise -> S.Cond (goPair <$> b) (codegenExpr codegenEnv <$> o)
 
 type ChainMode = { effect :: Boolean }
 

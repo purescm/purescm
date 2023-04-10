@@ -96,6 +96,7 @@ escapeIdentifiers lib = lib
     Identifier i -> Identifier $ escapeIdent i
     List exprs -> List $ map escapeExpr exprs
     Cond b o -> Cond (map (bimap escapeExpr escapeExpr) b) (map escapeExpr o)
+    If t c a -> If (escapeExpr t) (escapeExpr c) (map escapeExpr a)
     Let recursive bindings expr ->
       Let recursive (map (bimap escapeIdent escapeExpr) bindings) $ escapeExpr expr
     Lambda args expr -> Lambda (map escapeIdent args) $ escapeExpr expr
@@ -261,6 +262,7 @@ printChezExpr e = case e of
   Identifier x -> D.text x
   List xs -> printList $ D.words (printChezExpr <$> xs)
   Cond branches fallback -> printCond branches fallback
+  If test consequent alternate -> printIf test consequent alternate
   Let recursive bindings' expr -> printLet recursive bindings' expr
   Lambda args expr -> printLambda args expr
 
@@ -332,3 +334,13 @@ printCond branches fallback = do
   printNamedIndentedList (D.text $ scmPrefixed "cond")
     $ D.lines
     $ Array.snoc b' o'
+
+printIf :: ChezExpr -> ChezExpr -> Maybe ChezExpr -> Doc Void
+printIf test consequent = case _ of
+  Just alternate -> printList $ D.words
+    [ D.text $ scmPrefixed "if"
+    , D.alignCurrentColumn $ D.lines
+        [ printChezExpr test, printChezExpr consequent, printChezExpr alternate ]
+    ]
+  Nothing ->
+    printList $ D.words [ D.text $ scmPrefixed "if", printChezExpr test, printChezExpr consequent ]

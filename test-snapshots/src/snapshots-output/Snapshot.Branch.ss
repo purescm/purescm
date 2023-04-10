@@ -22,9 +22,9 @@
 
   (scm:define h
     (scm:lambda (v0)
-      (scm:cond
-        [(scm:fl=? v0 3.14) 3.14159]
-        [scm:else (scm:raise (scm:condition (scm:make-error) (scm:make-message-condition "Failed pattern match")))])))
+      (scm:if (scm:fl=? v0 3.14)
+              3.14159
+              (scm:raise (scm:condition (scm:make-error) (scm:make-message-condition "Failed pattern match"))))))
 
   (scm:define g
     (scm:lambda (v0)
@@ -38,10 +38,10 @@
     (scm:lambda (x0)
       (scm:lambda (y1)
         (scm:lambda (z2)
-          (scm:cond
-            [x0 (scm:cond
-              [y1 (scm:cond
-                [z2 0]
-                [scm:else 1])]
-              [scm:else 2])]
-            [scm:else 3]))))))
+          (scm:if x0
+                  (scm:if y1
+                          (scm:if z2
+                                  0
+                                  1)
+                          2)
+                  3))))))
