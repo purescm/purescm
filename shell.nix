@@ -23,6 +23,7 @@ pkgs.mkShell {
     easy-ps.purs-tidy
     easy-ps.psa
     easy-ps.spago-next
+    easy-ps.purescript-language-server
     pkgs.nodejs-slim-16_x
     pkgs.chez-racket
   ];
