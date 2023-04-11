@@ -23,8 +23,7 @@
   (scm:define main
     (scm:let*
       ([r0 (scm:letrec* (($record (scm:make-hashtable scm:string-hash scm:string=?))) (scm:hashtable-set! $record "fooBarBaz" 5) $record)]
-       [s1 (recordUpdate r0)]
-       [_2 (Test.Assert.assert (scm:fx=? (recordAccess r0) 5))])
+       [_1 (Test.Assert.assert (scm:fx=? (recordAccess (recordUpdate r0)) 10))])
         (scm:lambda ()
-          (scm:let ([_ (_2)])
-            ((Test.Assert.assert (scm:fx=? (recordAccess s1) 10))))))))
+          (scm:let ([_ (_1)])
+            ((Test.Assert.assert (scm:fx=? (recordAccess r0) 5))))))))

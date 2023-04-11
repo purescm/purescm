@@ -18,5 +18,5 @@ main = do
   let r = { fooBarBaz: 5 }
   let s = recordUpdate r
   
-  assert $ recordAccess r == 5
   assert $ recordAccess s == 10
+  assert $ recordAccess r == 5
