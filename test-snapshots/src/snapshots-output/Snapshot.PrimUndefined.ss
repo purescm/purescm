@@ -13,7 +13,7 @@
 
   (scm:define testCase
     (scm:lambda (dictRing0)
-      (scm:hashtable-ref ((scm:hashtable-ref dictRing0 "Semiring0" #f) (scm:quote undefined)) "add" #f)))
+      (scm:hashtable-ref ((scm:hashtable-ref dictRing0 "Semiring0" #f) (scm:gensym "purs-undefined")) "add" #f)))
 
   (scm:define main
     (Test.Assert.assert (scm:fx=? (((testCase Data.Ring.ringInt) 1) 1) 2))))

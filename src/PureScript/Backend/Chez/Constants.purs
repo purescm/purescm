@@ -24,4 +24,4 @@ schemeExt :: String
 schemeExt = ".ss"
 
 undefinedSymbol :: String
-undefinedSymbol = "undefined"
+undefinedSymbol = "purs-undefined"

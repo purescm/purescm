@@ -215,7 +215,8 @@ codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
   PrimOp o ->
     codegenPrimOp codegenEnv o
   PrimUndefined ->
-    S.quote $ S.Identifier undefinedSymbol
+    S.app (S.Identifier $ scmPrefixed "gensym")
+      (S.StringExpr $ Json.stringify $ Json.fromString undefinedSymbol)
 
   Fail i ->
     -- Note: This can be improved by using `error`, but it requires
