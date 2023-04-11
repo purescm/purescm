@@ -29,7 +29,7 @@ test3b :: Int
 test3b = runFn2 test3a 1 2
 
 test4a :: EffectFn1 String String
-test4a = mkEffectFn1 $ \a -> do 
+test4a = mkEffectFn1 $ \a -> do
   log a
   pure a
 
