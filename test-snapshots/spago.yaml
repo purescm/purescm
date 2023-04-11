@@ -7,6 +7,7 @@ package:
     - functions
     - partial
     - prelude
+    - record
     - refs
 workspace:
   package_set:
@@ -49,3 +50,14 @@ workspace:
       dependencies:
         - effect
         - prelude
+    record:
+      git: https://github.com/purescm/purescript-record.git
+      ref: 8a993da0d328f72167a4742e0e2a428a790510bc
+      dependencies: 
+        - functions
+        - prelude
+        - unsafe-coerce
+    unsafe-coerce:
+      git: https://github.com/purescm/purescript-unsafe-coerce.git
+      ref: 20dbd7797e985b631459b8dbd4072cf3096ee1da
+      dependencies: []

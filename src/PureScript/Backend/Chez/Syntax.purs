@@ -156,8 +156,8 @@ eqQ x y = runUncurriedFn (Identifier $ scmPrefixed "eq?") [ x, y ]
 vector :: Array ChezExpr -> ChezExpr
 vector = List <<< Array.cons (Identifier $ scmPrefixed "vector")
 
-hashtableCopy :: ChezExpr -> ChezExpr
-hashtableCopy h = runUncurriedFn (Identifier $ scmPrefixed "hashtable-copy") [ h ]
+hashtableCopyMut :: ChezExpr -> ChezExpr
+hashtableCopyMut h = runUncurriedFn (Identifier $ scmPrefixed "hashtable-copy") [ h, Bool true ]
 
 recordTypeName :: String -> String
 recordTypeName i = i <> "$"
@@ -189,4 +189,4 @@ recordUpdate h f = do
         , StringExpr $ Json.stringify $ Json.fromString k
         , v
         ]
-  Let false (NonEmptyArray.singleton (Tuple "$record" (hashtableCopy h))) (List (field <$> f))
+  Let false (NonEmptyArray.singleton (Tuple "$record" (hashtableCopyMut h))) (List (field <$> f))
