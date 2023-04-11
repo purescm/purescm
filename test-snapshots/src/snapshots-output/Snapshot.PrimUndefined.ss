@@ -1,0 +1,19 @@
+#!r6rs
+#!chezscheme
+(library
+  (Snapshot.PrimUndefined lib)
+  (export
+    main
+    testCase)
+  (import
+    (prefix (chezscheme) scm:)
+    (prefix (_Chez_Runtime lib) rt:)
+    (prefix (Data.Ring lib) Data.Ring.)
+    (prefix (Test.Assert lib) Test.Assert.))
+
+  (scm:define testCase
+    (scm:lambda (dictRing0)
+      (scm:hashtable-ref ((scm:hashtable-ref dictRing0 "Semiring0" #f) (scm:quote undefined)) "add" #f)))
+
+  (scm:define main
+    (Test.Assert.assert (scm:fx=? (((testCase Data.Ring.ringInt) 1) 1) 2))))
