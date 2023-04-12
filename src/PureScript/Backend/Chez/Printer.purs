@@ -24,7 +24,7 @@ import Dodo (Doc)
 import Dodo as D
 import Partial.Unsafe (unsafeCrashWith)
 import PureScript.Backend.Chez.Constants (scmPrefixed)
-import PureScript.Backend.Chez.Syntax (ChezDefinition(..), ChezExport(..), ChezExpr(..), ChezImport(..), ChezImportLevel(..), ChezImportSet(..), ChezLibrary, ChezString(..), LibraryBody, LibraryName, LibraryReference, LibraryVersion(..), LiteralDigit(..), SubVersionReference(..), VersionReference(..))
+import PureScript.Backend.Chez.Syntax (ChezDefinition(..), ChezExport(..), ChezExpr(..), ChezImport(..), ChezImportLevel(..), ChezImportSet(..), ChezLibrary, ChezString(..), LibraryBody, LibraryName, LibraryReference, LibraryVersion(..), ChezDigit(..), SubVersionReference(..), VersionReference(..))
 import PureScript.Backend.Chez.Syntax.Common as C
 
 printWrap :: Doc Void -> Doc Void -> Doc Void -> Doc Void
@@ -259,8 +259,8 @@ printDefinition = case _ of
 
 printChezExpr :: ChezExpr -> Doc Void
 printChezExpr e = case e of
-  Integer (LiteralDigit x) -> D.text x
-  Float (LiteralDigit x) -> D.text x
+  Integer (ChezDigit x) -> D.text x
+  Float (ChezDigit x) -> D.text x
   Char x -> D.text x
   StringExpr (ChezString x) -> D.text $ jsonToChezString $ Json.stringify $ Json.fromString x
   Bool x -> D.text $ if x then "#t" else "#f"

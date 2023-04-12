@@ -44,8 +44,8 @@ runtimeModule = do
       [ pure $ S.Define "boolean->integer" $ C.mkCurriedFn (pure "x") $ S.List
           [ S.Identifier $ scmPrefixed "if"
           , S.Identifier "x"
-          , S.Integer $ S.LiteralDigit "1"
-          , S.Integer $ S.LiteralDigit "0"
+          , S.Integer $ S.ChezDigit "1"
+          , S.Integer $ S.ChezDigit "0"
           ]
       , makeBooleanComparison ">?"
       , makeBooleanComparison ">=?"

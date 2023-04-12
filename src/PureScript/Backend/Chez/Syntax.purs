@@ -73,11 +73,11 @@ data ChezDefinition
   = Define String ChezExpr
   | DefineRecordType String (Array String)
 
-newtype LiteralDigit = LiteralDigit String
+newtype ChezDigit = ChezDigit String
 
-derive instance Newtype LiteralDigit _
-derive newtype instance Eq LiteralDigit
-derive newtype instance Ord LiteralDigit
+derive instance Newtype ChezDigit _
+derive newtype instance Eq ChezDigit
+derive newtype instance Ord ChezDigit
 
 newtype ChezString = ChezString String
 
@@ -86,8 +86,8 @@ derive newtype instance Eq ChezString
 derive newtype instance Ord ChezString
 
 data ChezExpr
-  = Integer LiteralDigit
-  | Float LiteralDigit
+  = Integer ChezDigit
+  | Float ChezDigit
   | Char String
   | StringExpr ChezString
   | Bool Boolean
