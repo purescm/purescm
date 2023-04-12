@@ -167,19 +167,8 @@ codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
     C.mkUncurriedFn (uncurry toChezIdent <$> a)
       (codegenChain effectChainMode codegenEnv e)
 
-  Accessor e (GetProp i) ->
-    C.runUncurriedFn
-      (S.Identifier $ scmPrefixed "hashtable-ref")
-      [ codegenExpr codegenEnv e
-      , S.StringExpr $ wrap i
-      , S.Bool false
-      ]
-  Accessor e (GetIndex i) ->
-    C.runUncurriedFn
-      (S.Identifier $ scmPrefixed "vector-ref")
-      [ codegenExpr codegenEnv e, S.Integer $ wrap $ show i ]
-  Accessor e (GetCtorField qi _ _ _ field _) ->
-    C.recordAccessor (codegenExpr codegenEnv e) (flattenQualified currentModule qi) field
+  Accessor e a ->
+    codegenAccessor codegenEnv e a
   Update _ _ ->
     S.Identifier "object-update"
 
@@ -265,6 +254,22 @@ codegenChar c = S.Char $ append """#\""" $ escapeChar $ toCharCode c
     | otherwise = CodeUnits.singleton c
 
   padLeft char i s = power char (i - String.length s) <> s
+
+codegenAccessor :: { currentModule :: ModuleName } -> NeutralExpr -> BackendAccessor -> ChezExpr
+codegenAccessor codegenEnv@{ currentModule } expression = case _ of
+  GetProp i ->
+    C.runUncurriedFn
+      (S.Identifier $ scmPrefixed "hashtable-ref")
+      [ codegenExpr codegenEnv expression
+      , S.StringExpr $ wrap i
+      , S.Bool false
+      ]
+  GetIndex i ->
+    C.runUncurriedFn
+      (S.Identifier $ scmPrefixed "vector-ref")
+      [ codegenExpr codegenEnv expression, S.Integer $ wrap $ show i ]
+  GetCtorField qi _ _ _ field _ ->
+    C.recordAccessor (codegenExpr codegenEnv expression) (flattenQualified currentModule qi) field
 
 type ChainMode = { effect :: Boolean }
 
