@@ -5,7 +5,7 @@ import Prelude
 data Foo = Foo Int Int Int
 
 -- A constructor that is partially applied to its arguments.
-x :: Int -> Int -> Foo 
+x :: Int -> Int -> Foo
 x = Foo 1
 
 y :: Int -> Foo
@@ -29,7 +29,7 @@ test2 = case _ of
 
 test3 :: HasArgs -> Int
 test3 = case _ of
-  HasArgs i1 i2 i3 
+  HasArgs i1 i2 i3
     | i1 < i3 -> i1
     | otherwise -> i2
 

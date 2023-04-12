@@ -4,22 +4,26 @@ block1 :: String
 block1 = """block"""
 
 block2 :: String
-block2 = """
+block2 =
+  """
 foo
 bar
 """
 
 block3 :: String
-block3 = """foo
+block3 =
+  """foo
 bar"""
 
 block4 :: String
-block4 = """foo
+block4 =
+  """foo
 bar
 baz"""
 
 block5 :: String
-block5 = """foo
+block5 =
+  """foo
 bar
 baz
 """

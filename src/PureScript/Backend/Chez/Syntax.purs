@@ -2,15 +2,10 @@ module PureScript.Backend.Chez.Syntax where
 
 import Prelude
 
-import Data.Argonaut as Json
-import Data.Array as Array
 import Data.Array.NonEmpty (NonEmptyArray)
-import Data.Array.NonEmpty as NonEmptyArray
 import Data.Maybe (Maybe)
 import Data.Newtype (class Newtype)
 import Data.Tuple (Tuple)
-import PureScript.Backend.Chez.Constants (scmPrefixed)
-import PureScript.Backend.Optimizer.CoreFn (Prop(..))
 
 type ChezLibrary =
   { "#!r6rs" :: Boolean
@@ -84,93 +79,20 @@ derive instance Newtype LiteralDigit _
 derive newtype instance Eq LiteralDigit
 derive newtype instance Ord LiteralDigit
 
+newtype ChezString = ChezString String
+
+derive instance Newtype ChezString _
+derive newtype instance Eq ChezString
+derive newtype instance Ord ChezString
+
 data ChezExpr
   = Integer LiteralDigit
   | Float LiteralDigit
   | Char String
-  | StringExpr String
+  | StringExpr ChezString
   | Bool Boolean
   | Identifier String
   | List (Array ChezExpr)
   | Cond (NonEmptyArray (Tuple ChezExpr ChezExpr)) (Maybe ChezExpr)
   | Let Boolean (NonEmptyArray (Tuple String ChezExpr)) ChezExpr
   | Lambda (Array String) ChezExpr
-
---
-
-runUncurriedFn :: ChezExpr -> Array ChezExpr -> ChezExpr
-runUncurriedFn f s = List $ Array.cons f s
-
-mkUncurriedFn :: Array String -> ChezExpr -> ChezExpr
-mkUncurriedFn a e = Lambda a e
-
-runCurriedFn :: ChezExpr -> NonEmptyArray ChezExpr -> ChezExpr
-runCurriedFn f s = NonEmptyArray.foldl1 app $ NonEmptyArray.cons f s
-
-mkCurriedFn :: NonEmptyArray String -> ChezExpr -> ChezExpr
-mkCurriedFn a e = Array.foldr (Lambda <<< Array.singleton) e $ NonEmptyArray.toArray a
-
-thunk :: ChezExpr -> ChezExpr
-thunk e = Lambda [] e
-
-unthunk :: ChezExpr -> ChezExpr
-unthunk e = List [ e ]
-
---
-
-app :: ChezExpr -> ChezExpr -> ChezExpr
-app f x = List [ f, x ]
-
-record :: Array (Prop ChezExpr) -> ChezExpr
-record r =
-  let
-    field :: Prop ChezExpr -> ChezExpr
-    field (Prop k v) =
-      List
-        [ Identifier $ scmPrefixed "hashtable-set!"
-        , Identifier "$record"
-        , StringExpr $ Json.stringify $ Json.fromString k
-        , v
-        ]
-  in
-    List $
-      [ Identifier $ scmPrefixed "letrec*"
-      , List
-          [ List
-              [ Identifier "$record"
-              , List
-                  [ Identifier $ scmPrefixed "make-hashtable"
-                  , Identifier $ scmPrefixed "string-hash"
-                  , Identifier $ scmPrefixed "string=?"
-                  ]
-              ]
-          ]
-      ] <> (field <$> r) <> [ Identifier "$record" ]
-
-quote :: ChezExpr -> ChezExpr
-quote e = app (Identifier $ scmPrefixed "quote") e
-
-eqQ :: ChezExpr -> ChezExpr -> ChezExpr
-eqQ x y = runUncurriedFn (Identifier $ scmPrefixed "eq?") [ x, y ]
-
-vector :: Array ChezExpr -> ChezExpr
-vector = List <<< Array.cons (Identifier $ scmPrefixed "vector")
-
-recordTypeName :: String -> String
-recordTypeName i = i <> "$"
-
-recordTypeCurriedConstructor :: String -> String
-recordTypeCurriedConstructor i = i
-
-recordTypeUncurriedConstructor :: String -> String
-recordTypeUncurriedConstructor i = i <> "*"
-
-recordTypePredicate :: String -> String
-recordTypePredicate i = i <> "?"
-
-recordTypeAccessor :: String -> String -> String
-recordTypeAccessor i field = i <> "-" <> field
-
-recordAccessor :: ChezExpr -> String -> String -> ChezExpr
-recordAccessor expr name field =
-  runUncurriedFn (Identifier $ recordTypeAccessor name field) [ expr ]

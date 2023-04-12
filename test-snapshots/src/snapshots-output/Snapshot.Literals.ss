@@ -21,10 +21,12 @@
     "string")
 
   (scm:define record2
-    (scm:letrec* (($record (scm:make-hashtable scm:string-hash scm:string=?))) (scm:hashtable-set! $record "foo" "bar") $record))
+    (scm:let ([$record (scm:make-hashtable scm:string-hash scm:string=?)])
+      ((scm:hashtable-set! $record "foo" "bar") $record)))
 
   (scm:define record
-    (scm:letrec* (($record (scm:make-hashtable scm:string-hash scm:string=?))) $record))
+    (scm:let ([$record (scm:make-hashtable scm:string-hash scm:string=?)])
+      $record))
 
   (scm:define number
     2.0)

@@ -5,6 +5,7 @@ module PureScript.Backend.Chez.Printer
 import Prelude
 
 import Control.Alternative as Alternative
+import Data.Argonaut as Json
 import Data.Array as Array
 import Data.Array.NonEmpty (NonEmptyArray)
 import Data.Array.NonEmpty as NEA
@@ -15,11 +16,16 @@ import Data.Maybe (Maybe(..), maybe)
 import Data.Newtype (un)
 import Data.String (Pattern(..), Replacement(..))
 import Data.String as String
+import Data.String.Regex as R
+import Data.String.Regex.Flags as R.Flags
+import Data.String.Regex.Unsafe as R.Unsafe
 import Data.Tuple (Tuple(..))
 import Dodo (Doc)
 import Dodo as D
+import Partial.Unsafe (unsafeCrashWith)
 import PureScript.Backend.Chez.Constants (scmPrefixed)
-import PureScript.Backend.Chez.Syntax (ChezDefinition(..), ChezExport(..), ChezExpr(..), ChezImport(..), ChezImportLevel(..), ChezImportSet(..), ChezLibrary, LibraryBody, LibraryName, LibraryReference, LibraryVersion(..), LiteralDigit(..), SubVersionReference(..), VersionReference(..), recordTypeAccessor, recordTypeCurriedConstructor, recordTypeName, recordTypePredicate, recordTypeUncurriedConstructor)
+import PureScript.Backend.Chez.Syntax (ChezDefinition(..), ChezExport(..), ChezExpr(..), ChezImport(..), ChezImportLevel(..), ChezImportSet(..), ChezLibrary, ChezString(..), LibraryBody, LibraryName, LibraryReference, LibraryVersion(..), LiteralDigit(..), SubVersionReference(..), VersionReference(..))
+import PureScript.Backend.Chez.Syntax.Common as C
 
 printWrap :: Doc Void -> Doc Void -> Doc Void -> Doc Void
 printWrap l r x = l <> x <> r
@@ -239,16 +245,16 @@ printDefinition = case _ of
   DefineRecordType ident [ field ] ->
     printRecordDefinition
       ident
-      (recordTypeName ident)
-      (recordTypeCurriedConstructor ident)
-      (recordTypePredicate ident)
+      (C.recordTypeName ident)
+      (C.recordTypeCurriedConstructor ident)
+      (C.recordTypePredicate ident)
       [ field ]
   DefineRecordType ident fields ->
     printRecordDefinition
       ident
-      (recordTypeName ident)
-      (recordTypeUncurriedConstructor ident)
-      (recordTypePredicate ident)
+      (C.recordTypeName ident)
+      (C.recordTypeUncurriedConstructor ident)
+      (C.recordTypePredicate ident)
       fields
 
 printChezExpr :: ChezExpr -> Doc Void
@@ -256,13 +262,30 @@ printChezExpr e = case e of
   Integer (LiteralDigit x) -> D.text x
   Float (LiteralDigit x) -> D.text x
   Char x -> D.text x
-  StringExpr x -> D.text x
+  StringExpr (ChezString x) -> D.text $ jsonToChezString $ Json.stringify $ Json.fromString x
   Bool x -> D.text $ if x then "#t" else "#f"
   Identifier x -> D.text x
   List xs -> printList $ D.words (printChezExpr <$> xs)
   Cond branches fallback -> printCond branches fallback
   Let recursive bindings' expr -> printLet recursive bindings' expr
   Lambda args expr -> printLambda args expr
+
+jsonToChezString :: String -> String
+jsonToChezString str = unicodeReplace str
+  where
+  unicodeRegex :: R.Regex
+  unicodeRegex = R.Unsafe.unsafeRegex """\\u([A-F\d]{4})""" R.Flags.global
+
+  unicodeReplace :: String -> String
+  unicodeReplace s = R.replace' unicodeRegex unicodeReplaceMatch s
+
+  unicodeReplaceMatch
+    :: String
+    -> Array (Maybe String)
+    -> String
+  unicodeReplaceMatch _ = case _ of
+    [ (Just x) ] -> "\\x" <> x <> ";"
+    _ -> unsafeCrashWith "Error matching at unicodeReplaceMatch in jsonToChezString"
 
 printRecordDefinition
   :: Prim.String
@@ -282,7 +305,7 @@ printRecordDefinition ident name constructor predicate fields =
 
   fieldForm :: Prim.String -> Doc Void
   fieldForm field = printList $ D.words
-    $ map D.text [ scmPrefixed "immutable", field, recordTypeAccessor ident field ]
+    $ map D.text [ scmPrefixed "immutable", field, C.recordTypeAccessor ident field ]
 
   fieldsForm :: Doc Void
   fieldsForm = printList $ D.words $ Array.cons (D.text $ scmPrefixed "fields")

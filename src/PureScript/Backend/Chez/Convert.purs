@@ -2,7 +2,6 @@ module PureScript.Backend.Chez.Convert where
 
 import Prelude
 
-import Data.Argonaut as Json
 import Data.Array as Array
 import Data.Array.NonEmpty as NEA
 import Data.Array.NonEmpty as NonEmptyArray
@@ -15,15 +14,13 @@ import Data.Newtype (unwrap, wrap)
 import Data.Set as Set
 import Data.String as String
 import Data.String.CodeUnits as CodeUnits
-import Data.String.Regex as R
-import Data.String.Regex.Flags as R.Flags
-import Data.String.Regex.Unsafe as R.Unsafe
 import Data.Tuple (Tuple(..), uncurry)
 import Data.Tuple as Tuple
 import Partial.Unsafe (unsafeCrashWith)
 import PureScript.Backend.Chez.Constants (libChezSchemePrefix, moduleForeign, moduleLib, runtimePrefix, scmPrefixed, undefinedSymbol)
-import PureScript.Backend.Chez.Syntax (ChezDefinition(..), ChezExport(..), ChezExpr, ChezImport(..), ChezImportSet(..), ChezLibrary, recordTypeAccessor, recordTypeCurriedConstructor, recordTypePredicate, recordTypeUncurriedConstructor)
+import PureScript.Backend.Chez.Syntax (ChezDefinition(..), ChezExport(..), ChezExpr, ChezImport(..), ChezImportSet(..), ChezLibrary)
 import PureScript.Backend.Chez.Syntax as S
+import PureScript.Backend.Chez.Syntax.Common as C
 import PureScript.Backend.Optimizer.Convert (BackendModule, BackendBindingGroup)
 import PureScript.Backend.Optimizer.CoreFn (Ident(..), Literal(..), ModuleName(..), Qualified(..))
 import PureScript.Backend.Optimizer.Semantics (NeutralExpr)
@@ -91,14 +88,14 @@ definitionIdentifiers :: ChezDefinition -> Array String
 definitionIdentifiers = case _ of
   Define i _ -> [ i ]
   DefineRecordType i [ x ] ->
-    [ recordTypeCurriedConstructor i
-    , recordTypePredicate i
-    , recordTypeAccessor i x
+    [ C.recordTypeCurriedConstructor i
+    , C.recordTypePredicate i
+    , C.recordTypeAccessor i x
     ]
   DefineRecordType i fields ->
-    [ recordTypeUncurriedConstructor i
-    , recordTypePredicate i
-    ] <> map (recordTypeAccessor i) fields
+    [ C.recordTypeUncurriedConstructor i
+    , C.recordTypePredicate i
+    ] <> map (C.recordTypeAccessor i) fields
 
 flattenQualified :: ModuleName -> Qualified Ident -> String
 flattenQualified _ (Qualified Nothing (Ident i)) = i
@@ -129,19 +126,19 @@ codegenTopLevelBinding codegenEnv (Tuple (Ident i) n) =
     CtorDef _ _ _ ss ->
       case NonEmptyArray.fromArray ss of
         Nothing ->
-          [ Define i (S.quote $ S.Identifier i)
-          , Define (S.recordTypePredicate i)
-              $ S.mkUncurriedFn [ "v" ]
-              $ S.eqQ (S.quote $ S.Identifier i) (S.Identifier "v")
+          [ Define i (C.quote $ S.Identifier i)
+          , Define (C.recordTypePredicate i)
+              $ C.mkUncurriedFn [ "v" ]
+              $ C.eqQ (C.quote $ S.Identifier i) (S.Identifier "v")
           ]
         Just xs
           | NEA.length xs == 1 ->
               [ DefineRecordType i ss ]
           | otherwise ->
               [ DefineRecordType i ss
-              , Define i $ S.mkCurriedFn xs
-                  $ S.runUncurriedFn
-                      (S.Identifier $ S.recordTypeUncurriedConstructor i)
+              , Define i $ C.mkCurriedFn xs
+                  $ C.runUncurriedFn
+                      (S.Identifier $ C.recordTypeUncurriedConstructor i)
                       (map S.Identifier ss)
               ]
     _ ->
@@ -156,39 +153,39 @@ codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
   Lit l ->
     codegenLiteral codegenEnv l
   App f p ->
-    S.runCurriedFn (codegenExpr codegenEnv f) (codegenExpr codegenEnv <$> p)
+    C.runCurriedFn (codegenExpr codegenEnv f) (codegenExpr codegenEnv <$> p)
   Abs a e -> do
-    S.mkCurriedFn (uncurry toChezIdent <$> a) (codegenExpr codegenEnv e)
+    C.mkCurriedFn (uncurry toChezIdent <$> a) (codegenExpr codegenEnv e)
   UncurriedApp f p ->
-    S.runUncurriedFn (codegenExpr codegenEnv f) (codegenExpr codegenEnv <$> p)
+    C.runUncurriedFn (codegenExpr codegenEnv f) (codegenExpr codegenEnv <$> p)
   UncurriedAbs a e ->
-    S.mkUncurriedFn (uncurry toChezIdent <$> a) (codegenExpr codegenEnv e)
+    C.mkUncurriedFn (uncurry toChezIdent <$> a) (codegenExpr codegenEnv e)
   UncurriedEffectApp f p ->
-    S.thunk $ S.runUncurriedFn (codegenExpr codegenEnv f)
+    C.thunk $ C.runUncurriedFn (codegenExpr codegenEnv f)
       (codegenExpr codegenEnv <$> p)
   UncurriedEffectAbs a e ->
-    S.mkUncurriedFn (uncurry toChezIdent <$> a)
+    C.mkUncurriedFn (uncurry toChezIdent <$> a)
       (codegenChain effectChainMode codegenEnv e)
 
   Accessor e (GetProp i) ->
-    S.runUncurriedFn
+    C.runUncurriedFn
       (S.Identifier $ scmPrefixed "hashtable-ref")
       [ codegenExpr codegenEnv e
-      , S.StringExpr $ Json.stringify $ Json.fromString i
+      , S.StringExpr $ wrap i
       , S.Bool false
       ]
   Accessor e (GetIndex i) ->
-    S.runUncurriedFn
+    C.runUncurriedFn
       (S.Identifier $ scmPrefixed "vector-ref")
       [ codegenExpr codegenEnv e, S.Integer $ wrap $ show i ]
   Accessor e (GetCtorField qi _ _ _ field _) ->
-    S.recordAccessor (codegenExpr codegenEnv e) (flattenQualified currentModule qi) field
+    C.recordAccessor (codegenExpr codegenEnv e) (flattenQualified currentModule qi) field
   Update _ _ ->
     S.Identifier "object-update"
 
   CtorSaturated qi _ _ _ xs ->
-    S.runUncurriedFn
-      (S.Identifier $ S.recordTypeUncurriedConstructor $ flattenQualified currentModule qi)
+    C.runUncurriedFn
+      (S.Identifier $ C.recordTypeUncurriedConstructor $ flattenQualified currentModule qi)
       (map (codegenExpr codegenEnv <<< Tuple.snd) xs)
   CtorDef _ _ _ _ ->
     unsafeCrashWith "codegenExpr:CtorDef - handled by codegenTopLevelBinding!"
@@ -215,8 +212,7 @@ codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
   PrimOp o ->
     codegenPrimOp codegenEnv o
   PrimUndefined ->
-    S.app (S.Identifier $ scmPrefixed "gensym")
-      (S.StringExpr $ Json.stringify $ Json.fromString undefinedSymbol)
+    C.app (S.Identifier $ scmPrefixed "gensym") (S.StringExpr $ wrap undefinedSymbol)
 
   Fail i ->
     -- Note: This can be improved by using `error`, but it requires
@@ -229,7 +225,7 @@ codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
           , S.List [ S.Identifier $ scmPrefixed "make-error" ]
           , S.List
               [ S.Identifier $ scmPrefixed "make-message-condition"
-              , S.StringExpr $ Json.stringify $ Json.fromString i
+              , S.StringExpr $ wrap i
               ]
           ]
       ]
@@ -238,28 +234,11 @@ codegenLiteral :: CodegenEnv -> Literal NeutralExpr -> ChezExpr
 codegenLiteral codegenEnv = case _ of
   LitInt i -> S.Integer $ wrap $ show i
   LitNumber n -> S.Float $ wrap $ show n
-  LitString s -> S.StringExpr $ jsonToChezString $ Json.stringify $ Json.fromString s
+  LitString s -> S.StringExpr $ wrap s
   LitChar c -> codegenChar c
-  LitBoolean b -> S.Identifier $ if b then "#t" else "#f"
-  LitArray a -> S.vector $ codegenExpr codegenEnv <$> a
-  LitRecord r -> S.record $ (map $ codegenExpr codegenEnv) <$> r
-
-jsonToChezString :: String -> String
-jsonToChezString str = unicodeReplace str
-  where
-  unicodeRegex :: R.Regex
-  unicodeRegex = R.Unsafe.unsafeRegex """\\u([A-F\d]{4})""" R.Flags.global
-
-  unicodeReplace :: String -> String
-  unicodeReplace s = R.replace' unicodeRegex unicodeReplaceMatch s
-
-  unicodeReplaceMatch
-    :: String
-    -> Array (Maybe String)
-    -> String
-  unicodeReplaceMatch _ = case _ of
-    [ (Just x) ] -> "\\x" <> x <> ";"
-    _ -> unsafeCrashWith "Error matching at unicodeReplaceMatch in jsonToChezString"
+  LitBoolean b -> S.Bool b
+  LitArray a -> C.vector $ codegenExpr codegenEnv <$> a
+  LitRecord r -> C.record $ (map $ codegenExpr codegenEnv) <$> r
 
 -- > In addition to the standard named characters 
 -- > #\alarm, #\backspace, #\delete, #\esc, #\linefeed, #\newline, #\page, #\return, #\space, and #\tab, 
@@ -299,7 +278,7 @@ codegenPureChain :: CodegenEnv -> NeutralExpr -> ChezExpr
 codegenPureChain codegenEnv = codegenChain pureChainMode codegenEnv
 
 codegenEffectChain :: CodegenEnv -> NeutralExpr -> ChezExpr
-codegenEffectChain codegenEnv = S.thunk <<< codegenChain effectChainMode codegenEnv
+codegenEffectChain codegenEnv = C.thunk <<< codegenChain effectChainMode codegenEnv
 
 codegenChain :: ChainMode -> CodegenEnv -> NeutralExpr -> ChezExpr
 codegenChain chainMode codegenEnv = collect []
@@ -313,15 +292,15 @@ codegenChain chainMode codegenEnv = collect []
     PrimEffect e' ->
       codegenPrimEffect codegenEnv e'
     UncurriedEffectApp f p ->
-      S.runUncurriedFn (codegenExpr codegenEnv f) (codegenExpr codegenEnv <$> p)
+      C.runUncurriedFn (codegenExpr codegenEnv f) (codegenExpr codegenEnv <$> p)
     _ ->
-      S.unthunk $ codegenExpr codegenEnv expression
+      C.unthunk $ codegenExpr codegenEnv expression
 
   finish :: Boolean -> Array _ -> NeutralExpr -> ChezExpr
   finish shouldUnthunk bindings expression = do
     let
       maybeUnthunk :: ChezExpr -> ChezExpr
-      maybeUnthunk = if shouldUnthunk then S.unthunk else identity
+      maybeUnthunk = if shouldUnthunk then C.unthunk else identity
     case NEA.fromArray bindings of
       Nothing -> maybeUnthunk $ codegenExpr codegenEnv expression
       Just bindings' -> S.Let recursive bindings' $ maybeUnthunk $ codegenExpr codegenEnv expression
@@ -360,8 +339,8 @@ codegenPrimOp codegenEnv@{ currentModule } = case _ of
       OpArrayLength ->
         S.List [ S.Identifier $ scmPrefixed "vector-length", x' ]
       OpIsTag qi ->
-        S.app
-          (S.Identifier $ S.recordTypePredicate $ flattenQualified currentModule qi)
+        C.app
+          (S.Identifier $ C.recordTypePredicate $ flattenQualified currentModule qi)
           x'
   Op2 o x y ->
     let
@@ -454,9 +433,9 @@ codegenPrimOp codegenEnv@{ currentModule } = case _ of
 codegenPrimEffect :: CodegenEnv -> BackendEffect NeutralExpr -> ChezExpr
 codegenPrimEffect codegenEnv = case _ of
   EffectRefNew v ->
-    S.app (S.Identifier $ scmPrefixed "box") (codegenExpr codegenEnv v)
+    C.app (S.Identifier $ scmPrefixed "box") (codegenExpr codegenEnv v)
   EffectRefRead r ->
-    S.app (S.Identifier $ scmPrefixed "unbox") (codegenExpr codegenEnv r)
+    C.app (S.Identifier $ scmPrefixed "unbox") (codegenExpr codegenEnv r)
   EffectRefWrite r v ->
     S.List
       [ S.Identifier $ scmPrefixed "set-box!", codegenExpr codegenEnv r, codegenExpr codegenEnv v ]
