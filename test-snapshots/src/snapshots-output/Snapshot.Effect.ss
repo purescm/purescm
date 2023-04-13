@@ -4,6 +4,8 @@
   (Snapshot.Effect lib)
   (export
     dontInlineMe
+    lastComponentIsRun
+    lastPureIsUnwrapped
     main)
   (import
     (prefix (chezscheme) scm:)
@@ -12,7 +14,26 @@
 
   (scm:define dontInlineMe
     (scm:lambda (v0)
-      (scm:lambda () Data.Unit.unit)))
+      (scm:lambda ()
+        Data.Unit.unit)))
+
+  (scm:define lastComponentIsRun
+    (scm:let ([_0 (dontInlineMe "a")])
+      (scm:lambda ()
+        (scm:let*
+          ([_ (_0)]
+           [_ ((dontInlineMe "b"))])
+            ((dontInlineMe "c"))))))
+
+  (scm:define lastPureIsUnwrapped
+    (scm:let ([_0 (dontInlineMe "a")])
+      (scm:lambda ()
+        (scm:let*
+          ([value1 (_0)]
+           [_ ((dontInlineMe "b"))])
+            value1))))
 
   (scm:define main
-    (scm:let* ((_0 (dontInlineMe "a"))) (scm:lambda () (scm:let* ((_ (_0)) (_ ((dontInlineMe "b"))) (value3 ((dontInlineMe "c"))) (_ ((dontInlineMe "d"))) (_ ((dontInlineMe "e")))) value3)))))
+    (scm:lambda ()
+      (scm:let ([_ (lastComponentIsRun)])
+        (lastPureIsUnwrapped)))))

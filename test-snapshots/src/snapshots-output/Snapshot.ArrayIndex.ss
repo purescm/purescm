@@ -10,4 +10,6 @@
 
   (scm:define testAccessorGetIndex
     (scm:lambda (v0)
-      (scm:cond ((scm:fx=? (scm:vector-length v0) 1) (scm:vector-ref v0 0)) (scm:else 0)))))
+      (scm:cond
+        [(scm:fx=? (scm:vector-length v0) 1) (scm:vector-ref v0 0)]
+        [scm:else 0]))))

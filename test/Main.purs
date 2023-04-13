@@ -43,8 +43,8 @@ import Node.Process as Process
 import Partial.Unsafe (unsafeCrashWith)
 import PureScript.Backend.Chez.Constants (moduleForeign, moduleLib, schemeExt)
 import PureScript.Backend.Chez.Convert (codegenModule)
+import PureScript.Backend.Chez.Printer as P
 import PureScript.Backend.Chez.Runtime (runtimeModule)
-import PureScript.Backend.Chez.Syntax as S
 import PureScript.Backend.Optimizer.Builder (buildModules)
 import PureScript.Backend.Optimizer.Convert (BackendModule)
 import PureScript.Backend.Optimizer.CoreFn (Comment(..), Module(..), ModuleName(..))
@@ -99,7 +99,7 @@ runSnapshotTests { accept, filter } = do
   let runtimePath = Path.concat [ testOut, "_Chez_Runtime" ]
   mkdirp runtimePath
   let runtimeFilePath = Path.concat [ runtimePath, moduleLib <> schemeExt ]
-  let runtimeContents = Dodo.print plainText Dodo.twoSpaces $ S.printLibrary $ runtimeModule
+  let runtimeContents = Dodo.print plainText Dodo.twoSpaces $ P.printLibrary $ runtimeModule
   FS.writeTextFile UTF8 runtimeFilePath runtimeContents
   coreFnModulesFromOutput "output" filter >>= case _ of
     Left errors -> do
@@ -117,7 +117,7 @@ runSnapshotTests { accept, filter } = do
             let
               formatted =
                 Dodo.print plainText Dodo.twoSpaces
-                  $ S.printLibrary
+                  $ P.printLibrary
                   $ codegenModule backend
             let testFileDir = Path.concat [ testOut, name ]
             let testFilePath = Path.concat [ testFileDir, moduleLib <> schemeExt ]
@@ -159,16 +159,20 @@ runSnapshotTests { accept, filter } = do
               , moduleName: name
               }
             case result of
-              Left err | matchesFail err.message failsWith -> do
-                Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <> " failed."
-                Console.log err.message
-                pure false
-              Right _ | isJust failsWith -> do
-                Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <>
-                  " succeeded when it should have failed."
-                pure false
-              _ ->
-                pure true
+              Left { message }
+                | matchesFail message failsWith ->
+                    pure true
+                | otherwise -> do
+                    Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <> " failed."
+                    Console.log message
+                    pure false
+              Right _
+                | isJust failsWith -> do
+                    Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <>
+                      " succeeded when it should have failed."
+                    pure false
+                | otherwise ->
+                    pure true
         attempt (FS.readTextFile UTF8 snapshotFilePath) >>= case _ of
           Left _ -> do
             Console.log $ withGraphics (foreground Yellow) "✓" <> " " <> name <> " saved."
@@ -203,9 +207,9 @@ hasFails = findMap go <<< _.comments
 matchesFail :: String -> Maybe String -> Boolean
 matchesFail errMsg = case _ of
   Just msg ->
-    not $ String.contains (Pattern msg) errMsg
+    String.contains (Pattern msg) errMsg
   Nothing ->
-    true
+    false
 
 getSchemeBinary :: Aff String
 getSchemeBinary = do
