@@ -21,3 +21,4 @@
 /test-snapshots/**/.psc*
 /test-snapshots/generated-docs
 /test-snapshots/test-out/
+/.direnv
