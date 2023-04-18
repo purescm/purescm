@@ -25,5 +25,3 @@
 /tools/.spago
 /tools/output
 /vendor/**/*.so
-/vendor/srfi/private/
-/vendor/srfi/tests/
