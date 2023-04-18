@@ -1,4 +1,4 @@
-module Main where
+module Tools.Main where
 
 import Prelude
 
@@ -12,6 +12,17 @@ import Effect.Class (liftEffect)
 import Effect.Class.Console as Console
 import Node.FS.Sync as FS
 import Node.Library.Execa as Execa
+import Node.Path (FilePath)
+import Node.Path as Path
+
+clonePath :: FilePath
+clonePath = "chez-srfi"
+
+vendorPath :: FilePath
+vendorPath = "vendor"
+
+revision :: String
+revision = "e056421"
 
 rmIf :: String -> Aff Unit
 rmIf p = liftEffect do
@@ -19,8 +30,8 @@ rmIf p = liftEffect do
   when c $
     FS.rm' p { force: true, maxRetries: 1, recursive: true, retryDelay: 1 }
 
-fetchChezSrfi :: String -> ExceptT String Aff Unit
-fetchChezSrfi clonePath = ExceptT do
+fetchChezSrfi :: ExceptT String Aff Unit
+fetchChezSrfi = ExceptT do
   cloneExists <- liftEffect $ FS.exists clonePath
   cloneOrFetch <- case cloneExists of
     true -> do
@@ -35,15 +46,23 @@ fetchChezSrfi clonePath = ExceptT do
       spawned.result
   pure $ bimap (_.message) (const unit) cloneOrFetch
 
-vendorChezSrfi :: String -> String -> ExceptT String Aff Unit
-vendorChezSrfi clonePath vendorPath = ExceptT do
-  Console.log "Vendoring chez-srfi..."
-  rmIf vendorPath
-  spawned <- Execa.execa "./install.chezscheme.sps" [ vendorPath ] (_ { cwd = Just clonePath })
+checkoutRevision :: ExceptT String Aff Unit
+checkoutRevision = ExceptT do
+  Console.log $ "Checking out " <> revision <> "..."
+  spawned <- Execa.execa "git" [ "checkout", revision ] (_ { cwd = Just clonePath })
   bimap (_.message) (const unit) <$> spawned.result
 
-cleanChezSrfi :: String -> ExceptT String Aff Unit
-cleanChezSrfi clonePath = ExceptT do
+vendorChezSrfi :: ExceptT String Aff Unit
+vendorChezSrfi = ExceptT do
+  Console.log "Vendoring chez-srfi..."
+  rmIf vendorPath
+  -- vendorPath is a sibling of clonePath
+  spawned <- Execa.execa "./install.chezscheme.sps" [ Path.concat [ "..", vendorPath ] ]
+    (_ { cwd = Just clonePath })
+  bimap (_.message) (const unit) <$> spawned.result
+
+cleanChezSrfi :: ExceptT String Aff Unit
+cleanChezSrfi = ExceptT do
   Console.log "Cleaning chez-srfi..."
   rmIf clonePath
   pure (Right unit)
@@ -51,9 +70,10 @@ cleanChezSrfi clonePath = ExceptT do
 main :: Effect Unit
 main = launchAff_ do
   spawned <- runExceptT do
-    fetchChezSrfi "../chez-srfi"
-    vendorChezSrfi "../chez-srfi" "../vendor"
-    cleanChezSrfi "../chez-srfi"
+    fetchChezSrfi
+    checkoutRevision
+    vendorChezSrfi
+    cleanChezSrfi
   case spawned of
     Left message ->
       Console.error $ "Failed: " <> message
