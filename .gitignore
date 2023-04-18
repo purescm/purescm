@@ -22,3 +22,6 @@
 /test-snapshots/generated-docs
 /test-snapshots/test-out/
 /.direnv
+/tools/.spago
+/tools/output
+/vendor/
