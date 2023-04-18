@@ -1,6 +1,3 @@
 package:
   name: tools
   dependencies: [ console, node-execa, node-fs ]
-workspace:
-  package_set:
-    registry: 20.0.1

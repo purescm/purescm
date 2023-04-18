@@ -1,6 +1,8 @@
 {
   "private": true,
   "scripts": {
-    "test": "spago -x test.dhall test"
+    "test": "spago test",
+    "test-accept": "spago test -- --accept",
+    "srfi": "spago run -p tools -m Tools.Main"
   }
 }
