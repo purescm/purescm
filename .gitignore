@@ -24,4 +24,6 @@
 /.direnv
 /tools/.spago
 /tools/output
-/vendor/
+/vendor/**/*.so
+/vendor/srfi/private/
+/vendor/srfi/tests/
