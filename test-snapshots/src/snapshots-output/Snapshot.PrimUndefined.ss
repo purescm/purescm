@@ -7,7 +7,7 @@
     testCase)
   (import
     (prefix (chezscheme) scm:)
-    (prefix (_Chez_Runtime lib) rt:)
+    (prefix (purs runtime lib) rt:)
     (prefix (Data.Ring lib) Data.Ring.)
     (prefix (Test.Assert lib) Test.Assert.))
 

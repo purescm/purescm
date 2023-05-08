@@ -96,7 +96,7 @@ runSnapshotTests { accept, filter } = do
   mkdirp snapshotsOut
   mkdirp testOut
   -- RUNTIME
-  let runtimePath = Path.concat [ testOut, "_Chez_Runtime" ]
+  let runtimePath = Path.concat [ testOut, "purs", "runtime" ]
   mkdirp runtimePath
   let runtimeFilePath = Path.concat [ runtimePath, moduleLib <> schemeExt ]
   let runtimeContents = Dodo.print plainText Dodo.twoSpaces $ P.printLibrary $ runtimeModule

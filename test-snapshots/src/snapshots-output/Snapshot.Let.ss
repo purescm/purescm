@@ -9,7 +9,7 @@
     letRecursive)
   (import
     (prefix (chezscheme) scm:)
-    (prefix (_Chez_Runtime lib) rt:))
+    (prefix (purs runtime lib) rt:))
 
   (scm:define letRecursive
     (scm:lambda (x0)

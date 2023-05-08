@@ -10,7 +10,7 @@ import Data.Array.NonEmpty.Internal (NonEmptyArray(..))
 import Data.Maybe (Maybe(..))
 import Data.Traversable (sequence)
 import Data.Tuple (Tuple(..))
-import PureScript.Backend.Chez.Constants (libChezSchemePrefix, scmPrefixed)
+import PureScript.Backend.Chez.Constants (libChezSchemePrefix, moduleLib, scmPrefixed)
 import PureScript.Backend.Chez.Syntax (ChezDefinition(..), ChezExport(..), ChezExpr, ChezImport(..), ChezImportSet(..), ChezLibrary)
 import PureScript.Backend.Chez.Syntax as S
 
@@ -54,7 +54,7 @@ runtimeModule = do
   { "#!chezscheme": true
   , "#!r6rs": true
   , name:
-      { identifiers: NEA.cons' "_Chez_Runtime" [ "lib" ]
+      { identifiers: NEA.cons' "purs" [ "runtime", moduleLib ]
       , version: []
       }
   , exports

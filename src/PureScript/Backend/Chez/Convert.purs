@@ -79,7 +79,7 @@ codegenModule { name, bindings, imports, foreign: foreign_ } =
             libChezSchemePrefix
         , ImportSet $ ImportPrefix
             ( ImportLibrary
-                { identifiers: NEA.cons' "_Chez_Runtime" [ moduleLib ], version: Nothing }
+                { identifiers: NEA.cons' "purs" [ "runtime", moduleLib ], version: Nothing }
             )
             runtimePrefix
         ] <> pursImports <> foreignImport
