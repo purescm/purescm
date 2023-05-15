@@ -11,7 +11,7 @@
   (export cond-expand)
   (import
     (rnrs)
-    (for (only (srfi private registry) expand-time-features)
+    (for (only (purs runtime srfi private registry) expand-time-features)
          expand))
   (define-syntax cond-expand
     (lambda (stx)

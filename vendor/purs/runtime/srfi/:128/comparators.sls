@@ -63,7 +63,7 @@
    comparator-check-type comparator-hash hash-bound hash-salt
    =? <? >? <=? >=? comparator-if<=>)
   (import (except (rnrs) define-record-type) (purs runtime srfi :99)
-    (purs runtime srfi :39) (only (rnrs r5rs) modulo) (srfi private include))
+    (purs runtime srfi :39) (only (rnrs r5rs) modulo) (purs runtime srfi private include))
   (define (exact-integer? x) (and (integer? x) (exact? x)))
   (begin
     (define-syntax comparator-if<=>

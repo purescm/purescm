@@ -41,7 +41,7 @@
     (except (rnrs) make-hashtable hashtable-clear! hashtable-copy
       hashtable-ref hashtable-update! make-eq-hashtable
       make-eqv-hashtable)
-    (srfi private include)
+    (purs runtime srfi private include)
     (rename (purs runtime srfi :126) (hashtable? hash-table?)
       (hashtable-contains? hash-table-contains?)
       (hashtable-empty? hash-table-empty?)

@@ -25,8 +25,8 @@
    string-accumulator bytevector-accumulator
    bytevector-accumulator! sum-accumulator product-accumulator)
   (import (rnrs) (only (purs runtime srfi :1) make-list)
-    (only (chezscheme) call/1cc) (srfi private include)
-    (srfi private define-values))
+    (only (chezscheme) call/1cc) (purs runtime srfi private include)
+    (purs runtime srfi private define-values))
   (begin
     (define (any pred ls)
       (if (null? (cdr ls))

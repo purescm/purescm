@@ -46,8 +46,8 @@
       (for-each r6rs:for-each)
       (member r6rs:member))
     (rnrs mutable-pairs) (purs runtime srfi :8 receive)
-    (purs runtime srfi :23 error tricks) (for (srfi private vanish) expand)
-    (srfi private check-arg) (srfi private include))
+    (purs runtime srfi :23 error tricks) (for (purs runtime srfi private vanish) expand)
+    (purs runtime srfi private check-arg) (purs runtime srfi private include))
   (let-syntax ([define (vanish-define define (cons*))])
     (SRFI-23-error->R6RS
       "(library (purs runtime srfi :1 lists))"

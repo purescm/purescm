@@ -41,7 +41,7 @@
 ;     to match the convention in the SRFI-document
 (library (purs runtime srfi :26 cut)
   (export cut cute <> <...>)
-  (import (rnrs) (srfi private include))
+  (import (rnrs) (purs runtime srfi private include))
   (begin
     (define-syntax srfi-26-internal-cut
       (syntax-rules (<> <...>)

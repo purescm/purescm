@@ -34,7 +34,7 @@
       (vector->list rnrs:vector->list)
       (list->vector rnrs:list->vector))
     (rnrs mutable-strings)
-    (srfi private include))
+    (purs runtime srfi private include))
   (begin
     (define-syntax receive
       (syntax-rules ()

@@ -31,7 +31,7 @@
       (hashtable-clear! rnrs:hashtable-clear!))
     (purs runtime srfi :0 cond-expand)
     (purs runtime srfi :126 helpers helpers)
-    (srfi private include))
+    (purs runtime srfi private include))
   (begin
     (define make-eq-hashtable
       (case-lambda
