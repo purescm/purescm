@@ -10,7 +10,6 @@ import Data.Array.NonEmpty (NonEmptyArray)
 import Data.Array.NonEmpty as NEA
 import Data.Array.NonEmpty as NonEmptyArray
 import Data.Bifunctor (bimap)
-import Data.Foldable (foldMap)
 import Data.Maybe (Maybe(..), maybe)
 import Data.Newtype (un)
 import Data.String (Pattern(..), Replacement(..))
@@ -95,7 +94,7 @@ escapeIdentifiers lib = lib
   escapeExpr = case _ of
     Identifier i -> Identifier $ escapeIdent i
     List exprs -> List $ map escapeExpr exprs
-    Cond b o -> Cond (map (bimap escapeExpr escapeExpr) b) (map escapeExpr o)
+    Cond b o -> Cond (map (bimap escapeExpr escapeExpr) b) (escapeExpr o)
     Let recursive bindings expr ->
       Let recursive (map (bimap escapeIdent escapeExpr) bindings) $ escapeExpr expr
     Lambda args expr -> Lambda (map escapeIdent args) $ escapeExpr expr
@@ -318,7 +317,7 @@ printLambda args expr =
     (D.words [ D.text $ scmPrefixed "lambda", printList $ D.words $ map D.text args ])
     $ printChezExpr expr
 
-printCond :: NonEmptyArray (Tuple ChezExpr ChezExpr) -> Maybe ChezExpr -> Doc Void
+printCond :: NonEmptyArray (Tuple ChezExpr ChezExpr) -> ChezExpr -> Doc Void
 printCond branches fallback = do
   let
     b' :: Array (Doc Void)
@@ -326,8 +325,7 @@ printCond branches fallback = do
       printBrackets $ D.words [ printChezExpr cond, printChezExpr expr ]
 
     o' :: Doc Void
-    o' = fallback # foldMap \x ->
-      printBrackets $ D.words [ D.text $ scmPrefixed "else", printChezExpr x ]
+    o' = printBrackets $ D.words [ D.text $ scmPrefixed "else", printChezExpr fallback ]
 
   printNamedIndentedList (D.text $ scmPrefixed "cond")
     $ D.lines
