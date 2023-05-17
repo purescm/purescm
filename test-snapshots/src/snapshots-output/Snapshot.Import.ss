@@ -6,7 +6,7 @@
     fortyThree)
   (import
     (prefix (chezscheme) scm:)
-    (prefix (_Chez_Runtime lib) rt:)
+    (prefix (purs runtime lib) rt:)
     (prefix (Snapshot.Import.Impl lib) Snapshot.Import.Impl.))
 
   (scm:define fortyThree

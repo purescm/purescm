@@ -10,7 +10,7 @@
     positionZero)
   (import
     (prefix (chezscheme) scm:)
-    (prefix (_Chez_Runtime lib) rt:)
+    (prefix (purs runtime lib) rt:)
     (prefix (Test.Assert lib) Test.Assert.))
 
   (scm:define positionZero

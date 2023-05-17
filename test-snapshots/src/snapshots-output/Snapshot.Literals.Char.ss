@@ -27,7 +27,7 @@
     vtab)
   (import
     (prefix (chezscheme) scm:)
-    (prefix (_Chez_Runtime lib) rt:))
+    (prefix (purs runtime lib) rt:))
 
   (scm:define vtab
     #\vtab)

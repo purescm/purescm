@@ -25,7 +25,7 @@
     unicode7)
   (import
     (prefix (chezscheme) scm:)
-    (prefix (_Chez_Runtime lib) rt:))
+    (prefix (purs runtime lib) rt:))
 
   (scm:define unicode7
     "Foo \b\b\b\b Bar")

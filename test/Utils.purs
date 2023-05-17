@@ -28,6 +28,7 @@ import Data.Set.NonEmpty as NonEmptySet
 import Data.Tuple (Tuple(..))
 import Effect.Aff (Aff, effectCanceler, error, makeAff, throwError)
 import Effect.Class (liftEffect)
+import Effect.Class.Console as Console
 import Node.Buffer (Buffer, freeze)
 import Node.Buffer.Immutable as ImmutableBuffer
 import Node.ChildProcess (ExecResult, Exit(..), defaultExecOptions, defaultSpawnOptions, inherit)
@@ -74,6 +75,15 @@ bufferToUTF8 = liftEffect <<< map (ImmutableBuffer.toString UTF8) <<< freeze
 
 mkdirp :: FilePath -> Aff Unit
 mkdirp path = FS.mkdir' path { recursive: true, mode: mkPerms Perms.all Perms.all Perms.all }
+
+cpr :: FilePath -> FilePath -> Aff Unit
+cpr from to = do
+  spawned <- execa "cp" [ "-r", from, to ] identity
+  spawned.result >>= case _ of
+    Left e ->
+      Console.error e.message
+    Right _ ->
+      pure unit
 
 loadModuleMain
   :: { libdir :: FilePath
