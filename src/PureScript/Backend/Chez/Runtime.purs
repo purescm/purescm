@@ -36,6 +36,35 @@ makeBooleanComparison suffix =
       , S.List [ S.Identifier "boolean->integer", S.Identifier "y" ]
       ]
 
+createMakeArrayFn :: forall m. Monad m => MonadState (Array ChezExport) m => m ChezDefinition
+createMakeArrayFn = do
+  modify_ $ Array.cons $ ExportIdentifier "make-array"
+  pure $ S.Define "make-array" $ S.Identifier "srfi:214:flexvector"
+
+createMakeObjectFn :: forall m. Monad m => MonadState (Array ChezExport) m => m ChezDefinition
+createMakeObjectFn = do
+  modify_ $ Array.cons $ ExportIdentifier "make-object"
+  pure $ S.Define "make-object" $ S.List
+    [ S.Identifier $ scmPrefixed "lambda"
+    , S.Identifier "args"
+    , S.List
+        [ S.Identifier $ scmPrefixed "apply"
+        , S.Identifier "srfi:125:hash-table"
+        , S.List
+            [ S.Identifier $ scmPrefixed "cons"
+            , S.Identifier "string-comparator"
+            , S.Identifier "args"
+            ]
+        ]
+    ]
+
+importSRFI :: String -> ChezImport
+importSRFI srfi = ImportSet $ ImportPrefix
+  ( ImportLibrary
+      { identifiers: NEA.cons' "purs" [ "runtime", "srfi", ":" <> srfi ], version: Nothing }
+  )
+  ("srfi:" <> srfi <> ":")
+
 runtimeModule :: ChezLibrary
 runtimeModule = do
   let
@@ -46,10 +75,19 @@ runtimeModule = do
           , S.Integer $ S.LiteralDigit "1"
           , S.Integer $ S.LiteralDigit "0"
           ]
+      , pure $ S.Define "string-comparator" $ S.List
+          [ S.Identifier "srfi:128:make-comparator"
+          , S.Identifier $ scmPrefixed "string?"
+          , S.Identifier $ scmPrefixed "string=?"
+          , S.Identifier $ scmPrefixed "string<?"
+          , S.Identifier $ scmPrefixed "string-hash"
+          ]
       , makeBooleanComparison ">?"
       , makeBooleanComparison ">=?"
       , makeBooleanComparison "<=?"
       , makeBooleanComparison "<?"
+      , createMakeArrayFn
+      , createMakeObjectFn
       ]
   { "#!chezscheme": true
   , "#!r6rs": true
@@ -62,6 +100,9 @@ runtimeModule = do
       [ ImportSet $ ImportPrefix
           (ImportLibrary { identifiers: NEA.singleton "chezscheme", version: Nothing })
           libChezSchemePrefix
+      , importSRFI "125"
+      , importSRFI "128"
+      , importSRFI "214"
       ]
   , body:
       { definitions
