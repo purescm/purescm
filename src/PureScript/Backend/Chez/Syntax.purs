@@ -8,7 +8,7 @@ import Data.Array.NonEmpty (NonEmptyArray)
 import Data.Array.NonEmpty as NonEmptyArray
 import Data.Maybe (Maybe)
 import Data.Newtype (class Newtype)
-import Data.Tuple (Tuple)
+import Data.Tuple (Tuple(..))
 import PureScript.Backend.Chez.Constants (rtPrefixed, scmPrefixed)
 import PureScript.Backend.Optimizer.CoreFn (Prop(..))
 
@@ -155,3 +155,18 @@ recordTypeAccessor i field = i <> "-" <> field
 recordAccessor :: ChezExpr -> String -> String -> ChezExpr
 recordAccessor expr name field =
   runUncurriedFn (Identifier $ recordTypeAccessor name field) [ expr ]
+
+recordUpdate :: ChezExpr -> Array (Prop ChezExpr) -> ChezExpr
+recordUpdate h f = do
+  let
+    field :: Prop ChezExpr -> ChezExpr
+    field (Prop k v) =
+      List
+        [ Identifier $ rtPrefixed "object-set!"
+        , Identifier "$record"
+        , StringExpr $ Json.stringify $ Json.fromString k
+        , v
+        ]
+  Let false
+    (NonEmptyArray.singleton (Tuple "$record" (List [ Identifier $ rtPrefixed "object-copy", h ])))
+    (List $ [ Identifier $ scmPrefixed "begin" ] <> (field <$> f))

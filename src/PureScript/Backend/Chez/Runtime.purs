@@ -66,6 +66,16 @@ createMakeObjectFn = makeExportedValue "make-object" $ S.List
 createObjectRefFn :: forall m. Monad m => MonadState (Array ChezExport) m => m ChezDefinition
 createObjectRefFn = makeExportedValue "object-ref" $ S.Identifier "srfi:125:hash-table-ref"
 
+createObjectSetFn :: forall m. Monad m => MonadState (Array ChezExport) m => m ChezDefinition
+createObjectSetFn = makeExportedValue "object-set!" $ S.Identifier "srfi:125:hash-table-set!"
+
+createObjectCopyFn :: forall m. Monad m => MonadState (Array ChezExport) m => m ChezDefinition
+createObjectCopyFn = makeExportedFunction "object-copy" (NEA.singleton "v") $ S.List
+  [ S.Identifier "srfi:125:hash-table-copy"
+  , S.Identifier "v"
+  , S.Bool true
+  ]
+
 importSRFI :: String -> ChezImport
 importSRFI srfi = ImportSet $ ImportPrefix
   ( ImportLibrary
@@ -98,6 +108,8 @@ runtimeModule = do
       , createArrayRefFn
       , createMakeObjectFn
       , createObjectRefFn
+      , createObjectSetFn
+      , createObjectCopyFn
       ]
   { "#!chezscheme": true
   , "#!r6rs": true

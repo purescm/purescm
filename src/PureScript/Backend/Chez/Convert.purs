@@ -180,8 +180,8 @@ codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
       [ codegenExpr codegenEnv e, S.Integer $ wrap $ show i ]
   Accessor e (GetCtorField qi _ _ _ field _) ->
     S.recordAccessor (codegenExpr codegenEnv e) (flattenQualified currentModule qi) field
-  Update _ _ ->
-    S.Identifier "object-update"
+  Update e f ->
+    S.recordUpdate (codegenExpr codegenEnv e) (map (codegenExpr codegenEnv) <$> f)
 
   CtorSaturated qi _ _ _ xs ->
     S.runUncurriedFn
