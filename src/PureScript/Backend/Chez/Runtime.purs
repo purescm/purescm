@@ -26,6 +26,12 @@ makeExportedFunction name args expr = do
   modify_ $ Array.cons $ ExportIdentifier name
   pure $ Define name $ S.mkCurriedFn args expr
 
+makeExportedValue
+  :: forall m. Monad m => MonadState (Array ChezExport) m => String -> ChezExpr -> m ChezDefinition
+makeExportedValue name value = do
+  modify_ $ Array.cons $ ExportIdentifier name
+  pure $ S.Define name $ value
+
 makeBooleanComparison
   :: forall m. Monad m => MonadState (Array ChezExport) m => String -> m ChezDefinition
 makeBooleanComparison suffix =
@@ -37,26 +43,28 @@ makeBooleanComparison suffix =
       ]
 
 createMakeArrayFn :: forall m. Monad m => MonadState (Array ChezExport) m => m ChezDefinition
-createMakeArrayFn = do
-  modify_ $ Array.cons $ ExportIdentifier "make-array"
-  pure $ S.Define "make-array" $ S.Identifier "srfi:214:flexvector"
+createMakeArrayFn = makeExportedValue "make-array" $ S.Identifier "srfi:214:flexvector"
+
+createArrayRefFn :: forall m. Monad m => MonadState (Array ChezExport) m => m ChezDefinition
+createArrayRefFn = makeExportedValue "array-ref" $ S.Identifier "srfi:214:flexvector-ref"
 
 createMakeObjectFn :: forall m. Monad m => MonadState (Array ChezExport) m => m ChezDefinition
-createMakeObjectFn = do
-  modify_ $ Array.cons $ ExportIdentifier "make-object"
-  pure $ S.Define "make-object" $ S.List
-    [ S.Identifier $ scmPrefixed "lambda"
-    , S.Identifier "args"
-    , S.List
-        [ S.Identifier $ scmPrefixed "apply"
-        , S.Identifier "srfi:125:hash-table"
-        , S.List
-            [ S.Identifier $ scmPrefixed "cons"
-            , S.Identifier "string-comparator"
-            , S.Identifier "args"
-            ]
-        ]
-    ]
+createMakeObjectFn = makeExportedValue "make-object" $ S.List
+  [ S.Identifier $ scmPrefixed "lambda"
+  , S.Identifier "args"
+  , S.List
+      [ S.Identifier $ scmPrefixed "apply"
+      , S.Identifier "srfi:125:hash-table"
+      , S.List
+          [ S.Identifier $ scmPrefixed "cons"
+          , S.Identifier "string-comparator"
+          , S.Identifier "args"
+          ]
+      ]
+  ]
+
+createObjectRefFn :: forall m. Monad m => MonadState (Array ChezExport) m => m ChezDefinition
+createObjectRefFn = makeExportedValue "object-ref" $ S.Identifier "srfi:125:hash-table-ref"
 
 importSRFI :: String -> ChezImport
 importSRFI srfi = ImportSet $ ImportPrefix
@@ -87,7 +95,9 @@ runtimeModule = do
       , makeBooleanComparison "<=?"
       , makeBooleanComparison "<?"
       , createMakeArrayFn
+      , createArrayRefFn
       , createMakeObjectFn
+      , createObjectRefFn
       ]
   { "#!chezscheme": true
   , "#!r6rs": true

@@ -10,4 +10,4 @@
 
   (scm:define recordAccess
     (scm:lambda (v0)
-      (scm:hashtable-ref v0 "fooBarBaz" #f))))
+      (rt:object-ref v0 "fooBarBaz"))))
