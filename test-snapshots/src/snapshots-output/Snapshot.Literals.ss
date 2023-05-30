@@ -21,10 +21,10 @@
     "string")
 
   (scm:define record2
-    (scm:letrec* (($record (scm:make-hashtable scm:string-hash scm:string=?))) (scm:hashtable-set! $record "foo" "bar") $record))
+    (rt:make-object "foo" "bar"))
 
   (scm:define record
-    (scm:letrec* (($record (scm:make-hashtable scm:string-hash scm:string=?))) $record))
+    (rt:make-object))
 
   (scm:define number
     2.0)
@@ -42,7 +42,7 @@
     #t)
 
   (scm:define array2
-    (scm:vector 1 2 3))
+    (rt:make-array 1 2 3))
 
   (scm:define array
-    (scm:vector)))
+    (rt:make-array)))

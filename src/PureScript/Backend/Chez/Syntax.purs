@@ -8,8 +8,8 @@ import Data.Array.NonEmpty (NonEmptyArray)
 import Data.Array.NonEmpty as NonEmptyArray
 import Data.Maybe (Maybe)
 import Data.Newtype (class Newtype)
-import Data.Tuple (Tuple)
-import PureScript.Backend.Chez.Constants (scmPrefixed)
+import Data.Tuple (Tuple(..))
+import PureScript.Backend.Chez.Constants (rtPrefixed, scmPrefixed)
 import PureScript.Backend.Optimizer.CoreFn (Prop(..))
 
 type ChezLibrary =
@@ -122,30 +122,11 @@ app :: ChezExpr -> ChezExpr -> ChezExpr
 app f x = List [ f, x ]
 
 record :: Array (Prop ChezExpr) -> ChezExpr
-record r =
+record r = do
   let
-    field :: Prop ChezExpr -> ChezExpr
-    field (Prop k v) =
-      List
-        [ Identifier $ scmPrefixed "hashtable-set!"
-        , Identifier "$record"
-        , StringExpr $ Json.stringify $ Json.fromString k
-        , v
-        ]
-  in
-    List $
-      [ Identifier $ scmPrefixed "letrec*"
-      , List
-          [ List
-              [ Identifier "$record"
-              , List
-                  [ Identifier $ scmPrefixed "make-hashtable"
-                  , Identifier $ scmPrefixed "string-hash"
-                  , Identifier $ scmPrefixed "string=?"
-                  ]
-              ]
-          ]
-      ] <> (field <$> r) <> [ Identifier "$record" ]
+    field :: Prop ChezExpr -> Array ChezExpr
+    field (Prop k v) = [ StringExpr $ Json.stringify $ Json.fromString k, v ]
+  List $ [ Identifier $ rtPrefixed "make-object" ] <> Array.foldMap field r
 
 quote :: ChezExpr -> ChezExpr
 quote e = app (Identifier $ scmPrefixed "quote") e
@@ -154,7 +135,7 @@ eqQ :: ChezExpr -> ChezExpr -> ChezExpr
 eqQ x y = runUncurriedFn (Identifier $ scmPrefixed "eq?") [ x, y ]
 
 vector :: Array ChezExpr -> ChezExpr
-vector = List <<< Array.cons (Identifier $ scmPrefixed "vector")
+vector = List <<< Array.cons (Identifier $ rtPrefixed "make-array")
 
 recordTypeName :: String -> String
 recordTypeName i = i <> "$"
@@ -174,3 +155,18 @@ recordTypeAccessor i field = i <> "-" <> field
 recordAccessor :: ChezExpr -> String -> String -> ChezExpr
 recordAccessor expr name field =
   runUncurriedFn (Identifier $ recordTypeAccessor name field) [ expr ]
+
+recordUpdate :: ChezExpr -> Array (Prop ChezExpr) -> ChezExpr
+recordUpdate h f = do
+  let
+    field :: Prop ChezExpr -> ChezExpr
+    field (Prop k v) =
+      List
+        [ Identifier $ rtPrefixed "object-set!"
+        , Identifier "$record"
+        , StringExpr $ Json.stringify $ Json.fromString k
+        , v
+        ]
+  Let false
+    (NonEmptyArray.singleton (Tuple "$record" (List [ Identifier $ rtPrefixed "object-copy", h ])))
+    (List $ [ Identifier $ scmPrefixed "begin" ] <> (field <$> f))

@@ -94,32 +94,32 @@
 
   (scm:define normal
     (scm:lambda (dict0)
-      (scm:hashtable-ref dict0 "normal" #f)))
+      (rt:object-ref dict0 "normal")))
 
   (scm:define useNormal
     (scm:lambda (dictNormal0)
       (scm:lambda (dictNormal11)
         (scm:lambda (a2)
           (scm:lambda (b3)
-            (scm:string-append ((scm:hashtable-ref dictNormal0 "normal" #f) a2) ((scm:hashtable-ref dictNormal11 "normal" #f) b3)))))))
+            (scm:string-append ((rt:object-ref dictNormal0 "normal") a2) ((rt:object-ref dictNormal11 "normal") b3)))))))
 
   (scm:define instanceName$p
-    (scm:letrec* (($record (scm:make-hashtable scm:string-hash scm:string=?))) (scm:hashtable-set! $record "normal" (scm:lambda (v0)
+    (rt:make-object "normal" (scm:lambda (v0)
       (scm:cond
         [(F1? v0) "F1"]
         [(F2? v0) "F2"]
-        [scm:else (scm:raise (scm:condition (scm:make-error) (scm:make-message-condition "Failed pattern match")))]))) $record))
+        [scm:else (scm:raise (scm:condition (scm:make-error) (scm:make-message-condition "Failed pattern match")))]))))
 
   (scm:define useInstance
     "F1F2")
 
   (scm:define ignore
     (scm:lambda (dict0)
-      (scm:hashtable-ref dict0 "ignore" #f)))
+      (rt:object-ref dict0 "ignore")))
 
   (scm:define useClass
     (scm:lambda (dictClassName$p0)
-      (scm:hashtable-ref dictClassName$p0 "ignore" #f)))
+      (rt:object-ref dictClassName$p0 "ignore")))
 
   (scm:define foo$poo
     "foo'oo")
@@ -144,8 +144,8 @@
 
   (scm:define classMember$p
     (scm:lambda (dict0)
-      (scm:hashtable-ref dict0 "classMember'" #f)))
+      (rt:object-ref dict0 "classMember'")))
 
   (scm:define useMember
     (scm:lambda (dictClassMember0)
-      (scm:hashtable-ref dictClassMember0 "classMember'" #f))))
+      (rt:object-ref dictClassMember0 "classMember'"))))

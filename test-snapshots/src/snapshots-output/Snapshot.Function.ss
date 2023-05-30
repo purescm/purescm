@@ -12,7 +12,7 @@
   (scm:define f
     (scm:lambda (x0)
       (scm:lambda (y1)
-        (scm:vector x0 y1 x0 y1 x0))))
+        (rt:make-array x0 y1 x0 y1 x0))))
 
   (scm:define g
     (scm:lambda (x0)

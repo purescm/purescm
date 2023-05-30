@@ -21,7 +21,7 @@ import Data.String.Regex.Unsafe as R.Unsafe
 import Data.Tuple (Tuple(..), uncurry)
 import Data.Tuple as Tuple
 import Partial.Unsafe (unsafeCrashWith)
-import PureScript.Backend.Chez.Constants (libChezSchemePrefix, moduleForeign, moduleLib, runtimePrefix, scmPrefixed, undefinedSymbol)
+import PureScript.Backend.Chez.Constants (libChezSchemePrefix, moduleForeign, moduleLib, rtPrefixed, runtimePrefix, scmPrefixed, undefinedSymbol)
 import PureScript.Backend.Chez.Syntax (ChezDefinition(..), ChezExport(..), ChezExpr, ChezImport(..), ChezImportSet(..), ChezLibrary, recordTypeAccessor, recordTypeCurriedConstructor, recordTypePredicate, recordTypeUncurriedConstructor)
 import PureScript.Backend.Chez.Syntax as S
 import PureScript.Backend.Optimizer.Convert (BackendModule, BackendBindingGroup)
@@ -172,19 +172,16 @@ codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
 
   Accessor e (GetProp i) ->
     S.runUncurriedFn
-      (S.Identifier $ scmPrefixed "hashtable-ref")
-      [ codegenExpr codegenEnv e
-      , S.StringExpr $ Json.stringify $ Json.fromString i
-      , S.Bool false
-      ]
+      (S.Identifier $ rtPrefixed "object-ref")
+      [ codegenExpr codegenEnv e, S.StringExpr $ Json.stringify $ Json.fromString i ]
   Accessor e (GetIndex i) ->
     S.runUncurriedFn
-      (S.Identifier $ scmPrefixed "vector-ref")
+      (S.Identifier $ rtPrefixed "array-ref")
       [ codegenExpr codegenEnv e, S.Integer $ wrap $ show i ]
   Accessor e (GetCtorField qi _ _ _ field _) ->
     S.recordAccessor (codegenExpr codegenEnv e) (flattenQualified currentModule qi) field
-  Update _ _ ->
-    S.Identifier "object-update"
+  Update e f ->
+    S.recordUpdate (codegenExpr codegenEnv e) (map (codegenExpr codegenEnv) <$> f)
 
   CtorSaturated qi _ _ _ xs ->
     S.runUncurriedFn
