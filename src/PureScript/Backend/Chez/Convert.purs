@@ -46,11 +46,12 @@ codegenModule { name, bindings, exports, imports, foreign: foreign_ } =
 
     exports' :: Array ChezExport
     exports' =
-      let exportedIdentifiers = flip Array.filter definitions case _ of
-            Define i _ -> Set.member (Ident i) exports
-            DefineRecordType i _ -> Set.member (Ident i) exports
-            DefinePredicate i _ -> Set.member (Ident i) exports
-          exportedForeignIdentifiers = Set.intersection foreign_ exports
+      let
+        exportedIdentifiers = flip Array.filter definitions case _ of
+          Define i _ -> Set.member (Ident i) exports
+          DefineRecordType i _ -> Set.member (Ident i) exports
+          DefinePredicate i _ -> Set.member (Ident i) exports
+        exportedForeignIdentifiers = Set.intersection foreign_ exports
       in
         map ExportIdentifier
           $ Array.sort
