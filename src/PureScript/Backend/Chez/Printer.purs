@@ -90,6 +90,7 @@ escapeIdentifiers lib = lib
   escapeDefinition = case _ of
     Define i expr -> Define (escapeIdent i) $ escapeExpr expr
     DefineRecordType i fields -> DefineRecordType (escapeIdent i) $ map escapeIdent fields
+    DefinePredicate i expr -> DefinePredicate (escapeIdent i) $ escapeExpr expr
 
   escapeExpr = case _ of
     Identifier i -> Identifier $ escapeIdent i
@@ -249,6 +250,9 @@ printDefinition = case _ of
       (recordTypeUncurriedConstructor ident)
       (recordTypePredicate ident)
       fields
+  DefinePredicate ident expr ->
+    printNamedIndentedList (D.words [ D.text $ scmPrefixed "define", D.text (recordTypePredicate ident) ])
+      $ printChezExpr expr
 
 printChezExpr :: ChezExpr -> Doc Void
 printChezExpr e = case e of

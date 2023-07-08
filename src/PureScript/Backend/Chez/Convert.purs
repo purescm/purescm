@@ -35,7 +35,7 @@ type CodegenEnv =
   }
 
 codegenModule :: BackendModule -> ChezLibrary
-codegenModule { name, bindings, imports, foreign: foreign_ } =
+codegenModule { name, bindings, exports, imports, foreign: foreign_ } =
   let
     codegenEnv :: CodegenEnv
     codegenEnv = { currentModule: name }
@@ -47,8 +47,15 @@ codegenModule { name, bindings, imports, foreign: foreign_ } =
     exports' :: Array ChezExport
     exports' = map ExportIdentifier
       $ Array.sort
-      $ Array.concatMap definitionIdentifiers definitions
+      $ Array.concatMap definitionIdentifiers exportedIdentifiers
           <> map coerce (Array.fromFoldable foreign_)
+      where
+        exportedIdentifiers = Array.filter isExported definitions
+        isExported = case _ of
+          Define i _ -> Set.member (Ident i) exports
+          DefineRecordType i _ -> Set.member (Ident i) exports
+          DefinePredicate i _ -> Set.member (Ident i) exports
+
 
     pursImports :: Array ChezImport
     pursImports = Array.fromFoldable imports <#> \importedModule ->
@@ -99,6 +106,7 @@ definitionIdentifiers = case _ of
     [ recordTypeUncurriedConstructor i
     , recordTypePredicate i
     ] <> map (recordTypeAccessor i) fields
+  DefinePredicate i _ -> [ recordTypePredicate i ]
 
 flattenQualified :: ModuleName -> Qualified Ident -> String
 flattenQualified _ (Qualified Nothing (Ident i)) = i
@@ -130,7 +138,7 @@ codegenTopLevelBinding codegenEnv (Tuple (Ident i) n) =
       case NonEmptyArray.fromArray ss of
         Nothing ->
           [ Define i (S.quote $ S.Identifier i)
-          , Define (S.recordTypePredicate i)
+          , DefinePredicate i
               $ S.mkUncurriedFn [ "v" ]
               $ S.eqQ (S.quote $ S.Identifier i) (S.Identifier "v")
           ]

@@ -3,7 +3,6 @@
 (library
   (Snapshot.Literals.Record lib)
   (export
-    insert
     main
     recordAccess
     recordAddField

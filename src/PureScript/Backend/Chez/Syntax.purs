@@ -77,6 +77,7 @@ type LibraryBody =
 data ChezDefinition
   = Define String ChezExpr
   | DefineRecordType String (Array String)
+  | DefinePredicate String ChezExpr
 
 newtype LiteralDigit = LiteralDigit String
 
