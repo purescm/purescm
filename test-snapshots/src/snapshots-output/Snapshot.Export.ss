@@ -3,20 +3,43 @@
 (library
   (Snapshot.Export lib)
   (export
+    bar
     exported
-    exportedForeign)
+    exportedForeign
+    foo)
   (import
     (prefix (chezscheme) scm:)
     (prefix (purs runtime lib) rt:)
     (Snapshot.Export foreign))
 
-  (scm:define-record-type (Baz$ Baz* Baz?)
-    (scm:fields (scm:immutable value0 Baz-value0) (scm:immutable value1 Baz-value1)))
+  (scm:define-record-type (Two$ Two* Two?)
+    (scm:fields (scm:immutable value0 Two-value0) (scm:immutable value1 Two-value1)))
 
-  (scm:define Baz
+  (scm:define Two
     (scm:lambda (value0)
       (scm:lambda (value1)
-        (Baz* value0 value1))))
+        (Two* value0 value1))))
+
+  (scm:define Foo
+    (scm:quote Foo))
+
+  (scm:define Foo?
+    (scm:lambda (v)
+      (scm:eq? (scm:quote Foo) v)))
+
+  (scm:define-record-type (Bar$ Bar* Bar?)
+    (scm:fields (scm:immutable value0 Bar-value0) (scm:immutable value1 Bar-value1)))
+
+  (scm:define Bar
+    (scm:lambda (value0)
+      (scm:lambda (value1)
+        (Bar* value0 value1))))
+
+  (scm:define foo
+    Foo)
 
   (scm:define exported
-    (Baz* 1 2)))
+    (Two* 1 2))
+
+  (scm:define bar
+    (Bar* 1 2)))
