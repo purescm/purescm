@@ -3,10 +3,12 @@
 (library
   (Snapshot.Export lib)
   (export
-    exported)
+    exported
+    exportedForeign)
   (import
     (prefix (chezscheme) scm:)
-    (prefix (purs runtime lib) rt:))
+    (prefix (purs runtime lib) rt:)
+    (Snapshot.Export foreign))
 
   (scm:define-record-type (Baz$ Baz* Baz?)
     (scm:fields (scm:immutable value0 Baz-value0) (scm:immutable value1 Baz-value1)))

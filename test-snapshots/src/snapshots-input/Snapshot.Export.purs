@@ -1,6 +1,10 @@
-module Snapshot.Export (exported, Test) where
+module Snapshot.Export (exported, Test, exportedForeign) where
 
 exported :: Test
 exported = Baz 1 2
 
-data Test = Foo Int | Bar | Baz Int Int
+data Test = Foo | Bar Int | Baz Int Int
+
+foreign import exportedForeign :: Int
+
+foreign import internalForeign :: Int

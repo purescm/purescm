@@ -45,17 +45,17 @@ codegenModule { name, bindings, exports, imports, foreign: foreign_ } =
       codegenTopLevelBindingGroup codegenEnv <$> bindings
 
     exports' :: Array ChezExport
-    exports' = map ExportIdentifier
-      $ Array.sort
-      $ Array.concatMap definitionIdentifiers exportedIdentifiers
-          <> map coerce (Array.fromFoldable foreign_)
-      where
-        exportedIdentifiers = Array.filter isExported definitions
-        isExported = case _ of
-          Define i _ -> Set.member (Ident i) exports
-          DefineRecordType i _ -> Set.member (Ident i) exports
-          DefinePredicate i _ -> Set.member (Ident i) exports
-
+    exports' =
+      let exportedIdentifiers = flip Array.filter definitions case _ of
+            Define i _ -> Set.member (Ident i) exports
+            DefineRecordType i _ -> Set.member (Ident i) exports
+            DefinePredicate i _ -> Set.member (Ident i) exports
+          exportedForeignIdentifiers = Set.intersection foreign_ exports
+      in
+        map ExportIdentifier
+          $ Array.sort
+          $ Array.concatMap definitionIdentifiers exportedIdentifiers
+              <> map coerce (Array.fromFoldable exportedForeignIdentifiers)
 
     pursImports :: Array ChezImport
     pursImports = Array.fromFoldable imports <#> \importedModule ->
