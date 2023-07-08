@@ -251,7 +251,8 @@ printDefinition = case _ of
       (recordTypePredicate ident)
       fields
   DefinePredicate ident expr ->
-    printNamedIndentedList (D.words [ D.text $ scmPrefixed "define", D.text (recordTypePredicate ident) ])
+    printNamedIndentedList
+      (D.words [ D.text $ scmPrefixed "define", D.text (recordTypePredicate ident) ])
       $ printChezExpr expr
 
 printChezExpr :: ChezExpr -> Doc Void
