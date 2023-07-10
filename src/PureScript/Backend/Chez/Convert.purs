@@ -183,6 +183,10 @@ codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
   Update e f ->
     S.recordUpdate (codegenExpr codegenEnv e) (map (codegenExpr codegenEnv) <$> f)
 
+  CtorSaturated qi _ _ _ [ Tuple _ x ] ->
+    S.app
+      (S.Identifier $ S.recordTypeCurriedConstructor $ flattenQualified currentModule qi)
+      (codegenExpr codegenEnv x)
   CtorSaturated qi _ _ _ xs ->
     S.runUncurriedFn
       (S.Identifier $ S.recordTypeUncurriedConstructor $ flattenQualified currentModule qi)
