@@ -18,6 +18,7 @@ If you would prefer to use different terms, please use the section below instead
 | [@jordanmartinez](https://github.com/jordanmartinez) | Jordan Martinez | [Apache-2.0] |
 | [@PureFunctor](https://github.com/PureFunctor), [@sjpgarcia](https://github.com/sjpgarcia) | Justin Garcia | [Apache-2.0] |
 | [@turlando](https://github.com/turlando) | Tancredi Orlando | [Apache-2.0] |
+| [@anttih](https://github.com/anttih) | Antti Holvikari | [Apache-2.0] |
 
 ### Contributors using Modified Terms
 

@@ -23,11 +23,16 @@
     Last?
     NoArgs
     NoArgs?
+    OneArg
+    OneArg-value0
+    OneArg?
+    one
     test1
     test2
     test3
     test4
     test5
+    test6
     x
     y
     z)
@@ -40,6 +45,9 @@
 
   (scm:define-record-type (Last$ Last Last?)
     (scm:fields (scm:immutable value0 Last-value0)))
+
+  (scm:define-record-type (OneArg$ OneArg OneArg?)
+    (scm:fields (scm:immutable value0 OneArg-value0)))
 
   (scm:define NoArgs
     (scm:quote NoArgs))
@@ -75,30 +83,37 @@
   (scm:define x
     (Foo 1))
 
-  (scm:define test5
+  (scm:define test6
     (scm:lambda (_)
       (scm:lambda (v1)
         (scm:cond
           [(First? v1) (First-value0 v1)]
           [scm:else (scm:raise (scm:condition (scm:make-error) (scm:make-message-condition "Failed pattern match")))]))))
 
-  (scm:define test4
+  (scm:define test5
     (scm:lambda (v0)
       (scm:cond
         [(First? v0) (First-value0 v0)]
         [(Last? v0) (Last-value0 v0)]
         [scm:else (scm:raise (scm:condition (scm:make-error) (scm:make-message-condition "Failed pattern match")))])))
 
-  (scm:define test3
+  (scm:define test4
     (scm:lambda (v0)
       (scm:cond
         [(scm:fx<? (HasArgs-value0 v0) (HasArgs-value2 v0)) (HasArgs-value0 v0)]
         [scm:else (HasArgs-value1 v0)])))
 
-  (scm:define test2
+  (scm:define test3
     (scm:lambda (v0)
       (HasArgs-value0 v0)))
 
+  (scm:define test2
+    (scm:lambda (v0)
+      (OneArg-value0 v0)))
+
   (scm:define test1
     (scm:lambda (v0)
-      #t)))
+      #t))
+
+  (scm:define one
+    (OneArg 1)))
