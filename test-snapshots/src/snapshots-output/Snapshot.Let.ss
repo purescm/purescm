@@ -13,9 +13,11 @@
 
   (scm:define letRecursive
     (scm:lambda (x0)
-      (scm:cond
-        [(scm:fx=? x0 0) 0]
-        [scm:else (letRecursive (scm:fx- x0 1))])))
+      (scm:letrec ([go1 (scm:lambda (v2)
+        (scm:cond
+          [(scm:fx=? v2 0) 0]
+          [scm:else (go1 (scm:fx- v2 1))]))])
+        (go1 x0))))
 
   (scm:define letChain
     (scm:lambda (x0)
