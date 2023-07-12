@@ -13,9 +13,10 @@ letChain x =
     a + b + c + d
 
 letRecursive :: Int -> Int
-letRecursive x
-  | x == 0 = 0
-  | otherwise = letRecursive (x - 1)
+letRecursive x = go x
+  where
+  go 0 = 0
+  go x' = go (x' - 1)
 
 isEven :: Int -> Boolean
 isEven x

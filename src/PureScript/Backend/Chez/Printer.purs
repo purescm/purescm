@@ -293,12 +293,15 @@ printLet recursive bindings' expr = do
     multiLetKeyword
       | recursive = D.text $ scmPrefixed "letrec*"
       | otherwise = D.text $ scmPrefixed "let*"
+    singleLetKeyword
+      | recursive = D.text $ scmPrefixed "letrec"
+      | otherwise = D.text $ scmPrefixed "let"
     printBinding (Tuple b e) = printBrackets $ D.words [ D.text b, printChezExpr e ]
 
   case NEA.uncons bindings' of
     { head, tail: [] } ->
       D.lines
-        [ D.text "(" <> D.words [ D.text (scmPrefixed "let"), printList $ printBinding head ]
+        [ D.text "(" <> D.words [ singleLetKeyword, printList $ printBinding head ]
         , D.indent $ printChezExpr expr <> D.text ")"
         ]
     { head, tail } ->
