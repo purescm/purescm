@@ -12,6 +12,7 @@ import Data.Int as Int
 import Data.Maybe (Maybe(..))
 import Data.Monoid (power)
 import Data.Newtype (unwrap, wrap)
+import Data.Number (isNaN)
 import Data.Set as Set
 import Data.String as String
 import Data.String.CodeUnits as CodeUnits
@@ -234,12 +235,23 @@ codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
 codegenLiteral :: CodegenEnv -> Literal NeutralExpr -> ChezExpr
 codegenLiteral codegenEnv = case _ of
   LitInt i -> S.Integer $ wrap $ show i
-  LitNumber n -> S.Float $ wrap $ show n
+  LitNumber n -> S.Float $ wrap $ codegenFloat n
   LitString s -> S.StringExpr $ jsonToChezString $ Json.stringify $ Json.fromString s
   LitChar c -> codegenChar c
   LitBoolean b -> S.Identifier $ if b then "#t" else "#f"
   LitArray a -> S.vector $ codegenExpr codegenEnv <$> a
   LitRecord r -> S.record $ (map $ codegenExpr codegenEnv) <$> r
+
+-- PureScript doesn't have syntax for literal number infinity or NaN
+-- but the backend-optimizer might evaluate an expression to such a value
+-- so we need to deal with those separately.
+codegenFloat :: Number -> String
+codegenFloat x = case x of
+  _
+    | top == x -> "+inf.0"
+    | bottom == x -> "-inf.0"
+    | isNaN x -> "+nan.0"
+    | otherwise -> show x
 
 jsonToChezString :: String -> String
 jsonToChezString str = unicodeReplace str
