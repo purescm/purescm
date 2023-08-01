@@ -4,3 +4,5 @@ foreign import addImpl :: Int -> Int -> Int
 
 fortyTwo :: Int
 fortyTwo = addImpl 21 21
+
+data Product = Product Int Int

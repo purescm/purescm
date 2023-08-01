@@ -116,7 +116,7 @@ runSnapshotTests { accept, filter } = do
       coreFnModules # buildModules
         { directives
         , foreignSemantics: coreForeignSemantics -- no chez scheme specific foreign semantics yet
-        , onCodegenModule: \_ (Module { name: ModuleName name, path }) backend -> do
+        , onCodegenModule: \_ (Module { name: ModuleName name, path }) backend _ -> do
             let
               formatted =
                 Dodo.print plainText Dodo.twoSpaces
@@ -147,6 +147,7 @@ runSnapshotTests { accept, filter } = do
             let padding = power " " (SCU.length total - SCU.length index)
             Console.log $ "[" <> padding <> index <> " of " <> total <> "] Building " <> unwrap name
             pure coreFnMod
+        , traceIdents: Set.empty
         }
       outputModules <- liftEffect $ Ref.read outputRef
       results <- forWithIndex outputModules \name ({ formatted, failsWith, hasMain }) -> do
