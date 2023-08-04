@@ -48,6 +48,9 @@ createMakeArrayFn = makeExportedValue "make-array" $ S.Identifier "srfi:214:flex
 createArrayRefFn :: forall m. Monad m => MonadState (Array ChezExport) m => m ChezDefinition
 createArrayRefFn = makeExportedValue "array-ref" $ S.Identifier "srfi:214:flexvector-ref"
 
+createArrayLengthFn :: forall m. Monad m => MonadState (Array ChezExport) m => m ChezDefinition
+createArrayLengthFn = makeExportedValue "array-length" $ S.Identifier "srfi:214:flexvector-length"
+
 createMakeObjectFn :: forall m. Monad m => MonadState (Array ChezExport) m => m ChezDefinition
 createMakeObjectFn = makeExportedValue "make-object" $ S.List
   [ S.Identifier $ scmPrefixed "lambda"
@@ -106,6 +109,7 @@ runtimeModule = do
       , makeBooleanComparison "<?"
       , createMakeArrayFn
       , createArrayRefFn
+      , createArrayLengthFn
       , createMakeObjectFn
       , createObjectRefFn
       , createObjectSetFn

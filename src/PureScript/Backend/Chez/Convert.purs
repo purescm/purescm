@@ -371,7 +371,7 @@ codegenPrimOp codegenEnv@{ currentModule } = case _ of
       OpNumberNegate ->
         S.List [ S.Identifier $ scmPrefixed "fl-", x' ]
       OpArrayLength ->
-        S.List [ S.Identifier $ scmPrefixed "vector-length", x' ]
+        S.List [ S.Identifier $ rtPrefixed "array-length", x' ]
       OpIsTag qi ->
         S.app
           (S.Identifier $ S.recordTypePredicate $ flattenQualified currentModule qi)
