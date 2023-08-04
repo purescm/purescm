@@ -409,7 +409,7 @@ codegenPrimOp codegenEnv@{ currentModule } = case _ of
     in
       case o of
         OpArrayIndex ->
-          S.List [ S.Identifier $ scmPrefixed "vector-ref", x', y' ]
+          S.List [ S.Identifier $ rtPrefixed "array-ref", x', y' ]
         OpBooleanAnd ->
           S.List [ S.Identifier $ scmPrefixed "and", x', y' ]
         OpBooleanOr ->
