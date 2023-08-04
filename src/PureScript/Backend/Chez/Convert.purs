@@ -371,7 +371,7 @@ codegenPrimOp codegenEnv@{ currentModule } = case _ of
       OpNumberNegate ->
         S.List [ S.Identifier $ scmPrefixed "fl-", x' ]
       OpArrayLength ->
-        S.List [ S.Identifier $ scmPrefixed "vector-length", x' ]
+        S.List [ S.Identifier $ rtPrefixed "array-length", x' ]
       OpIsTag qi ->
         S.app
           (S.Identifier $ S.recordTypePredicate $ flattenQualified currentModule qi)
@@ -409,7 +409,7 @@ codegenPrimOp codegenEnv@{ currentModule } = case _ of
     in
       case o of
         OpArrayIndex ->
-          S.List [ S.Identifier $ scmPrefixed "vector-ref", x', y' ]
+          S.List [ S.Identifier $ rtPrefixed "array-ref", x', y' ]
         OpBooleanAnd ->
           S.List [ S.Identifier $ scmPrefixed "and", x', y' ]
         OpBooleanOr ->
