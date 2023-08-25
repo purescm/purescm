@@ -20,5 +20,3 @@
 /test-snapshots/generated-docs
 /test-snapshots/test-out/
 /.direnv
-/vendor/**/*.so
-/vendor/**/*.wpo
