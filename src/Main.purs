@@ -122,7 +122,10 @@ bundleArgsParser =
 main :: FilePath -> Effect Unit
 main cliRoot = do
   cliArgs <- Array.drop 2 <$> Process.argv
-  case ArgParser.parseArgs "purs-backend-chez" "Chez Scheme backend for PureScript" cliArgParser cliArgs of
+  case
+    ArgParser.parseArgs "purs-backend-chez" "Chez Scheme backend for PureScript" cliArgParser
+      cliArgs
+    of
     Left err ->
       Console.error $ ArgParser.printArgError err
     Right (Build args) ->
@@ -174,9 +177,9 @@ runBuild args = do
 
 runBundle :: FilePath -> BundleArgs -> Aff Unit
 runBundle cliRoot args = do
-  let outPath = Path.concat [args.outputDir, "main"]
-  let mainPath = Path.concat [args.outputDir, "main.ss"]
-  let mainWpoPath = Path.concat [args.outputDir, "main.wpo"]
+  let outPath = Path.concat [ args.outputDir, "main" ]
+  let mainPath = Path.concat [ args.outputDir, "main.ss" ]
+  let mainWpoPath = Path.concat [ args.outputDir, "main.wpo" ]
   mkdirp args.outputDir
   let
     mainContent = Array.fold
@@ -186,7 +189,7 @@ runBundle cliRoot args = do
   FS.writeTextFile UTF8 mainPath mainContent
   let
     runtimePath = Path.concat [ cliRoot, "vendor" ]
-    runtimeLibPathPair = runtimePath <> "::" <> (Path.concat [args.outputDir, "vendor"])
+    runtimeLibPathPair = runtimePath <> "::" <> (Path.concat [ args.outputDir, "vendor" ])
     libDirPathPair = args.libDir <> "::" <> args.outputDir
     libDirs = runtimeLibPathPair <> ":" <> libDirPathPair <> ":"
     arguments = [ "-q", "--libdirs", libDirs ]
