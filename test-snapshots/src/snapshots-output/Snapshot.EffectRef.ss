@@ -21,7 +21,7 @@
     (scm:lambda (x0)
       (scm:let*
         ([a1 (scm:fx+ x0 x0)]
-         [_2 (scm:fx+ a1 (scm:fx+ a1 x0))])
+         [_2 (scm:fx+ (scm:fx+ a1 a1) x0)])
           (scm:lambda ()
             (scm:box _2)))))
 
