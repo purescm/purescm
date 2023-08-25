@@ -48,7 +48,7 @@ workspace:
   extra_packages:
     backend-optimizer:
       git: https://github.com/aristanetworks/purescript-backend-optimizer
-      ref: 25d8ae89a650a12acfbca2b05e3715bd2aa5f2b3
+      ref: 9de6bd8a00d31e51502a062d10bbddf53a401039
       dependencies:
         - aff
         - ansi
