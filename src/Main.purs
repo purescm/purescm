@@ -64,6 +64,7 @@ type BuildArgs =
 type BundleArgs =
   { moduleName :: String
   , libDir :: FilePath
+  , outputDir :: FilePath
   }
 
 data Command
@@ -79,7 +80,7 @@ cliArgParser =
           Build <$> buildArgsParser <* ArgParser.flagHelp
     , ArgParser.command [ "bundle-app" ]
         "Bundles .so files to a single program file."
-        do Bundle <$> runArgsParser <* ArgParser.flagHelp
+        do Bundle <$> bundleArgsParser <* ArgParser.flagHelp
     ]
     <* ArgParser.flagHelp
 
@@ -98,8 +99,8 @@ buildArgsParser =
           # ArgParser.default (Path.concat [ ".", "output-chez" ])
     }
 
-runArgsParser :: ArgParser BundleArgs
-runArgsParser =
+bundleArgsParser :: ArgParser BundleArgs
+bundleArgsParser =
   ArgParser.fromRecord
     { moduleName:
         ArgParser.argument [ "--main" ]
@@ -108,7 +109,12 @@ runArgsParser =
           # ArgParser.default "Main"
     , libDir:
         ArgParser.argument [ "--libdir" ]
-          "Path to scheme code.\n\
+          "Path to scheme source files.\n\
+          \Defaults to './output-chez'."
+          # ArgParser.default (Path.concat [ ".", "output-chez" ])
+    , outputDir:
+        ArgParser.argument [ "--output-dir" ]
+          "Path to output directory for backend files.\n\
           \Defaults to './output-chez'."
           # ArgParser.default (Path.concat [ ".", "output-chez" ])
     }
@@ -168,11 +174,10 @@ runBuild args = do
 
 runBundle :: FilePath -> BundleArgs -> Aff Unit
 runBundle cliRoot args = do
-  let bundlePath = "app"
-  let outPath = Path.concat [bundlePath, "test"]
-  let mainPath = Path.concat [bundlePath, "main.ss"]
-  let mainWpoPath = Path.concat [bundlePath, "main.wpo"]
-  mkdirp bundlePath
+  let outPath = Path.concat [args.outputDir, "test"]
+  let mainPath = Path.concat [args.outputDir, "main.ss"]
+  let mainWpoPath = Path.concat [args.outputDir, "main.wpo"]
+  mkdirp args.outputDir
   let
     mainContent = Array.fold
       [ "(import (Test.Main lib))"
@@ -181,7 +186,9 @@ runBundle cliRoot args = do
   FS.writeTextFile UTF8 mainPath mainContent
   let
     runtimePath = Path.concat [ cliRoot, "vendor" ]
-    libDirs = runtimePath <> ":" <> args.libDir <> ":"
+    runtimeLibPathPair = runtimePath <> "::" <> (Path.concat [args.outputDir, "vendor"])
+    libDirPathPair = args.libDir <> "::" <> args.outputDir
+    libDirs = runtimeLibPathPair <> ":" <> libDirPathPair <> ":"
     arguments = [ "-q", "--libdirs", libDirs ]
   schemeBin <- getSchemeBinary
   spawned <- execa schemeBin arguments identity
