@@ -190,14 +190,17 @@ runBundle cliRoot args = do
     libDirPathPair = args.libDir <> "::" <> args.outputDir
     libDirs = runtimeLibPathPair <> ":" <> libDirPathPair <> ":"
     arguments = [ "-q", "--libdirs", libDirs ]
+  Console.log "Compiling scheme source files object files"
   evalScheme arguments $ Array.fold
     [ "(optimize-level 3)"
+    , "(compile-file-message #f)"
     , "(compile-imported-libraries #t)"
     , "(generate-wpo-files #t)"
     , "(begin "
     , "  (compile-program \"" <> mainPath <> "\")"
     , "  (compile-whole-program \"" <> mainWpoPath <> "\" \"" <> outPath <> "\"))"
     ]
+  Console.log $ "Created " <> outPath
 
 evalScheme :: Array String -> String -> Aff Unit
 evalScheme arguments code = do
