@@ -190,9 +190,7 @@ runBundle cliRoot args = do
     libDirPathPair = args.libDir <> "::" <> args.outputDir
     libDirs = runtimeLibPathPair <> ":" <> libDirPathPair <> ":"
     arguments = [ "-q", "--libdirs", libDirs ]
-  schemeBin <- getSchemeBinary
-  spawned <- execa schemeBin arguments identity
-  spawned.stdin.writeUtf8End $ Array.fold
+  evalScheme arguments $ Array.fold
     [ "(optimize-level 3)"
     , "(compile-imported-libraries #t)"
     , "(generate-wpo-files #t)"
@@ -200,6 +198,12 @@ runBundle cliRoot args = do
     , "  (compile-program \"" <> mainPath <> "\")"
     , "  (compile-whole-program \"" <> mainWpoPath <> "\" \"" <> outPath <> "\"))"
     ]
+
+evalScheme :: Array String -> String -> Aff Unit
+evalScheme arguments code = do
+  schemeBin <- getSchemeBinary
+  spawned <- execa schemeBin arguments identity
+  spawned.stdin.writeUtf8End code
   void $ liftEffect $ Stream.pipe spawned.stdout.stream Process.stdout
   void $ liftEffect $ Stream.pipe spawned.stderr.stream Process.stderr
   void $ spawned.result
