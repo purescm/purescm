@@ -48,6 +48,7 @@ import Partial.Unsafe (unsafeCrashWith)
 import PureScript.Backend.Chez.Constants (moduleForeign, moduleLib, schemeExt)
 import PureScript.Backend.Chez.Convert (codegenModule)
 import PureScript.Backend.Chez.Printer as Printer
+import PureScript.Backend.Chez.Runtime (runtimeModule)
 import PureScript.Backend.Optimizer.Builder (buildModules)
 import PureScript.Backend.Optimizer.CoreFn (Ann, Module(..), ModuleName(..))
 import PureScript.Backend.Optimizer.CoreFn.Json (decodeModule)
@@ -135,6 +136,11 @@ main cliRoot = do
 
 runBuild :: BuildArgs -> Aff Unit
 runBuild args = do
+  let runtimePath = Path.concat [ args.outputDir, "purs", "runtime" ]
+  mkdirp runtimePath
+  let runtimeFilePath = Path.concat [ runtimePath, moduleLib <> schemeExt ]
+  let runtimeContents = Dodo.print plainText Dodo.twoSpaces $ Printer.printLibrary $ runtimeModule
+  FS.writeTextFile UTF8 runtimeFilePath runtimeContents
   coreFnModulesFromOutput args.coreFnDir (pure "**") >>= case _ of
     Left errors -> do
       for_ errors \(Tuple filePath err) -> do
@@ -142,7 +148,6 @@ runBuild args = do
       liftEffect $ Process.exit 1
     Right coreFnModules -> do
       let { directives } = parseDirectiveFile defaultDirectives
-      mkdirp args.outputDir
       coreFnModules # buildModules
         { directives
         , foreignSemantics: coreForeignSemantics
@@ -189,7 +194,7 @@ runBundle cliRoot args = do
   FS.writeTextFile UTF8 mainPath mainContent
   let
     runtimePath = Path.concat [ cliRoot, "vendor" ]
-    runtimeLibPathPair = runtimePath <> "::" <> (Path.concat [ args.outputDir, "vendor" ])
+    runtimeLibPathPair = runtimePath <> "::" <> (Path.concat [ args.outputDir ])
     libDirPathPair = args.libDir <> "::" <> args.outputDir
     libDirs = runtimeLibPathPair <> ":" <> libDirPathPair <> ":"
     arguments = [ "-q", "--libdirs", libDirs ]
