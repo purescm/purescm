@@ -192,13 +192,14 @@ runBundle cliRoot args = do
     arguments = [ "-q", "--libdirs", libDirs ]
   Console.log "Compiling scheme source files object files"
   evalScheme arguments $ Array.fold
-    [ "(optimize-level 3)"
-    , "(compile-file-message #f)"
-    , "(compile-imported-libraries #t)"
-    , "(generate-wpo-files #t)"
-    , "(begin "
+    [ "(top-level-program (import (chezscheme))"
+    , "  (optimize-level 3)"
+    , "  (compile-file-message #f)"
+    , "  (compile-imported-libraries #t)"
+    , "  (generate-wpo-files #t)"
     , "  (compile-program \"" <> mainPath <> "\")"
-    , "  (compile-whole-program \"" <> mainWpoPath <> "\" \"" <> outPath <> "\"))"
+    , "  (compile-whole-program \"" <> mainWpoPath <> "\" \"" <> outPath <> "\")"
+    , ")"
     ]
   Console.log $ "Created " <> outPath
 
