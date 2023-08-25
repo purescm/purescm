@@ -174,7 +174,7 @@ runBuild args = do
 
 runBundle :: FilePath -> BundleArgs -> Aff Unit
 runBundle cliRoot args = do
-  let outPath = Path.concat [args.outputDir, "test"]
+  let outPath = Path.concat [args.outputDir, "main"]
   let mainPath = Path.concat [args.outputDir, "main.ss"]
   let mainWpoPath = Path.concat [args.outputDir, "main.wpo"]
   mkdirp args.outputDir
