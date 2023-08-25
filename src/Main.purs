@@ -38,7 +38,7 @@ import Node.FS.Perms as Perms
 import Node.FS.Stats as Stats
 import Node.FS.Stream (createReadStream, createWriteStream)
 import Node.Glob.Basic (expandGlobs)
-import Node.Library.Execa (execa)
+import Node.Library.Execa (ExecaError, ExecaSuccess, execa)
 import Node.Library.Execa.Which (defaultWhichOptions, which)
 import Node.Path (FilePath)
 import Node.Path as Path
@@ -193,27 +193,30 @@ runBundle cliRoot args = do
     libDirPathPair = args.libDir <> "::" <> args.outputDir
     libDirs = runtimeLibPathPair <> ":" <> libDirPathPair <> ":"
     arguments = [ "-q", "--libdirs", libDirs ]
-  Console.log "Compiling scheme source files object files"
-  evalScheme arguments $ Array.fold
+  res <- evalScheme arguments $ Array.fold
     [ "(top-level-program (import (chezscheme))"
-    , "  (optimize-level 3)"
-    , "  (compile-file-message #f)"
-    , "  (compile-imported-libraries #t)"
-    , "  (generate-wpo-files #t)"
-    , "  (compile-program \"" <> mainPath <> "\")"
-    , "  (compile-whole-program \"" <> mainWpoPath <> "\" \"" <> outPath <> "\")"
-    , ")"
+    , "  (with-exception-handler (lambda (e) (display-condition e (console-error-port)) (newline (console-error-port)) (exit -1))"
+    , "    (lambda ()"
+    , "      (optimize-level 3)"
+    , "      (compile-file-message #f)"
+    , "      (compile-imported-libraries #t)"
+    , "      (generate-wpo-files #t)"
+    , "      (compile-program \"" <> mainPath <> "\")"
+    , "      (compile-whole-program \"" <> mainWpoPath <> "\" \"" <> outPath <> "\")"
+    , ")))"
     ]
-  Console.log $ "Created " <> outPath
+  case res of
+    Left err -> liftEffect $ Process.exit (fromMaybe 1 err.exitCode)
+    Right _ -> Console.log $ "Created " <> outPath
 
-evalScheme :: Array String -> String -> Aff Unit
+evalScheme :: Array String -> String -> Aff (Either ExecaError ExecaSuccess)
 evalScheme arguments code = do
   schemeBin <- getSchemeBinary
   spawned <- execa schemeBin arguments identity
   spawned.stdin.writeUtf8End code
   void $ liftEffect $ Stream.pipe spawned.stdout.stream Process.stdout
   void $ liftEffect $ Stream.pipe spawned.stderr.stream Process.stderr
-  void $ spawned.result
+  spawned.result
 
 getSchemeBinary :: Aff String
 getSchemeBinary = do
