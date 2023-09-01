@@ -8,16 +8,16 @@ To compile PureScript corefn files to scheme:
 purs-backend-chez build
 ```
 
-This will produce output under `output-chez/`. You can then further precompile the scheme files to a single Chez program:
+This will produce output under `output/`. You can then further precompile the scheme files to a single Chez program:
 
 ```
 purs-backend-chez bundle-app --main Main
 ```
 
-which generates a single file `output-chez/main`. To run the compiled program:
+which generates a single file `output/main`. To run the compiled program:
 
 ```
-scheme --program output-chez/main
+scheme --program output/main
 ```
 
 ## Vendored Dependencies

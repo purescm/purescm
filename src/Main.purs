@@ -96,8 +96,8 @@ buildArgsParser =
     , outputDir:
         ArgParser.argument [ "--output-dir" ]
           "Path to output directory for backend files.\n\
-          \Defaults to './output-chez'."
-          # ArgParser.default (Path.concat [ ".", "output-chez" ])
+          \Defaults to './output'."
+          # ArgParser.default (Path.concat [ ".", "output" ])
     }
 
 bundleArgsParser :: ArgParser BundleArgs
@@ -111,13 +111,13 @@ bundleArgsParser =
     , libDir:
         ArgParser.argument [ "--libdir" ]
           "Path to scheme source files.\n\
-          \Defaults to './output-chez'."
-          # ArgParser.default (Path.concat [ ".", "output-chez" ])
+          \Defaults to './output'."
+          # ArgParser.default (Path.concat [ ".", "output" ])
     , outputDir:
         ArgParser.argument [ "--output-dir" ]
           "Path to output directory for backend files.\n\
-          \Defaults to './output-chez'."
-          # ArgParser.default (Path.concat [ ".", "output-chez" ])
+          \Defaults to './output'."
+          # ArgParser.default (Path.concat [ ".", "output" ])
     }
 
 main :: FilePath -> Effect Unit
