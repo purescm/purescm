@@ -188,7 +188,7 @@ runBundle cliRoot args = do
   mkdirp args.outputDir
   let
     mainContent = Array.fold
-      [ "(import (Test.Main lib))"
+      [ "(import (" <> args.moduleName <> " lib))"
       , "(main)"
       ]
   FS.writeTextFile UTF8 mainPath mainContent
