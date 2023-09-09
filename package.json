@@ -1,6 +1,12 @@
 {
   "private": true,
+  "main": "index.js",
+  "type": "module",
+  "bin": {
+    "purs-backend-chez": "./index.js"
+  },
   "scripts": {
-    "test": "spago -x test.dhall test"
+    "test": "spago -x test.dhall test",
+    "build": "spago build --purs-args '-g corefn,js' && purs-backend-es bundle-module -m Main --int-tags --platform=node --minify --to=./bundle/index.js"
   }
 }

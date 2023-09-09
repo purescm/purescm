@@ -35,8 +35,10 @@
               easy-ps.psa
               easy-ps.spago-next
               easy-ps.purescript-language-server
+              easy-ps.purs-backend-es
               pkgs.nodejs-slim-16_x
               pkgs.chez-racket
+              pkgs.esbuild
             ];
           };
         };

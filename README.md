@@ -1,5 +1,25 @@
 # purs-backend-chez
 
+## Usage
+
+To compile PureScript corefn files to scheme:
+
+```
+purs-backend-chez build
+```
+
+This will produce output under `output/`. You can then further precompile the scheme files to a single Chez program:
+
+```
+purs-backend-chez bundle-app --main Main
+```
+
+which generates a single file `output/main`. To run the compiled program:
+
+```
+scheme --program output/main
+```
+
 ## Vendored Dependencies
 
 In order to represent `Array` and record types in `purescm`, the backend has a runtime dependency on implementations of SRFI 214 (Flexvectors) and SRFI 125 (Intermediate hash tables). This is due in part to how [vectors](https://cisco.github.io/ChezScheme/csug9.5/objects.html#./objects:h5) are more like "arrays" than "array lists" and [hashtables](https://cisco.github.io/ChezScheme/csug9.5/objects.html#./objects:h12)' canonical accessor, `hashtable-ref`, takes a `default` value rather than raising an exception.
