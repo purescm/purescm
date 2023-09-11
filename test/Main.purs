@@ -110,8 +110,6 @@ runSnapshotTests { accept, filter } = do
       liftEffect $ Process.exit 1
     Right coreFnModules -> do
       let { directives } = parseDirectiveFile defaultDirectives
-      -- No runtime .ss files needed yet
-      -- copyFile (Path.concat [ "..", "..", "runtime.js" ]) (Path.concat [ testOut, "runtime.js" ])
       coreFnModules # buildModules
         { directives
         , foreignSemantics: coreForeignSemantics -- no chez scheme specific foreign semantics yet
