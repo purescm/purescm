@@ -76,15 +76,6 @@ bufferToUTF8 = liftEffect <<< map (ImmutableBuffer.toString UTF8) <<< freeze
 mkdirp :: FilePath -> Aff Unit
 mkdirp path = FS.mkdir' path { recursive: true, mode: mkPerms Perms.all Perms.all Perms.all }
 
-cpr :: FilePath -> FilePath -> Aff Unit
-cpr from to = do
-  spawned <- execa "cp" [ "-r", from, to ] identity
-  spawned.result >>= case _ of
-    Left e ->
-      Console.error e.message
-    Right _ ->
-      pure unit
-
 loadModuleMain
   :: { libdir :: FilePath
      , scheme :: String

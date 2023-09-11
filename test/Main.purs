@@ -51,7 +51,7 @@ import PureScript.Backend.Optimizer.CoreFn (Comment(..), Module(..), ModuleName(
 import PureScript.Backend.Optimizer.Directives (parseDirectiveFile)
 import PureScript.Backend.Optimizer.Directives.Defaults (defaultDirectives)
 import PureScript.Backend.Optimizer.Semantics.Foreign (coreForeignSemantics)
-import Test.Utils (bufferToUTF8, canRunMain, copyFile, coreFnModulesFromOutput, cpr, execWithStdin, loadModuleMain, mkdirp, spawnFromParent)
+import Test.Utils (bufferToUTF8, canRunMain, copyFile, coreFnModulesFromOutput, execWithStdin, loadModuleMain, mkdirp, spawnFromParent)
 
 type TestArgs =
   { accept :: Boolean
@@ -85,7 +85,7 @@ main = do
 runSnapshotTests :: TestArgs -> Aff Unit
 runSnapshotTests { accept, filter } = do
   currentDirectory <- liftEffect Process.cwd
-  let vendorDirectory = Path.concat [ currentDirectory, "vendor", "purs" ]
+  let vendorDirectory = Path.concat [ currentDirectory, "vendor" ]
   liftEffect $ Process.chdir $ Path.concat [ "test-snapshots" ]
   spawnFromParent "spago" [ "build", "--purs-args", "-g corefn" ]
   snapshotDir <- liftEffect Process.cwd
@@ -103,7 +103,6 @@ runSnapshotTests { accept, filter } = do
   let runtimeFilePath = Path.concat [ runtimePath, moduleLib <> schemeExt ]
   let runtimeContents = Dodo.print plainText Dodo.twoSpaces $ P.printLibrary $ runtimeModule
   FS.writeTextFile UTF8 runtimeFilePath runtimeContents
-  cpr vendorDirectory testOut
   coreFnModulesFromOutput "output" filter >>= case _ of
     Left errors -> do
       for_ errors \(Tuple filePath err) -> do
@@ -156,7 +155,7 @@ runSnapshotTests { accept, filter } = do
           runAcceptedTest = do
             schemeFile <- liftEffect $ Path.resolve [ testOut, name ] $ moduleLib <> schemeExt
             result <- loadModuleMain
-              { libdir: testOut
+              { libdir: vendorDirectory <> ":" <> testOut
               , scheme: schemeBin
               , hasMain
               , modulePath: schemeFile
