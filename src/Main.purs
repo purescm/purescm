@@ -4,27 +4,15 @@ import Prelude
 
 import ArgParse.Basic (ArgParser)
 import ArgParse.Basic as ArgParser
-import Control.Monad.Except (ExceptT(..), lift, runExceptT)
-import Control.Parallel (parTraverse)
-import Data.Argonaut as Json
 import Data.Array as Array
-import Data.Array.NonEmpty (NonEmptyArray)
-import Data.Array.NonEmpty as NonEmptyArray
-import Data.Bifunctor (lmap)
-import Data.Compactable (separate)
 import Data.Either (Either(..), isRight)
-import Data.Foldable (for_, foldl)
-import Data.Lazy as Lazy
-import Data.List (List)
-import Data.Maybe (fromMaybe, maybe)
+import Data.Maybe (fromMaybe)
 import Data.Monoid (power)
 import Data.Newtype (unwrap)
 import Data.Set as Set
-import Data.Set.NonEmpty as NonEmptySet
 import Data.String (Pattern(..))
 import Data.String as String
 import Data.String.CodeUnits as SCU
-import Data.Tuple (Tuple(..))
 import Dodo (plainText)
 import Dodo as Dodo
 import Effect (Effect)
@@ -37,7 +25,6 @@ import Node.FS.Perms (mkPerms)
 import Node.FS.Perms as Perms
 import Node.FS.Stats as Stats
 import Node.FS.Stream (createReadStream, createWriteStream)
-import Node.Glob.Basic (expandGlobs)
 import Node.Library.Execa (ExecaError, ExecaSuccess, execa)
 import Node.Library.Execa.Which (defaultWhichOptions, which)
 import Node.Path (FilePath)
@@ -45,17 +32,12 @@ import Node.Path as Path
 import Node.Process as Process
 import Node.Stream as Stream
 import Partial.Unsafe (unsafeCrashWith)
+import PureScript.Backend.Chez.Builder (basicBuildMain)
 import PureScript.Backend.Chez.Constants (moduleForeign, moduleLib, schemeExt)
 import PureScript.Backend.Chez.Convert (codegenModule)
 import PureScript.Backend.Chez.Printer as Printer
 import PureScript.Backend.Chez.Runtime (runtimeModule)
-import PureScript.Backend.Optimizer.Builder (buildModules)
-import PureScript.Backend.Optimizer.CoreFn (Ann, Module(..), ModuleName(..))
-import PureScript.Backend.Optimizer.CoreFn.Json (decodeModule)
-import PureScript.Backend.Optimizer.CoreFn.Sort (emptyPull, pullResult, resumePull, sortModules)
-import PureScript.Backend.Optimizer.Directives (parseDirectiveFile)
-import PureScript.Backend.Optimizer.Directives.Defaults (defaultDirectives)
-import PureScript.Backend.Optimizer.Semantics.Foreign (coreForeignSemantics)
+import PureScript.Backend.Optimizer.CoreFn (Module(..), ModuleName(..))
 
 type BuildArgs =
   { coreFnDir :: FilePath
@@ -141,44 +123,36 @@ runBuild args = do
   let runtimeFilePath = Path.concat [ runtimePath, moduleLib <> schemeExt ]
   let runtimeContents = Dodo.print plainText Dodo.twoSpaces $ Printer.printLibrary $ runtimeModule
   FS.writeTextFile UTF8 runtimeFilePath runtimeContents
-  coreFnModulesFromOutput args.coreFnDir (pure "**") >>= case _ of
-    Left errors -> do
-      for_ errors \(Tuple filePath err) -> do
-        Console.error $ filePath <> " " <> err
-      liftEffect $ Process.exit 1
-    Right coreFnModules -> do
-      let { directives } = parseDirectiveFile defaultDirectives
-      coreFnModules # buildModules
-        { directives
-        , foreignSemantics: coreForeignSemantics
-        , onCodegenModule: \_ (Module { name: ModuleName name, path }) backend _ -> do
-            let
-              formatted =
-                Dodo.print plainText Dodo.twoSpaces
-                  $ Printer.printLibrary
-                  $ codegenModule backend
-            let modPath = Path.concat [ args.outputDir, name ]
-            mkdirp modPath
-            let libPath = Path.concat [ modPath, moduleLib <> schemeExt ]
-            FS.writeTextFile UTF8 libPath formatted
-            unless (Set.isEmpty backend.foreign) do
-              let
-                foreignSiblingPath =
-                  fromMaybe path (String.stripSuffix (Pattern (Path.extname path)) path) <>
-                    schemeExt
-              let foreignOutputPath = Path.concat [ modPath, moduleForeign <> schemeExt ]
-              res <- attempt $ copyFile foreignSiblingPath foreignOutputPath
-              unless (isRight res) do
-                Console.log $ "  Foreign implementation missing."
-        , onPrepareModule: \build coreFnMod@(Module { name }) -> do
-            let total = show build.moduleCount
-            let index = show (build.moduleIndex + 1)
-            let padding = power " " (SCU.length total - SCU.length index)
-            Console.log $ Array.fold
-              [ "[", padding, index, " of ", total, "] purs-backend-chez: building ", unwrap name ]
-            pure coreFnMod
-        , traceIdents: Set.empty
-        }
+  basicBuildMain
+    { coreFnDirectory: args.coreFnDir
+    , coreFnGlobs: pure "**"
+    , onCodegenModule: \_ (Module { name: ModuleName name, path }) backend _ -> do
+        let
+          formatted =
+            Dodo.print plainText Dodo.twoSpaces
+              $ Printer.printLibrary
+              $ codegenModule backend
+        let modPath = Path.concat [ args.outputDir, name ]
+        mkdirp modPath
+        let libPath = Path.concat [ modPath, moduleLib <> schemeExt ]
+        FS.writeTextFile UTF8 libPath formatted
+        unless (Set.isEmpty backend.foreign) do
+          let
+            foreignSiblingPath =
+              fromMaybe path (String.stripSuffix (Pattern (Path.extname path)) path) <>
+                schemeExt
+          let foreignOutputPath = Path.concat [ modPath, moduleForeign <> schemeExt ]
+          res <- attempt $ copyFile foreignSiblingPath foreignOutputPath
+          unless (isRight res) do
+            Console.log $ "  Foreign implementation missing."
+    , onPrepareModule: \build coreFnMod@(Module { name }) -> do
+        let total = show build.moduleCount
+        let index = show (build.moduleIndex + 1)
+        let padding = power " " (SCU.length total - SCU.length index)
+        Console.log $ Array.fold
+          [ "[", padding, index, " of ", total, "] purs-backend-chez: building ", unwrap name ]
+        pure coreFnMod
+    }
 
 runBundle :: FilePath -> BundleArgs -> Aff Unit
 runBundle cliRoot args = do
@@ -234,42 +208,6 @@ getSchemeBinary = do
       pure "chez"
     else do
       unsafeCrashWith "Could not find scheme binary"
-
-coreFnModulesFromOutput
-  :: String
-  -> NonEmptyArray String
-  -> Aff (Either (NonEmptyArray (Tuple FilePath String)) (List (Module Ann)))
-coreFnModulesFromOutput path globs = runExceptT do
-  paths <- Set.toUnfoldable <$> lift
-    (expandGlobs path ((_ <> "/corefn.json") <$> NonEmptyArray.toArray globs))
-  case NonEmptyArray.toArray globs of
-    [ "**" ] ->
-      sortModules <$> modulesFromPaths paths
-    _ ->
-      go <<< foldl resumePull emptyPull =<< modulesFromPaths paths
-  where
-  modulesFromPaths paths = ExceptT do
-    { left, right } <- separate <$> parTraverse readCoreFnModule paths
-    pure $ maybe (Right right) Left $ NonEmptyArray.fromArray left
-
-  pathFromModuleName (ModuleName mn) =
-    path <> "/" <> mn <> "/corefn.json"
-
-  go pull = case pullResult pull of
-    Left needed ->
-      go <<< foldl resumePull pull =<< modulesFromPaths
-        (pathFromModuleName <$> NonEmptySet.toUnfoldable needed)
-    Right modules ->
-      pure $ Lazy.force modules
-
-readCoreFnModule :: String -> Aff (Either (Tuple FilePath String) (Module Ann))
-readCoreFnModule filePath = do
-  contents <- FS.readTextFile UTF8 filePath
-  case lmap Json.printJsonDecodeError <<< decodeModule =<< Json.jsonParser contents of
-    Left err -> do
-      pure $ Left $ Tuple filePath err
-    Right mod ->
-      pure $ Right mod
 
 mkdirp :: FilePath -> Aff Unit
 mkdirp path = FS.mkdir' path { recursive: true, mode: mkPerms Perms.all Perms.all Perms.all }

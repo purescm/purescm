@@ -15,7 +15,6 @@ import Data.Array (findMap)
 import Data.Array as Array
 import Data.Array.NonEmpty (NonEmptyArray)
 import Data.Either (Either(..), either, isRight)
-import Data.Foldable (for_)
 import Data.Foldable as Foldable
 import Data.Map as Map
 import Data.Maybe (Maybe(..), fromMaybe, isJust)
@@ -26,7 +25,6 @@ import Data.String (Pattern(..))
 import Data.String as String
 import Data.String.CodeUnits as SCU
 import Data.TraversableWithIndex (forWithIndex)
-import Data.Tuple (Tuple(..))
 import Dodo (plainText)
 import Dodo as Dodo
 import Effect (Effect)
@@ -41,17 +39,14 @@ import Node.Library.Execa.Which (defaultWhichOptions, which)
 import Node.Path as Path
 import Node.Process as Process
 import Partial.Unsafe (unsafeCrashWith)
+import PureScript.Backend.Chez.Builder (basicBuildMain)
 import PureScript.Backend.Chez.Constants (moduleForeign, moduleLib, schemeExt)
 import PureScript.Backend.Chez.Convert (codegenModule)
 import PureScript.Backend.Chez.Printer as P
 import PureScript.Backend.Chez.Runtime (runtimeModule)
-import PureScript.Backend.Optimizer.Builder (buildModules)
 import PureScript.Backend.Optimizer.Convert (BackendModule)
 import PureScript.Backend.Optimizer.CoreFn (Comment(..), Module(..), ModuleName(..))
-import PureScript.Backend.Optimizer.Directives (parseDirectiveFile)
-import PureScript.Backend.Optimizer.Directives.Defaults (defaultDirectives)
-import PureScript.Backend.Optimizer.Semantics.Foreign (coreForeignSemantics)
-import Test.Utils (bufferToUTF8, canRunMain, copyFile, coreFnModulesFromOutput, execWithStdin, loadModuleMain, mkdirp, spawnFromParent)
+import Test.Utils (bufferToUTF8, canRunMain, copyFile, execWithStdin, loadModuleMain, mkdirp, spawnFromParent)
 
 type TestArgs =
   { accept :: Boolean
@@ -103,98 +98,90 @@ runSnapshotTests { accept, filter } = do
   let runtimeFilePath = Path.concat [ runtimePath, moduleLib <> schemeExt ]
   let runtimeContents = Dodo.print plainText Dodo.twoSpaces $ P.printLibrary $ runtimeModule
   FS.writeTextFile UTF8 runtimeFilePath runtimeContents
-  coreFnModulesFromOutput "output" filter >>= case _ of
-    Left errors -> do
-      for_ errors \(Tuple filePath err) -> do
-        Console.error $ filePath <> " " <> err
-      liftEffect $ Process.exit 1
-    Right coreFnModules -> do
-      let { directives } = parseDirectiveFile defaultDirectives
-      coreFnModules # buildModules
-        { directives
-        , foreignSemantics: coreForeignSemantics -- no chez scheme specific foreign semantics yet
-        , onCodegenModule: \_ (Module { name: ModuleName name, path }) backend _ -> do
-            let
-              formatted =
-                Dodo.print plainText Dodo.twoSpaces
-                  $ P.printLibrary
-                  $ codegenModule backend
-            let testFileDir = Path.concat [ testOut, name ]
-            let testFilePath = Path.concat [ testFileDir, moduleLib <> schemeExt ]
-            mkdirp testFileDir
-            FS.writeTextFile UTF8 testFilePath formatted
-            unless (Set.isEmpty backend.foreign) do
-              let
-                foreignSiblingPath =
-                  fromMaybe path (String.stripSuffix (Pattern (Path.extname path)) path) <>
-                    schemeExt
-              let foreignOutputPath = Path.concat [ testFileDir, moduleForeign <> schemeExt ]
-              copyFile foreignSiblingPath foreignOutputPath
-            let snapshotDirFile = Path.concat [ snapshotDir, path ]
-            when (Set.member snapshotDirFile snapshotPaths) do
-              originalFileSourceCode <- FS.readTextFile UTF8 snapshotDirFile
-              hasMain <- either unsafeCrashWith pure $
-                canRunMain originalFileSourceCode
-              void $ liftEffect $ Ref.modify
-                (Map.insert name ({ formatted, failsWith: hasFails backend, hasMain }))
-                outputRef
-        , onPrepareModule: \build coreFnMod@(Module { name }) -> do
-            let total = show build.moduleCount
-            let index = show (build.moduleIndex + 1)
-            let padding = power " " (SCU.length total - SCU.length index)
-            Console.log $ "[" <> padding <> index <> " of " <> total <> "] Building " <> unwrap name
-            pure coreFnMod
-        , traceIdents: Set.empty
-        }
-      outputModules <- liftEffect $ Ref.read outputRef
-      results <- forWithIndex outputModules \name ({ formatted, failsWith, hasMain }) -> do
+  basicBuildMain
+    { coreFnDirectory: "output"
+    , coreFnGlobs: filter
+    , onCodegenModule: \_ (Module { name: ModuleName name, path }) backend _ -> do
         let
-          snapshotFilePath = Path.concat [ snapshotsOut, name <> schemeExt ]
-          runAcceptedTest = do
-            schemeFile <- liftEffect $ Path.resolve [ testOut, name ] $ moduleLib <> schemeExt
-            result <- loadModuleMain
-              { libdir: vendorDirectory <> ":" <> testOut
-              , scheme: schemeBin
-              , hasMain
-              , modulePath: schemeFile
-              , moduleName: name
-              }
-            case result of
-              Left { message }
-                | matchesFail message failsWith ->
-                    pure true
-                | otherwise -> do
-                    Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <> " failed."
-                    Console.log message
-                    pure false
-              Right _
-                | isJust failsWith -> do
-                    Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <>
-                      " succeeded when it should have failed."
-                    pure false
-                | otherwise ->
-                    pure true
-        attempt (FS.readTextFile UTF8 snapshotFilePath) >>= case _ of
-          Left _ -> do
-            Console.log $ withGraphics (foreground Yellow) "✓" <> " " <> name <> " saved."
-            FS.writeTextFile UTF8 snapshotFilePath formatted
-            pure true
-          Right prevOutput
-            | formatted == prevOutput ->
-                runAcceptedTest
-            | accept -> do
-                Console.log $ withGraphics (foreground Yellow) "✓" <> " " <> name <> " accepted."
-                FS.writeTextFile UTF8 snapshotFilePath formatted
-                runAcceptedTest
+          formatted =
+            Dodo.print plainText Dodo.twoSpaces
+              $ P.printLibrary
+              $ codegenModule backend
+        let testFileDir = Path.concat [ testOut, name ]
+        let testFilePath = Path.concat [ testFileDir, moduleLib <> schemeExt ]
+        mkdirp testFileDir
+        FS.writeTextFile UTF8 testFilePath formatted
+        unless (Set.isEmpty backend.foreign) do
+          let
+            foreignSiblingPath =
+              fromMaybe path (String.stripSuffix (Pattern (Path.extname path)) path) <>
+                schemeExt
+          let foreignOutputPath = Path.concat [ testFileDir, moduleForeign <> schemeExt ]
+          copyFile foreignSiblingPath foreignOutputPath
+        let snapshotDirFile = Path.concat [ snapshotDir, path ]
+        when (Set.member snapshotDirFile snapshotPaths) do
+          originalFileSourceCode <- FS.readTextFile UTF8 snapshotDirFile
+          hasMain <- either unsafeCrashWith pure $
+            canRunMain originalFileSourceCode
+          void $ liftEffect $ Ref.modify
+            (Map.insert name ({ formatted, failsWith: hasFails backend, hasMain }))
+            outputRef
+    , onPrepareModule: \build coreFnMod@(Module { name }) -> do
+        let total = show build.moduleCount
+        let index = show (build.moduleIndex + 1)
+        let padding = power " " (SCU.length total - SCU.length index)
+        Console.log $ "[" <> padding <> index <> " of " <> total <> "] Building " <> unwrap name
+        pure coreFnMod
+    }
+  outputModules <- liftEffect $ Ref.read outputRef
+  results <- forWithIndex outputModules \name ({ formatted, failsWith, hasMain }) -> do
+    let
+      snapshotFilePath = Path.concat [ snapshotsOut, name <> schemeExt ]
+      runAcceptedTest = do
+        schemeFile <- liftEffect $ Path.resolve [ testOut, name ] $ moduleLib <> schemeExt
+        result <- loadModuleMain
+          { libdir: vendorDirectory <> ":" <> testOut
+          , scheme: schemeBin
+          , hasMain
+          , modulePath: schemeFile
+          , moduleName: name
+          }
+        case result of
+          Left { message }
+            | matchesFail message failsWith ->
+                pure true
             | otherwise -> do
                 Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <> " failed."
-                diff <- bufferToUTF8 <<< _.stdout =<< execWithStdin
-                  ("diff " <> snapshotFilePath <> " -")
-                  formatted
-                Console.log diff
+                Console.log message
                 pure false
-      unless (Foldable.and results) do
-        liftEffect $ Process.exit 1
+          Right _
+            | isJust failsWith -> do
+                Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <>
+                  " succeeded when it should have failed."
+                pure false
+            | otherwise ->
+                pure true
+    attempt (FS.readTextFile UTF8 snapshotFilePath) >>= case _ of
+      Left _ -> do
+        Console.log $ withGraphics (foreground Yellow) "✓" <> " " <> name <> " saved."
+        FS.writeTextFile UTF8 snapshotFilePath formatted
+        pure true
+      Right prevOutput
+        | formatted == prevOutput ->
+            runAcceptedTest
+        | accept -> do
+            Console.log $ withGraphics (foreground Yellow) "✓" <> " " <> name <> " accepted."
+            FS.writeTextFile UTF8 snapshotFilePath formatted
+            runAcceptedTest
+        | otherwise -> do
+            Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <> " failed."
+            diff <- bufferToUTF8 <<< _.stdout =<< execWithStdin
+              ("diff " <> snapshotFilePath <> " -")
+              formatted
+            Console.log diff
+            pure false
+  unless (Foldable.and results) do
+    liftEffect $ Process.exit 1
 
 hasFails :: BackendModule -> Maybe String
 hasFails = findMap go <<< _.comments
