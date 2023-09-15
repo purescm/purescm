@@ -14,9 +14,11 @@ import Data.Either (Either(..))
 import Data.Foldable (foldl, for_)
 import Data.Lazy as Lazy
 import Data.List (List)
-import Data.Maybe (maybe)
+import Data.Map as Map
+import Data.Maybe (Maybe, fromMaybe, maybe)
 import Data.Set as Set
 import Data.Set.NonEmpty as NonEmptySet
+import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
 import Effect.Aff (Aff)
 import Effect.Class (liftEffect)
@@ -33,11 +35,14 @@ import PureScript.Backend.Optimizer.CoreFn.Json (decodeModule)
 import PureScript.Backend.Optimizer.CoreFn.Sort (emptyPull, pullResult, resumePull, sortModules)
 import PureScript.Backend.Optimizer.Directives (parseDirectiveFile)
 import PureScript.Backend.Optimizer.Directives.Defaults (defaultDirectives)
+import PureScript.Backend.Optimizer.Semantics (InlineDirectiveMap)
 import PureScript.Backend.Optimizer.Semantics.Foreign (coreForeignSemantics)
+import PureScript.CST.Errors (printParseError)
 
 basicBuildMain
   :: { coreFnDirectory :: FilePath
      , coreFnGlobs :: NonEmptyArray String
+     , externalDirectivesFile :: Maybe FilePath
      , onCodegenModule :: BuildEnv -> Module Ann -> BackendModule -> OptimizationSteps -> Aff Unit
      , onPrepareModule :: BuildEnv -> Module Ann -> Aff (Module Ann)
      }
@@ -49,9 +54,10 @@ basicBuildMain options = do
         Console.error $ filePath <> " " <> err
       liftEffect $ Process.exit 1
     Right coreFnModules -> do
-      let { directives } = parseDirectiveFile defaultDirectives
+      externalDirectives <- map (fromMaybe Map.empty) $ traverse externalDirectivesFromFile
+        options.externalDirectivesFile
       coreFnModules # buildModules
-        { directives
+        { directives: Map.union externalDirectives (parseDirectiveFile defaultDirectives).directives
         , foreignSemantics: coreForeignSemantics
         , onCodegenModule: options.onCodegenModule
         , onPrepareModule: options.onPrepareModule
@@ -93,3 +99,15 @@ readCoreFnModule filePath = do
       pure $ Left $ Tuple filePath err
     Right mod ->
       pure $ Right mod
+
+externalDirectivesFromFile :: FilePath -> Aff InlineDirectiveMap
+externalDirectivesFromFile filePath = do
+  fileContent <- FS.readTextFile UTF8 filePath
+  let { errors, directives } = parseDirectiveFile fileContent
+  for_ errors \(Tuple directive { position, error }) -> do
+    Console.warn $ "Invalid directive [" <> show (position.line + 1) <> ":"
+      <> show (position.column + 1)
+      <> "]"
+    Console.warn $ "  " <> directive
+    Console.warn $ "  " <> printParseError error
+  pure directives
