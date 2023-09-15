@@ -6,7 +6,7 @@ import ArgParse.Basic (ArgParser)
 import ArgParse.Basic as ArgParser
 import Data.Array as Array
 import Data.Either (Either(..), isRight)
-import Data.Maybe (fromMaybe)
+import Data.Maybe (Maybe, fromMaybe)
 import Data.Monoid (power)
 import Data.Newtype (unwrap)
 import Data.Set as Set
@@ -16,9 +16,10 @@ import Data.String.CodeUnits as SCU
 import Dodo (plainText)
 import Dodo as Dodo
 import Effect (Effect)
-import Effect.Aff (Aff, attempt, effectCanceler, error, launchAff_, makeAff, throwError)
+import Effect.Aff (Aff, attempt, effectCanceler, error, launchAff_, makeAff, runAff_, throwError)
 import Effect.Class (liftEffect)
 import Effect.Class.Console as Console
+import Effect.Exception (message)
 import Node.Encoding (Encoding(..))
 import Node.FS.Aff as FS
 import Node.FS.Perms (mkPerms)
@@ -42,6 +43,7 @@ import PureScript.Backend.Optimizer.CoreFn (Module(..), ModuleName(..))
 type BuildArgs =
   { coreFnDir :: FilePath
   , outputDir :: FilePath
+  , directivesFile :: Maybe FilePath
   }
 
 type BundleArgs =
@@ -80,6 +82,10 @@ buildArgsParser =
           "Path to output directory for backend files.\n\
           \Defaults to './output'."
           # ArgParser.default (Path.concat [ ".", "output" ])
+    , directivesFile:
+        ArgParser.argument [ "--directives" ]
+          "Path to file that defines external inline directives (optional)."
+          # ArgParser.optional
     }
 
 bundleArgsParser :: ArgParser BundleArgs
@@ -112,7 +118,11 @@ main cliRoot = do
     Left err ->
       Console.error $ ArgParser.printArgError err
     Right (Build args) ->
-      launchAff_ $ runBuild args
+      flip runAff_ (runBuild args) case _ of
+        Right _ -> pure unit
+        Left err -> do
+          Console.error (message err)
+          Process.exit 1
     Right (Bundle arg) ->
       launchAff_ $ runBundle cliRoot arg
 
@@ -126,6 +136,7 @@ runBuild args = do
   basicBuildMain
     { coreFnDirectory: args.coreFnDir
     , coreFnGlobs: pure "**"
+    , externalDirectivesFile: args.directivesFile
     , onCodegenModule: \_ (Module { name: ModuleName name, path }) backend _ -> do
         let
           formatted =

@@ -101,6 +101,7 @@ runSnapshotTests { accept, filter } = do
   basicBuildMain
     { coreFnDirectory: "output"
     , coreFnGlobs: filter
+    , externalDirectivesFile: Nothing
     , onCodegenModule: \_ (Module { name: ModuleName name, path }) backend _ -> do
         let
           formatted =
