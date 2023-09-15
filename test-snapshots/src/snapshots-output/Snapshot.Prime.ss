@@ -104,11 +104,11 @@
             (scm:string-append ((rt:object-ref dictNormal0 "normal") a2) ((rt:object-ref dictNormal11 "normal") b3)))))))
 
   (scm:define instanceName$p
-    (rt:make-object "normal" (scm:lambda (v0)
+    (rt:make-object (scm:cons "normal" (scm:lambda (v0)
       (scm:cond
         [(F1? v0) "F1"]
         [(F2? v0) "F2"]
-        [scm:else (scm:raise (scm:condition (scm:make-error) (scm:make-message-condition "Failed pattern match")))]))))
+        [scm:else (scm:raise (scm:condition (scm:make-error) (scm:make-message-condition "Failed pattern match")))])))))
 
   (scm:define useInstance
     "F1F2")

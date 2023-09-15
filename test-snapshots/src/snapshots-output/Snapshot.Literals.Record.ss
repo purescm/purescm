@@ -16,8 +16,8 @@
     (prefix (Type.Proxy lib) Type.Proxy.))
 
   (scm:define insert
-    (((Record.insert (rt:make-object "reflectSymbol" (scm:lambda (_)
-      "anotherField"))) (scm:gensym "purs-undefined")) (scm:gensym "purs-undefined")))
+    (((Record.insert (rt:make-object (scm:cons "reflectSymbol" (scm:lambda (_)
+      "anotherField")))) (scm:gensym "purs-undefined")) (scm:gensym "purs-undefined")))
 
   (scm:define recordUpdate
     (scm:lambda (v0)
@@ -34,7 +34,7 @@
 
   (scm:define main
     (scm:let*
-      ([r0 (rt:make-object "fooBarBaz" 5)]
+      ([r0 (rt:make-object (scm:cons "fooBarBaz" 5))]
        [s1 (recordUpdate r0)]
        [t2 ((recordAddField (scm:gensym "purs-undefined")) s1)]
        [_3 (Test.Assert.assert (scm:fx=? (recordAccess t2) 10))])
