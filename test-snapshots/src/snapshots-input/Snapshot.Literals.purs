@@ -29,8 +29,3 @@ record = {}
 
 record2 :: { foo :: String }
 record2 = { foo: "bar" }
-
-record3 :: { foo :: Int }
-record3 = { foo: minusTwo }
-
-foreign import minusTwo :: Int

@@ -5,6 +5,7 @@
   (export
     insert
     main
+    minusTwo
     recordAccess
     recordAddField
     recordUpdate)
@@ -13,7 +14,8 @@
     (prefix (purs runtime lib) rt:)
     (prefix (Record lib) Record.)
     (prefix (Test.Assert lib) Test.Assert.)
-    (prefix (Type.Proxy lib) Type.Proxy.))
+    (prefix (Type.Proxy lib) Type.Proxy.)
+    (Snapshot.Literals.Record foreign))
 
   (scm:define insert
     (((Record.insert (rt:make-object (scm:cons "reflectSymbol" (scm:lambda (_)
@@ -42,5 +44,6 @@
           (scm:let*
             ([_ (_3)]
              [_ ((Test.Assert.assert (scm:fx=? (rt:object-ref t2 "anotherField") 42)))]
-             [_ ((Test.Assert.assert (scm:fx=? (recordAccess s1) 10)))])
-              ((Test.Assert.assert (scm:fx=? (recordAccess r0) 5))))))))
+             [_ ((Test.Assert.assert (scm:fx=? (recordAccess s1) 10)))]
+             [_ ((Test.Assert.assert (scm:fx=? (recordAccess r0) 5)))])
+              ((Test.Assert.assert (scm:fx=? (recordAccess (rt:make-object (scm:cons "fooBarBaz" minusTwo))) minusTwo))))))))

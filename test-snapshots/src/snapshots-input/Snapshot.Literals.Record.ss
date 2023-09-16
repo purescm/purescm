@@ -1,4 +1,4 @@
-(library (Snapshot.Literals foreign) 
+(library (Snapshot.Literals.Record foreign) 
   (export minusTwo) 
   (import (chezscheme))
   
