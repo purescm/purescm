@@ -9,16 +9,22 @@
     boolean2
     char
     int
+    minusTwo
     number
     record
     record2
+    record3
     string)
   (import
     (prefix (chezscheme) scm:)
-    (prefix (purs runtime lib) rt:))
+    (prefix (purs runtime lib) rt:)
+    (Snapshot.Literals foreign))
 
   (scm:define string
     "string")
+
+  (scm:define record3
+    (rt:make-object (scm:cons "foo" minusTwo)))
 
   (scm:define record2
     (rt:make-object (scm:cons "foo" "bar")))
