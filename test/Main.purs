@@ -147,21 +147,21 @@ runSnapshotTests { accept, filter } = do
           , modulePath: schemeFile
           , moduleName: name
           }
-        case result of
-          Left { message }
-            | matchesFail message failsWith ->
-                pure true
-            | otherwise -> do
-                Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <> " failed."
-                Console.log message
-                pure false
-          Right _
+        case result.exitCode of
+          Just 0
             | isJust failsWith -> do
                 Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <>
                   " succeeded when it should have failed."
                 pure false
             | otherwise ->
                 pure true
+          _
+            | matchesFail result.message failsWith ->
+                pure true
+            | otherwise -> do
+                Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <> " failed."
+                Console.log result.message
+                pure false
     attempt (FS.readTextFile UTF8 snapshotFilePath) >>= case _ of
       Left _ -> do
         Console.log $ withGraphics (foreground Yellow) "✓" <> " " <> name <> " saved."
@@ -182,7 +182,7 @@ runSnapshotTests { accept, filter } = do
             Console.log diff
             pure false
   unless (Foldable.and results) do
-    liftEffect $ Process.exit 1
+    liftEffect $ Process.exit' 1
 
 hasFails :: BackendModule -> Maybe String
 hasFails = findMap go <<< _.comments

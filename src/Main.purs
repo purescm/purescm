@@ -6,7 +6,7 @@ import ArgParse.Basic (ArgParser)
 import ArgParse.Basic as ArgParser
 import Data.Array as Array
 import Data.Either (Either(..), isRight)
-import Data.Maybe (Maybe, fromMaybe)
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Monoid (power)
 import Data.Newtype (unwrap)
 import Data.Set as Set
@@ -21,12 +21,13 @@ import Effect.Class (liftEffect)
 import Effect.Class.Console as Console
 import Effect.Exception (message)
 import Node.Encoding (Encoding(..))
+import Node.EventEmitter (on_)
 import Node.FS.Aff as FS
 import Node.FS.Perms (mkPerms)
 import Node.FS.Perms as Perms
 import Node.FS.Stats as Stats
 import Node.FS.Stream (createReadStream, createWriteStream)
-import Node.Library.Execa (ExecaError, ExecaSuccess, execa)
+import Node.Library.Execa (ExecaResult, execa)
 import Node.Library.Execa.Which (defaultWhichOptions, which)
 import Node.Path (FilePath)
 import Node.Path as Path
@@ -122,7 +123,7 @@ main cliRoot = do
         Right _ -> pure unit
         Left err -> do
           Console.error (message err)
-          Process.exit 1
+          Process.exit' 1
     Right (Bundle arg) ->
       launchAff_ $ runBundle cliRoot arg
 
@@ -195,18 +196,18 @@ runBundle cliRoot args = do
     , "      (compile-whole-program \"" <> mainWpoPath <> "\" \"" <> outPath <> "\")"
     , ")))"
     ]
-  case res of
-    Left err -> liftEffect $ Process.exit (fromMaybe 1 err.exitCode)
-    Right _ -> Console.log $ "Created " <> outPath
+  case res.exitCode of
+    Just 0 -> Console.log $ "Created " <> outPath
+    _ -> liftEffect $ Process.exit' (fromMaybe 1 res.exitCode)
 
-evalScheme :: Array String -> String -> Aff (Either ExecaError ExecaSuccess)
+evalScheme :: Array String -> String -> Aff ExecaResult
 evalScheme arguments code = do
   schemeBin <- getSchemeBinary
   spawned <- execa schemeBin arguments identity
   spawned.stdin.writeUtf8End code
   void $ liftEffect $ Stream.pipe spawned.stdout.stream Process.stdout
   void $ liftEffect $ Stream.pipe spawned.stderr.stream Process.stderr
-  spawned.result
+  spawned.getResult
 
 getSchemeBinary :: Aff String
 getSchemeBinary = do
@@ -231,13 +232,9 @@ copyFile from to = do
   makeAff \k -> do
     src <- createReadStream from
     dst <- createWriteStream to
-    res <- Stream.pipe src dst
-    Stream.onError src (k <<< Left)
-    Stream.onError dst (k <<< Left)
-    Stream.onError res (k <<< Left)
-    Stream.onFinish res (k (Right unit))
+    Stream.pipe src dst
+    src # on_ Stream.errorH (k <<< Left)
+    dst # on_ Stream.errorH (k <<< Left)
     pure $ effectCanceler do
-      Stream.destroy res
       Stream.destroy dst
       Stream.destroy src
-

@@ -13,20 +13,23 @@ import Data.Array as Array
 import Data.Array.NonEmpty as NonEmptyArray
 import Data.Array.NonEmpty.Internal (NonEmptyArray(..))
 import Data.Either (Either(..))
+import Data.Maybe (Maybe(..))
 import Data.Posix.Signal (Signal(..))
 import Effect.Aff (Aff, effectCanceler, error, makeAff, throwError)
 import Effect.Class (liftEffect)
 import Node.Buffer (Buffer, freeze)
 import Node.Buffer.Immutable as ImmutableBuffer
-import Node.ChildProcess (ExecResult, Exit(..), defaultExecOptions, defaultSpawnOptions, inherit)
+import Node.ChildProcess (ExecResult)
 import Node.ChildProcess as ChildProcess
+import Node.ChildProcess.Types (Exit(..), inherit)
 import Node.Encoding (Encoding(..))
+import Node.EventEmitter (on_)
 import Node.FS.Aff as FS
 import Node.FS.Perms (mkPerms)
 import Node.FS.Perms as Perms
 import Node.FS.Stats as Stats
 import Node.FS.Stream (createReadStream, createWriteStream)
-import Node.Library.Execa (ExecaError, ExecaSuccess, execa)
+import Node.Library.Execa (ExecaResult, execa)
 import Node.Path (FilePath)
 import Node.Process as Process
 import Node.Stream as Stream
@@ -36,22 +39,21 @@ import PureScript.CST.Types as CSTT
 
 spawnFromParent :: String -> Array String -> Aff Unit
 spawnFromParent command args = makeAff \k -> do
-  childProc <- ChildProcess.spawn command args defaultSpawnOptions { stdio = inherit }
-  ChildProcess.onExit childProc case _ of
+  childProc <- ChildProcess.spawn' command args (_ { appendStdio = Just [ inherit ] })
+  childProc # on_ ChildProcess.exitH case _ of
     Normally code
-      | code > 0 -> Process.exit code
+      | code > 0 -> Process.exit' code
       | otherwise -> k (Right unit)
-    BySignal _ ->
-      Process.exit 1
+    BySignal _ -> Process.exit' 1
   pure $ effectCanceler do
-    ChildProcess.kill SIGABRT childProc
+    void $ ChildProcess.killSignal SIGABRT childProc
 
 execWithStdin :: String -> String -> Aff ExecResult
 execWithStdin command input = makeAff \k -> do
-  childProc <- ChildProcess.exec command defaultExecOptions (k <<< pure)
-  _ <- Stream.writeString (ChildProcess.stdin childProc) UTF8 input mempty
-  Stream.end (ChildProcess.stdin childProc) mempty
-  pure $ effectCanceler $ ChildProcess.kill SIGABRT childProc
+  childProc <- ChildProcess.exec' command identity (k <<< pure)
+  _ <- Stream.writeString' (ChildProcess.stdin childProc) UTF8 input mempty
+  Stream.end' (ChildProcess.stdin childProc) mempty
+  pure $ effectCanceler $ void $ ChildProcess.killSignal SIGABRT childProc
 
 bufferToUTF8 :: Buffer -> Aff String
 bufferToUTF8 = liftEffect <<< map (ImmutableBuffer.toString UTF8) <<< freeze
@@ -66,7 +68,7 @@ loadModuleMain
      , moduleName :: String
      , modulePath :: String
      }
-  -> Aff (Either ExecaError ExecaSuccess)
+  -> Aff ExecaResult
 loadModuleMain options = do
   let
     arguments :: Array String
@@ -82,7 +84,7 @@ loadModuleMain options = do
       , options.moduleName
       , " lib)) (with-exception-handler (lambda (e) (display-condition e (console-error-port)) (newline (console-error-port)) (exit -1)) (lambda () (main)))"
       ]
-  spawned.result
+  spawned.getResult
 
 copyFile :: FilePath -> FilePath -> Aff Unit
 copyFile from to = do
@@ -92,13 +94,10 @@ copyFile from to = do
   makeAff \k -> do
     src <- createReadStream from
     dst <- createWriteStream to
-    res <- Stream.pipe src dst
-    Stream.onError src (k <<< Left)
-    Stream.onError dst (k <<< Left)
-    Stream.onError res (k <<< Left)
-    Stream.onFinish res (k (Right unit))
+    Stream.pipe src dst
+    src # on_ Stream.errorH (k <<< Left)
+    dst # on_ Stream.errorH (k <<< Left)
     pure $ effectCanceler do
-      Stream.destroy res
       Stream.destroy dst
       Stream.destroy src
 
