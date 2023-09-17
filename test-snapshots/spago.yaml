@@ -14,8 +14,8 @@ workspace:
     registry: 19.1.0
   extra_packages:
     prelude:
-      git: https://github.com/purescm/purescript-prelude.git
-      ref: 63ff5a24beba191c8fda919a58489f36bde2d506
+      git: https://github.com/anttih/purescript-prelude.git
+      ref: 9f6bf7617b54431e084c593ea98ae379f0cbc5c7
       dependencies: []
     partial:
       git: https://github.com/purescm/purescript-partial.git
