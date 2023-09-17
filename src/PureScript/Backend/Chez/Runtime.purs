@@ -56,13 +56,9 @@ createMakeObjectFn = makeExportedValue "make-object" $ S.List
   [ S.Identifier $ scmPrefixed "lambda"
   , S.Identifier "args"
   , S.List
-      [ S.Identifier $ scmPrefixed "apply"
-      , S.Identifier "srfi:125:hash-table"
-      , S.List
-          [ S.Identifier $ scmPrefixed "cons"
-          , S.Identifier "string-comparator"
-          , S.Identifier "args"
-          ]
+      [ S.Identifier "srfi:125:alist->hash-table"
+      , S.Identifier "args"
+      , S.Identifier "string-comparator"
       ]
   ]
 

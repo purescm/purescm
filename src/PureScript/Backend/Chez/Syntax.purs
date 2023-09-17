@@ -124,9 +124,10 @@ app f x = List [ f, x ]
 record :: Array (Prop ChezExpr) -> ChezExpr
 record r = do
   let
-    field :: Prop ChezExpr -> Array ChezExpr
-    field (Prop k v) = [ StringExpr $ Json.stringify $ Json.fromString k, v ]
-  List $ [ Identifier $ rtPrefixed "make-object" ] <> Array.foldMap field r
+    field :: Prop ChezExpr -> ChezExpr
+    field (Prop k v) = List
+      [ Identifier $ scmPrefixed "cons", StringExpr $ Json.stringify $ Json.fromString k, v ]
+  List $ [ Identifier $ rtPrefixed "make-object" ] <> (field <$> r)
 
 quote :: ChezExpr -> ChezExpr
 quote e = app (Identifier $ scmPrefixed "quote") e
