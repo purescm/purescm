@@ -169,4 +169,4 @@ recordUpdate h f = do
         ]
   Let false
     (NonEmptyArray.singleton (Tuple "$record" (List [ Identifier $ rtPrefixed "object-copy", h ])))
-    (List $ [ Identifier $ scmPrefixed "begin" ] <> (field <$> f))
+    (List $ [ Identifier $ scmPrefixed "begin" ] <> (field <$> f) <> [ Identifier "$record" ])
