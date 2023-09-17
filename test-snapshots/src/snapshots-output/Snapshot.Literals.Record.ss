@@ -24,7 +24,7 @@
   (scm:define recordUpdate
     (scm:lambda (v0)
       (scm:let ([$record (rt:object-copy v0)])
-        (scm:begin (rt:object-set! $record "fooBarBaz" 10)))))
+        (scm:begin (rt:object-set! $record "fooBarBaz" 10) $record))))
 
   (scm:define recordAddField
     (scm:lambda (_)
