@@ -232,9 +232,11 @@ copyFile from to = do
   makeAff \k -> do
     src <- createReadStream from
     dst <- createWriteStream to
-    Stream.pipe src dst
-    src # on_ Stream.errorH (k <<< Left)
+    src # on_ Stream.errorH \err -> do
+      Stream.destroy' dst $ error $ "Got error in src stream: " <> message err
+      k $ Left err
     dst # on_ Stream.errorH (k <<< Left)
+    Stream.pipe src dst
     pure $ effectCanceler do
       Stream.destroy dst
       Stream.destroy src

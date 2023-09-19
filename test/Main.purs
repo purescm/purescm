@@ -46,7 +46,7 @@ import PureScript.Backend.Chez.Printer as P
 import PureScript.Backend.Chez.Runtime (runtimeModule)
 import PureScript.Backend.Optimizer.Convert (BackendModule)
 import PureScript.Backend.Optimizer.CoreFn (Comment(..), Module(..), ModuleName(..))
-import Test.Utils (bufferToUTF8, canRunMain, copyFile, execWithStdin, loadModuleMain, mkdirp, spawnFromParent)
+import Test.Utils (canRunMain, copyFile, execWithStdin, loadModuleMain, mkdirp, spawnFromParent)
 
 type TestArgs =
   { accept :: Boolean
@@ -176,9 +176,7 @@ runSnapshotTests { accept, filter } = do
             runAcceptedTest
         | otherwise -> do
             Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <> " failed."
-            diff <- bufferToUTF8 <<< _.stdout =<< execWithStdin
-              ("diff " <> snapshotFilePath <> " -")
-              formatted
+            diff <- _.stdout <$> execWithStdin "diff" [ snapshotFilePath, "-" ] formatted
             Console.log diff
             pure false
   unless (Foldable.and results) do
