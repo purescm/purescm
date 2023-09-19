@@ -205,8 +205,8 @@ evalScheme arguments code = do
   schemeBin <- getSchemeBinary
   spawned <- execa schemeBin arguments identity
   spawned.stdin.writeUtf8End code
-  void $ liftEffect $ Stream.pipe spawned.stdout.stream Process.stdout
-  void $ liftEffect $ Stream.pipe spawned.stderr.stream Process.stderr
+  spawned.stdout.pipeToParentStdout
+  spawned.stderr.pipeToParentStderr
   spawned.getResult
 
 getSchemeBinary :: Aff String
