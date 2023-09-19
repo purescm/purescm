@@ -33,7 +33,6 @@ package:
       - node-child-process
       - node-execa
       - node-fs
-      - node-fs-aff
       - node-glob-basic
       - node-path
       - node-process
@@ -44,8 +43,34 @@ package:
       - refs
 workspace:
   package_set:
-    registry: 20.0.1
+    registry: 41.2.0
   extra_packages:
+    dodo-printer:
+      git: https://github.com/natefaubion/purescript-dodo-printer.git
+      ref: 831c5c963a57ca4bfd62f96335267d7d0785851d
+      dependencies:
+        - aff
+        - ansi
+        - arrays
+        - avar
+        - console
+        - control
+        - effect
+        - either
+        - exceptions
+        - foldable-traversable
+        - integers
+        - lists
+        - maybe
+        - minibench
+        - newtype
+        - parallel
+        - partial
+        - posix-types
+        - prelude
+        - safe-coerce
+        - strings
+        - tuples
     backend-optimizer:
       git: https://github.com/aristanetworks/purescript-backend-optimizer
       ref: 9de6bd8a00d31e51502a062d10bbddf53a401039
@@ -53,12 +78,12 @@ workspace:
         - aff
         - ansi
         - argonaut
-        - argonaut-codecs
         - argparse-basic
         - arrays
         - bifunctors
         - console
         - control
+        - datetime
         - debug
         - dodo-printer
         - effect
@@ -73,24 +98,53 @@ workspace:
         - lists
         - maybe
         - newtype
-        - node-buffer
-        - node-child-process
-        - node-fs
-        - node-fs-aff
-        - node-glob-basic
-        - node-path
-        - node-process
-        - node-streams
+        - now
+        - numbers
         - ordered-collections
+        - orders
         - parallel
         - partial
         - posix-types
         - prelude
         - refs
         - safe-coerce
+        - st
         - strings
         - transformers
         - tuples
+        - unsafe-coerce
+    language-cst-parser:
+      git: https://github.com/natefaubion/purescript-language-cst-parser.git
+      ref: bf5623e08e1f43f923d4ff3c29cafbda25128768
+      dependencies:
+        - arrays
+        - console
+        - const
+        - control
+        - effect
+        - either
+        - enums
+        - foldable-traversable
+        - free
+        - functions
+        - functors
+        - identity
+        - integers
+        - lazy
+        - lists
+        - maybe
+        - newtype
+        - node-process
+        - numbers
+        - ordered-collections
+        - partial
+        - prelude
+        - st
+        - strings
+        - transformers
+        - tuples
+        - typelevel-prelude
+        - unfoldable
         - unsafe-coerce
     node-glob-basic:
       git: https://github.com/natefaubion/purescript-node-glob-basic.git
@@ -101,7 +155,7 @@ workspace:
         - effect
         - lists
         - maybe
-        - node-fs-aff
+        - node-fs
         - node-path
         - node-process
         - ordered-collections

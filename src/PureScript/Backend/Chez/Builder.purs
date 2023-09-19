@@ -52,7 +52,7 @@ basicBuildMain options = do
     Left errors -> do
       for_ errors \(Tuple filePath err) -> do
         Console.error $ filePath <> " " <> err
-      liftEffect $ Process.exit 1
+      liftEffect $ Process.exit' 1
     Right coreFnModules -> do
       externalDirectives <- map (fromMaybe Map.empty) $ traverse externalDirectivesFromFile
         options.externalDirectivesFile

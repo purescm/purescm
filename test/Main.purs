@@ -46,7 +46,7 @@ import PureScript.Backend.Chez.Printer as P
 import PureScript.Backend.Chez.Runtime (runtimeModule)
 import PureScript.Backend.Optimizer.Convert (BackendModule)
 import PureScript.Backend.Optimizer.CoreFn (Comment(..), Module(..), ModuleName(..))
-import Test.Utils (bufferToUTF8, canRunMain, copyFile, execWithStdin, loadModuleMain, mkdirp, spawnFromParent)
+import Test.Utils (canRunMain, copyFile, execWithStdin, loadModuleMain, mkdirp, spawnFromParent)
 
 type TestArgs =
   { accept :: Boolean
@@ -147,21 +147,21 @@ runSnapshotTests { accept, filter } = do
           , modulePath: schemeFile
           , moduleName: name
           }
-        case result of
-          Left { message }
-            | matchesFail message failsWith ->
-                pure true
-            | otherwise -> do
-                Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <> " failed."
-                Console.log message
-                pure false
-          Right _
+        case result.exitCode of
+          Just 0
             | isJust failsWith -> do
                 Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <>
                   " succeeded when it should have failed."
                 pure false
             | otherwise ->
                 pure true
+          _
+            | matchesFail result.message failsWith ->
+                pure true
+            | otherwise -> do
+                Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <> " failed."
+                Console.log result.message
+                pure false
     attempt (FS.readTextFile UTF8 snapshotFilePath) >>= case _ of
       Left _ -> do
         Console.log $ withGraphics (foreground Yellow) "✓" <> " " <> name <> " saved."
@@ -176,13 +176,11 @@ runSnapshotTests { accept, filter } = do
             runAcceptedTest
         | otherwise -> do
             Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <> " failed."
-            diff <- bufferToUTF8 <<< _.stdout =<< execWithStdin
-              ("diff " <> snapshotFilePath <> " -")
-              formatted
+            diff <- _.stdout <$> execWithStdin "diff" [ snapshotFilePath, "-" ] formatted
             Console.log diff
             pure false
   unless (Foldable.and results) do
-    liftEffect $ Process.exit 1
+    liftEffect $ Process.exit' 1
 
 hasFails :: BackendModule -> Maybe String
 hasFails = findMap go <<< _.comments
