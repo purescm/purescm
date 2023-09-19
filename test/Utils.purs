@@ -80,10 +80,11 @@ loadModuleMain options = do
   spawned <- execa options.scheme arguments identity
   when options.hasMain do
     spawned.stdin.writeUtf8End $ Array.fold
-      [ "(import ("
-      , options.moduleName
-      , " lib)) (with-exception-handler (lambda (e) (display-condition e (console-error-port)) (newline (console-error-port)) (exit -1)) (lambda () (main)))"
+      [ "(base-exception-handler (lambda (e) (display-condition e (console-error-port)) (newline (console-error-port)) (exit -1)))"
+      , "(top-level-program (import (" <> options.moduleName <> " lib)) (main))"
       ]
+  void $ liftEffect $ Stream.pipe spawned.stdout.stream Process.stdout
+  void $ liftEffect $ Stream.pipe spawned.stderr.stream Process.stderr
   spawned.getResult
 
 copyFile :: FilePath -> FilePath -> Aff Unit

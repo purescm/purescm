@@ -20,13 +20,17 @@ recordUpdate = _ { fooBarBaz = 10 }
 recordAddField :: forall r. Lacks "anotherField" r => { fooBarBaz :: Int | r } -> { fooBarBaz :: Int, anotherField :: Int | r }
 recordAddField = Record.insert (Proxy :: _ "anotherField") 42
 
+foreign import minusTwo :: Int
+
 main :: Effect Unit
 main = do
   let r = { fooBarBaz: 5 }
   let s = recordUpdate r
   let t = recordAddField s
+  let u = { fooBarBaz: minusTwo }
 
   assert $ recordAccess t == 10
   assert $ t.anotherField == 42
   assert $ recordAccess s == 10
   assert $ recordAccess r == 5
+  assert $ recordAccess u == minusTwo

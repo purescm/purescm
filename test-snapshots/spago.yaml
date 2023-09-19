@@ -15,7 +15,7 @@ workspace:
   extra_packages:
     prelude:
       git: https://github.com/purescm/purescript-prelude.git
-      ref: 63ff5a24beba191c8fda919a58489f36bde2d506
+      ref: b250d70c7bc6528c12e0598c50ad87b7267ccfa9
       dependencies: []
     partial:
       git: https://github.com/purescm/purescript-partial.git
