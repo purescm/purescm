@@ -73,7 +73,7 @@ workspace:
         - tuples
     backend-optimizer:
       git: https://github.com/aristanetworks/purescript-backend-optimizer
-      ref: 9de6bd8a00d31e51502a062d10bbddf53a401039
+      ref: 54b82ac23143dd47bfafaf52dec81dd7ccf2b490
       dependencies:
         - aff
         - ansi
