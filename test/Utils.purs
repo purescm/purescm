@@ -85,6 +85,7 @@ copyFile from to = do
       Stream.destroy' dst $ error $ "Got error in src stream: " <> message err
       k $ Left err
     dst # on_ Stream.errorH (k <<< Left)
+    dst # on_ Stream.finishH (k (Right unit))
     Stream.pipe src dst
     pure $ effectCanceler do
       Stream.destroy dst
