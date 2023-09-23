@@ -1,12 +1,17 @@
 {
-  "private": true,
+  "name": "purescm",
+  "version": "1.0.0",
   "main": "index.js",
   "type": "module",
+  "files": [
+    "vendor/**/*.sls",
+    "bundle/index.js"
+  ],
   "bin": {
-    "purs-backend-chez": "./index.js"
+    "purescm": "./index.js"
   },
   "scripts": {
-    "test": "spago -x test.dhall test",
+    "test": "spago test",
     "build": "spago build --purs-args '-g corefn,js' && purs-backend-es bundle-module -m Main --int-tags --platform=node --minify --to=./bundle/index.js"
   }
 }
