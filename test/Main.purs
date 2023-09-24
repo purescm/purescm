@@ -82,7 +82,7 @@ runSnapshotTests { accept, filter } = do
   currentDirectory <- liftEffect Process.cwd
   let vendorDirectory = Path.concat [ currentDirectory, "vendor" ]
   liftEffect $ Process.chdir $ Path.concat [ "test-snapshots" ]
-  spawnFromParent "spago" [ "build", "--purs-args", "-g corefn" ]
+  spawnFromParent "spago" [ "build" ]
   snapshotDir <- liftEffect Process.cwd
   snapshotPaths <- expandGlobs (Path.concat [ snapshotDir, "src", "snapshots-input" ])
     [ "Snapshot.*.purs" ]
