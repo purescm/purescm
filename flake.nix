@@ -12,33 +12,32 @@
       flake = false;
     };
 
-    easy-purescript-nix = {
-      url = "github:f-f/easy-purescript-nix";
-      flake = false;
-    };
+    purescript-overlay.url = "github:f-f/purescript-overlay";
+    purescript-overlay.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, flake-utils, easy-purescript-nix, ... }:
+  outputs = { self, nixpkgs, flake-utils, purescript-overlay, ... }:
     let supportedSystems = [ "x86_64-linux" "x86_64-darwin" "aarch64-darwin" ];
     in flake-utils.lib.eachSystem supportedSystems (system:
       let
-        pkgs = import nixpkgs { inherit system; };
-        easy-ps = pkgs.callPackage easy-purescript-nix { };
+        overlays = [ purescript-overlay.overlays.default ];
+        pkgs = import nixpkgs {
+          inherit system overlays;
+        };
       in
       {
         devShells = {
           default = pkgs.mkShell {
             name = "purescm";
-            packages = [
-              easy-ps.purs-0_15_8
-              easy-ps.purs-tidy
-              easy-ps.psa
-              easy-ps.spago-next
-              easy-ps.purescript-language-server
-              easy-ps.purs-backend-es
-              pkgs.nodejs-slim-16_x
-              pkgs.chez-racket
-              pkgs.esbuild
+            packages = with pkgs; [
+              purescript-language-server
+              purs-backend-es
+              purs-bin.purs-0_15_10
+              purs-tidy
+              spago-unstable
+              nodejs-slim-16_x
+              chez-racket
+              esbuild
             ];
           };
         };
