@@ -10,6 +10,10 @@ package:
     - record
     - refs
 workspace:
+  backend:
+    cmd: ../index.dev.js
+    args:
+      - build
   package_set:
     registry: 19.1.0
   extra_packages:
@@ -53,7 +57,7 @@ workspace:
     record:
       git: https://github.com/purescm/purescript-record.git
       ref: 8a993da0d328f72167a4742e0e2a428a790510bc
-      dependencies: 
+      dependencies:
         - functions
         - prelude
         - unsafe-coerce
