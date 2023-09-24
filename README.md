@@ -1,17 +1,33 @@
-# purs-backend-chez
+# purescm - Chez Scheme backend for PureScript
+
+## Installation
+
+```
+npm i --global purescm@next
+```
 
 ## Usage
 
-To compile PureScript corefn files to scheme:
+The best way to use `purescm` is to use the [spago](https://github.com/purescript/spago) integration for alternative PureScript backends. In `spago.yaml` use the `backend` config like so:
 
 ```
-purs-backend-chez build
+workspace:
+  backend:
+    cmd: purescm
+    args:
+      - "build"
+```
+
+Then to compile your `purescm` project you can run:
+
+```
+spago build
 ```
 
 This will produce output under `output/`. You can then further precompile the scheme files to a single Chez program:
 
 ```
-purs-backend-chez bundle-app --main Main
+purescm bundle-app --main Main
 ```
 
 which generates a single file `output/main`. To run the compiled program:
@@ -52,4 +68,4 @@ Copyright 1984-2022 Cisco Systems, Inc.
 To run snapshots, run `npm run test`.
 To overwrite old snapshots with the latest output, run `npm run test -- -a "--accept"`.
 To add a new snapshot, create a file called `Snapshot.X.purs` where `X` indicates what is being tested.
-If a snapshot needs a dependency, install it by running `spago -x test-snapshots/spago.dhall install <packages...>`. The snapshots have their own `spago.dhall` file so as not to pollute the `purs-backend-chez` binary with unneeded dependencies.
+If a snapshot needs a dependency, install it by running `spago -x test-snapshots/spago.dhall install <packages...>`. The snapshots have their own `spago.dhall` file so as not to pollute the `purescm` binary with unneeded dependencies.
