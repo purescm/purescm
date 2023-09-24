@@ -12,6 +12,6 @@
   },
   "scripts": {
     "test": "spago test",
-    "build": "spago build && purs-backend-es bundle-module -m Main --int-tags --platform=node --minify --to=./bundle/index.js"
+    "build": "spago build --purs-args '-g corefn,js' && purs-backend-es bundle-module -m Main --int-tags --platform=node --minify --to=./bundle/index.js"
   }
 }
