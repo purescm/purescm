@@ -113,7 +113,7 @@ main :: FilePath -> Effect Unit
 main cliRoot = do
   cliArgs <- Array.drop 2 <$> Process.argv
   case
-    ArgParser.parseArgs "purs-backend-chez" "Chez Scheme backend for PureScript" cliArgParser
+    ArgParser.parseArgs "purescm" "Chez Scheme backend for PureScript" cliArgParser
       cliArgs
     of
     Left err ->
@@ -162,7 +162,7 @@ runBuild args = do
         let index = show (build.moduleIndex + 1)
         let padding = power " " (SCU.length total - SCU.length index)
         Console.log $ Array.fold
-          [ "[", padding, index, " of ", total, "] purs-backend-chez: building ", unwrap name ]
+          [ "[", padding, index, " of ", total, "] purescm: building ", unwrap name ]
         pure coreFnMod
     }
 

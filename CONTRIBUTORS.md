@@ -1,6 +1,6 @@
 ## Contributors
 
-This file lists the contributors to the `purs-backend-chez` project, and the terms under which their code is licensed.
+This file lists the contributors to the `purescm` project, and the terms under which their code is licensed.
 
 ### Contributors using Standard Terms
 
