@@ -14,24 +14,20 @@ import ArgParse.Basic as ArgParser
 import Data.Array (findMap)
 import Data.Array as Array
 import Data.Array.NonEmpty (NonEmptyArray)
+import Data.Array.NonEmpty as NonEmptyArray
 import Data.Either (Either(..), either, isRight)
 import Data.Foldable as Foldable
-import Data.Map as Map
-import Data.Maybe (Maybe(..), fromMaybe, isJust)
+import Data.Maybe (Maybe(..))
 import Data.Monoid (power)
-import Data.Newtype (unwrap)
 import Data.Set as Set
-import Data.String (Pattern(..))
+import Data.String (Pattern(..), Replacement(..))
 import Data.String as String
 import Data.String.CodeUnits as SCU
 import Data.TraversableWithIndex (forWithIndex)
-import Dodo (plainText)
-import Dodo as Dodo
 import Effect (Effect)
 import Effect.Aff (Aff, attempt, launchAff_)
 import Effect.Class (liftEffect)
 import Effect.Class.Console as Console
-import Effect.Ref as Ref
 import Node.Encoding (Encoding(..))
 import Node.FS.Aff as FS
 import Node.Glob.Basic (expandGlobs)
@@ -39,14 +35,10 @@ import Node.Library.Execa.Which (defaultWhichOptions, which)
 import Node.Path as Path
 import Node.Process as Process
 import Partial.Unsafe (unsafeCrashWith)
-import PureScript.Backend.Chez.Builder (basicBuildMain)
-import PureScript.Backend.Chez.Constants (moduleForeign, moduleLib, schemeExt)
-import PureScript.Backend.Chez.Convert (codegenModule)
-import PureScript.Backend.Chez.Printer as P
-import PureScript.Backend.Chez.Runtime (runtimeModule)
+import PureScript.Backend.Chez.Constants (moduleLib, schemeExt)
 import PureScript.Backend.Optimizer.Convert (BackendModule)
-import PureScript.Backend.Optimizer.CoreFn (Comment(..), Module(..), ModuleName(..))
-import Test.Utils (canRunMain, copyFile, execWithStdin, loadModuleMain, mkdirp, spawnFromParent)
+import PureScript.Backend.Optimizer.CoreFn (Comment(..))
+import Test.Utils (canRunMain, execWithStdin, loadModuleMain, mkdirp, spawnFromParent)
 
 type TestArgs =
   { accept :: Boolean
@@ -81,104 +73,84 @@ runSnapshotTests :: TestArgs -> Aff Unit
 runSnapshotTests { accept, filter } = do
   currentDirectory <- liftEffect Process.cwd
   let vendorDirectory = Path.concat [ currentDirectory, "vendor" ]
+
+  -- Get into the snapshot project and build it
   liftEffect $ Process.chdir $ Path.concat [ "test-snapshots" ]
-  spawnFromParent "spago" [ "build", "--purs-args", "-g corefn" ]
+  spawnFromParent "spago" [ "build" ]
   snapshotDir <- liftEffect Process.cwd
-  snapshotPaths <- expandGlobs (Path.concat [ snapshotDir, "src", "snapshots-input" ])
-    [ "Snapshot.*.purs" ]
-  schemeBin <- getSchemeBinary
-  outputRef <- liftEffect $ Ref.new Map.empty
+  let snapshotInput = Path.concat [ snapshotDir, "src", "snapshots-input" ]
   let snapshotsOut = Path.concat [ snapshotDir, "src", "snapshots-output" ]
-  let testOut = Path.concat [ snapshotDir, "test-out" ]
+  snapshotPaths <- expandGlobs snapshotInput (map (_ <> ".purs") $ NonEmptyArray.toArray filter)
   mkdirp snapshotsOut
-  mkdirp testOut
-  -- RUNTIME
-  let runtimePath = Path.concat [ testOut, "purs", "runtime" ]
-  mkdirp runtimePath
-  let runtimeFilePath = Path.concat [ runtimePath, moduleLib <> schemeExt ]
-  let runtimeContents = Dodo.print plainText Dodo.twoSpaces $ P.printLibrary $ runtimeModule
-  FS.writeTextFile UTF8 runtimeFilePath runtimeContents
-  basicBuildMain
-    { coreFnDirectory: "output"
-    , coreFnGlobs: filter
-    , externalDirectivesFile: Nothing
-    , onCodegenModule: \_ (Module { name: ModuleName name, path }) backend _ -> do
-        let
-          formatted =
-            Dodo.print plainText Dodo.twoSpaces
-              $ P.printLibrary
-              $ codegenModule backend
-        let testFileDir = Path.concat [ testOut, name ]
-        let testFilePath = Path.concat [ testFileDir, moduleLib <> schemeExt ]
-        mkdirp testFileDir
-        FS.writeTextFile UTF8 testFilePath formatted
-        unless (Set.isEmpty backend.foreign) do
-          let
-            foreignSiblingPath =
-              fromMaybe path (String.stripSuffix (Pattern (Path.extname path)) path) <>
-                schemeExt
-          let foreignOutputPath = Path.concat [ testFileDir, moduleForeign <> schemeExt ]
-          copyFile foreignSiblingPath foreignOutputPath
-        let snapshotDirFile = Path.concat [ snapshotDir, path ]
-        when (Set.member snapshotDirFile snapshotPaths) do
-          originalFileSourceCode <- FS.readTextFile UTF8 snapshotDirFile
-          hasMain <- either unsafeCrashWith pure $
-            canRunMain originalFileSourceCode
-          void $ liftEffect $ Ref.modify
-            (Map.insert name ({ formatted, failsWith: hasFails backend, hasMain }))
-            outputRef
-    , onPrepareModule: \build coreFnMod@(Module { name }) -> do
-        let total = show build.moduleCount
-        let index = show (build.moduleIndex + 1)
-        let padding = power " " (SCU.length total - SCU.length index)
-        Console.log $ "[" <> padding <> index <> " of " <> total <> "] Building " <> unwrap name
-        pure coreFnMod
-    }
-  outputModules <- liftEffect $ Ref.read outputRef
-  results <- forWithIndex outputModules \name ({ formatted, failsWith, hasMain }) -> do
+  schemeBin <- getSchemeBinary
+
+  -- Tests return true or false depending on whether they pass
+  results <- forWithIndex (Set.toUnfoldable snapshotPaths :: Array _) \i snapshotInputPath -> do
     let
-      snapshotFilePath = Path.concat [ snapshotsOut, name <> schemeExt ]
+      -- The idea here is that we get files from the `output` directory, and check if
+      -- they look like the ones we have in `snapshots-output`
+      expectedSnapshotOutputPath =
+        String.replace (Pattern snapshotInput) (Replacement snapshotsOut)
+          $ String.replace (Pattern ".purs") (Replacement schemeExt)
+          $ snapshotInputPath
+      actualSnapshotOutputPath =
+        String.replace (Pattern snapshotInput) (Replacement (Path.concat [ snapshotDir, "output" ]))
+          $ String.replace (Pattern ".purs") (Replacement $ "/" <> moduleLib <> schemeExt)
+          $ snapshotInputPath
+      name = String.replace (Pattern $ snapshotInput <> "/") (Replacement "")
+        $ String.replace (Pattern ".purs") (Replacement "")
+        $ snapshotInputPath
+
+    let
+      total = show $ Set.size snapshotPaths
+      index = show i
+      padding = power " " (SCU.length total - SCU.length index)
+    Console.log $ "[" <> padding <> index <> " of " <> total <> "] Running test " <> name
+
+    -- Read the file generated by purescm
+    actualSnapshotOutput <- FS.readTextFile UTF8 actualSnapshotOutputPath
+    purescriptFile <- FS.readTextFile UTF8 snapshotInputPath
+    hasMain <- either unsafeCrashWith pure $ canRunMain purescriptFile
+
+    let
       runAcceptedTest = do
-        schemeFile <- liftEffect $ Path.resolve [ testOut, name ] $ moduleLib <> schemeExt
         result <- loadModuleMain
-          { libdir: vendorDirectory <> ":" <> testOut
+          { libdir: vendorDirectory <> ":" <> "output"
           , scheme: schemeBin
           , hasMain
-          , modulePath: schemeFile
+          , modulePath: actualSnapshotOutputPath
           , moduleName: name
           }
         case result.exitCode of
-          Just 0
-            | isJust failsWith -> do
-                Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <>
-                  " succeeded when it should have failed."
-                pure false
-            | otherwise ->
-                pure true
-          _
-            | matchesFail result.message failsWith ->
-                pure true
-            | otherwise -> do
-                Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <> " failed."
-                Console.log result.message
-                pure false
-    attempt (FS.readTextFile UTF8 snapshotFilePath) >>= case _ of
+          Just 0 -> pure true
+          _ -> do
+            Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <> " failed."
+            Console.log result.message
+            pure false
+
+    attempt (FS.readTextFile UTF8 expectedSnapshotOutputPath) >>= case _ of
+      -- If we don't have this fixture yet, save it
       Left _ -> do
         Console.log $ withGraphics (foreground Yellow) "✓" <> " " <> name <> " saved."
-        FS.writeTextFile UTF8 snapshotFilePath formatted
+        FS.writeTextFile UTF8 expectedSnapshotOutputPath actualSnapshotOutput
         pure true
       Right prevOutput
-        | formatted == prevOutput ->
+        -- We have and it looks the same  -> run it
+        | actualSnapshotOutput == prevOutput ->
             runAcceptedTest
+        -- We have it but we are accepting the new output -> save it, and run it afterwards
         | accept -> do
             Console.log $ withGraphics (foreground Yellow) "✓" <> " " <> name <> " accepted."
-            FS.writeTextFile UTF8 snapshotFilePath formatted
+            FS.writeTextFile UTF8 expectedSnapshotOutputPath actualSnapshotOutput
             runAcceptedTest
+        -- We have it and it's broken
         | otherwise -> do
             Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <> " failed."
-            diff <- _.stdout <$> execWithStdin "diff" [ snapshotFilePath, "-" ] formatted
+            diff <- _.stdout <$> execWithStdin "diff" [ expectedSnapshotOutputPath, "-" ]
+              actualSnapshotOutput
             Console.log diff
             pure false
+
   unless (Foldable.and results) do
     liftEffect $ Process.exit' 1
 
