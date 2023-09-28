@@ -9,6 +9,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.build.outputs.version }}
     steps:
       - uses: actions/checkout@v2
 
@@ -29,8 +31,10 @@ jobs:
         uses: cachix/install-nix-action@v16
 
       - name: Build the project
+        id: build
         run: |
           nix-shell --command "spago build"
+          echo "version=test" >> "$GITHUB_OUTPUT"
 
       - name: Run tests
         run: |
@@ -39,3 +43,22 @@ jobs:
       - name: Check Formatting
         run: |
           nix-shell --command "purs-tidy check src test"
+  publish:
+    runs-on: ubuntu-latest
+    needs:
+     - "build"
+    if: "${{ github.event_name == 'push' && github.ref == 'refs/head/ci-publish' }}"
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v2
+      with:
+        node-version: "16"
+        registry-url: "https://registry.npmjs.org"
+    - name: "Publish npm package"
+      working-directory: "npm-package"
+      env:
+        BUILD_VERSION: "${{ needs.build.outputs.version }}"
+        NODE_AUTH_TOKEN: "${{ secrets.NPM_TOKEN }}"
+    run: |
+      npm version --no-git-tag-version --allow-same-version "$BUILD_VERSION"
+      npm publish --tag next
