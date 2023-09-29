@@ -70,7 +70,8 @@ cliArgParser =
         do Bundle <$> bundleArgsParser <* ArgParser.flagHelp
     ]
     <* ArgParser.flagHelp
-    <* ArgParser.flagInfo [ "--version", "-v" ] "Show the current version of purescm." Version.version
+    <* ArgParser.flagInfo [ "--version", "-v" ] "Show the current version of purescm."
+      Version.version
 
 buildArgsParser :: ArgParser BuildArgs
 buildArgsParser =
