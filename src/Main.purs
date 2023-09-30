@@ -70,20 +70,20 @@ cliArgParser =
     [ ArgParser.command [ "build" ]
         "Builds Chez scheme code from corefn.json files"
         do
-          Build <$> buildArgsParser <* ArgParser.flagHelp
+          Build <$> buildCmdArgParser <* ArgParser.flagHelp
     , ArgParser.command [ "bundle-app" ]
         "Bundles .so files to a single program file."
-        do Bundle <$> bundleArgsParser <* ArgParser.flagHelp
+        do Bundle <$> bundleCmdArgParser <* ArgParser.flagHelp
     , ArgParser.command [ "run" ]
         "Runs a compiled scheme program by invoking the main function using the Chez interpreter."
-        do Run <$> runArgsParser <* ArgParser.flagHelp
+        do Run <$> runCmdArgParser <* ArgParser.flagHelp
     ]
     <* ArgParser.flagHelp
     <* ArgParser.flagInfo [ "--version", "-v" ] "Show the current version of purescm."
       BuildInfo.buildInfo.packages.purescm
 
-buildArgsParser :: ArgParser BuildArgs
-buildArgsParser =
+buildCmdArgParser :: ArgParser BuildArgs
+buildCmdArgParser =
   ArgParser.fromRecord
     { coreFnDir:
         ArgParser.argument [ "--corefn-dir" ]
@@ -101,8 +101,8 @@ buildArgsParser =
           # ArgParser.optional
     }
 
-bundleArgsParser :: ArgParser BundleArgs
-bundleArgsParser =
+bundleCmdArgParser :: ArgParser BundleArgs
+bundleCmdArgParser =
   ArgParser.fromRecord
     { moduleName:
         ArgParser.argument [ "--main" ]
@@ -121,8 +121,8 @@ bundleArgsParser =
           # ArgParser.default (Path.concat [ ".", "output" ])
     }
 
-runArgsParser :: ArgParser RunArgs
-runArgsParser =
+runCmdArgParser :: ArgParser RunArgs
+runCmdArgParser =
   ArgParser.fromRecord
     { moduleName:
         ArgParser.argument [ "--main" ]
