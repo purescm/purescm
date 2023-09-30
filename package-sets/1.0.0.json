@@ -5,7 +5,8 @@
   "packages": {
     "prelude": {
       "git": "https://github.com/purescm/purescript-prelude.git",
-      "ref": "b250d70c7bc6528c12e0598c50ad87b7267ccfa9"
+      "ref": "b250d70c7bc6528c12e0598c50ad87b7267ccfa9",
+      "dependencies": []
     },
     "partial": {
       "git": "https://github.com/purescm/purescript-partial.git",
