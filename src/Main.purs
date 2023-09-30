@@ -75,7 +75,8 @@ cliArgParser =
         "Bundles .so files to a single program file."
         do Bundle <$> bundleCmdArgParser <* ArgParser.flagHelp
     , ArgParser.command [ "run" ]
-        "Runs a compiled scheme program by invoking the main function using the Chez interpreter."
+        "Runs a compiled scheme program by invoking\n\
+        \the main function using the Chez interpreter."
         do Run <$> runCmdArgParser <* ArgParser.flagHelp
     ]
     <* ArgParser.flagHelp
