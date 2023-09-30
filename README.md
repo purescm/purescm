@@ -24,13 +24,21 @@ Then to compile your `purescm` project you can run:
 spago build
 ```
 
-This will produce output under `output/`. You can then further precompile the scheme files to a single Chez program:
+This will produce output under `output/`. You can run the compiled program with:
 
 ```
-purescm bundle-app --main Main
+purescm run
 ```
 
-which generates a single file `output/main`. To run the compiled program:
+### Bundling
+
+Scheme files can be precompiled to a single Chez program:
+
+```
+purescm bundle-app
+```
+
+which generates a single file `output/main` which can be run with `scheme` or `petite`:
 
 ```
 scheme --program output/main
