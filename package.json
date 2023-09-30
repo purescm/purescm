@@ -11,7 +11,7 @@
     "purescm": "./index.js"
   },
   "scripts": {
-    "version": "echo 'export const version = \"v'$npm_package_version'\";' > ./src/Version.js && git add .",
+    "version": "sed -i'' -e \"s|version:.*|version: $npm_package_version|g\" spago.yaml",
     "test": "spago test",
     "build": "spago build && purs-backend-es bundle-module -m Main --int-tags --platform=node --minify --to=./bundle/index.js",
     "prerelease": "npm version prerelease --preid=pre",

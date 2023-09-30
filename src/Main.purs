@@ -40,7 +40,7 @@ import PureScript.Backend.Chez.Convert (codegenModule)
 import PureScript.Backend.Chez.Printer as Printer
 import PureScript.Backend.Chez.Runtime (runtimeModule)
 import PureScript.Backend.Optimizer.CoreFn (Module(..), ModuleName(..))
-import Version as Version
+import Spago.Generated.BuildInfo as BuildInfo
 
 type BuildArgs =
   { coreFnDir :: FilePath
@@ -71,7 +71,7 @@ cliArgParser =
     ]
     <* ArgParser.flagHelp
     <* ArgParser.flagInfo [ "--version", "-v" ] "Show the current version of purescm."
-      Version.version
+      BuildInfo.buildInfo.packages.purescm
 
 buildArgsParser :: ArgParser BuildArgs
 buildArgsParser =
