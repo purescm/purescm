@@ -54,9 +54,15 @@ type BundleArgs =
   , outputDir :: FilePath
   }
 
+type RunArgs =
+  { moduleName :: String
+  , libDir :: FilePath
+  }
+
 data Command
   = Build BuildArgs
   | Bundle BundleArgs
+  | Run RunArgs
 
 cliArgParser :: ArgParser Command
 cliArgParser =
@@ -64,17 +70,21 @@ cliArgParser =
     [ ArgParser.command [ "build" ]
         "Builds Chez scheme code from corefn.json files"
         do
-          Build <$> buildArgsParser <* ArgParser.flagHelp
+          Build <$> buildCmdArgParser <* ArgParser.flagHelp
     , ArgParser.command [ "bundle-app" ]
         "Bundles .so files to a single program file."
-        do Bundle <$> bundleArgsParser <* ArgParser.flagHelp
+        do Bundle <$> bundleCmdArgParser <* ArgParser.flagHelp
+    , ArgParser.command [ "run" ]
+        "Runs a compiled scheme program by invoking\n\
+        \the main function using the Chez interpreter."
+        do Run <$> runCmdArgParser <* ArgParser.flagHelp
     ]
     <* ArgParser.flagHelp
     <* ArgParser.flagInfo [ "--version", "-v" ] "Show the current version of purescm."
       BuildInfo.buildInfo.packages.purescm
 
-buildArgsParser :: ArgParser BuildArgs
-buildArgsParser =
+buildCmdArgParser :: ArgParser BuildArgs
+buildCmdArgParser =
   ArgParser.fromRecord
     { coreFnDir:
         ArgParser.argument [ "--corefn-dir" ]
@@ -92,8 +102,8 @@ buildArgsParser =
           # ArgParser.optional
     }
 
-bundleArgsParser :: ArgParser BundleArgs
-bundleArgsParser =
+bundleCmdArgParser :: ArgParser BundleArgs
+bundleCmdArgParser =
   ArgParser.fromRecord
     { moduleName:
         ArgParser.argument [ "--main" ]
@@ -108,6 +118,21 @@ bundleArgsParser =
     , outputDir:
         ArgParser.argument [ "--output-dir" ]
           "Path to output directory for backend files.\n\
+          \Defaults to './output'."
+          # ArgParser.default (Path.concat [ ".", "output" ])
+    }
+
+runCmdArgParser :: ArgParser RunArgs
+runCmdArgParser =
+  ArgParser.fromRecord
+    { moduleName:
+        ArgParser.argument [ "--main" ]
+          "Module to be used as the application's entry point.\n\
+          \Defaults to 'Main'."
+          # ArgParser.default "Main"
+    , libDir:
+        ArgParser.argument [ "--libdir" ]
+          "Path to scheme source files.\n\
           \Defaults to './output'."
           # ArgParser.default (Path.concat [ ".", "output" ])
     }
@@ -129,6 +154,8 @@ main cliRoot = do
           Process.exit' 1
     Right (Bundle arg) ->
       launchAff_ $ runBundle cliRoot arg
+    Right (Run arg) ->
+      launchAff_ $ runRun cliRoot arg
 
 runBuild :: BuildArgs -> Aff Unit
 runBuild args = do
@@ -202,6 +229,20 @@ runBundle cliRoot args = do
   case res.exitCode of
     Just 0 -> Console.log $ "Created " <> outPath
     _ -> liftEffect $ Process.exit' (fromMaybe 1 res.exitCode)
+
+runRun :: FilePath -> RunArgs -> Aff Unit
+runRun cliRoot args = do
+  let
+    runtimePath = Path.concat [ cliRoot, "vendor" ]
+    libDirs = runtimePath <> ":" <> args.libDir <> ":"
+    arguments = [ "-q", "--libdirs", libDirs ]
+  res <- evalScheme arguments $ Array.fold
+    [ "(base-exception-handler (lambda (e) (display-condition e (console-error-port)) (newline (console-error-port)) (exit -1)))"
+    , "(top-level-program (import (" <> args.moduleName <> " lib)) (main))"
+    ]
+  case res.exitCode of
+    Just 0 -> pure unit
+    _ -> liftEffect $ Process.setExitCode (fromMaybe 1 res.exitCode)
 
 evalScheme :: Array String -> String -> Aff ExecaResult
 evalScheme arguments code = do
