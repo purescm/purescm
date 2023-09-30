@@ -1,6 +1,11 @@
 package:
   name: purescm
-  version: 1.0.1-pre.0
+  publish:
+    version: 1.0.1
+    license: Apache-2.0
+    location:
+      githubOwner: purescm
+      githubRepo: purescm
   dependencies:
     - aff
     - argonaut
