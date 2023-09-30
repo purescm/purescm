@@ -1,6 +1,6 @@
 {
   "name": "purescm",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "index.js",
   "type": "module",
   "files": [
@@ -11,7 +11,9 @@
     "purescm": "./index.js"
   },
   "scripts": {
+    "version": "sed -i'' -e \"s|version:.*|version: $npm_package_version|g\" spago.yaml",
     "test": "spago test",
-    "build": "spago build && purs-backend-es bundle-module -m Main --int-tags --platform=node --minify --to=./bundle/index.js"
+    "build": "spago build && purs-backend-es bundle-module -m Main --int-tags --platform=node --minify --to=./bundle/index.js",
+    "prepublishOnly": "rm -rf bundle output output-es && npm run build"
   }
 }
