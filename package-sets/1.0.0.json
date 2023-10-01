@@ -68,14 +68,14 @@
     },
     "safe-coerce": {
       "git": "https://github.com/purescript/purescript-safe-coerce.git",
-      "ref": "7fa799ae80a38b8d948efcb52608e58e198b3da7"
+      "ref": "7fa799ae80a38b8d948efcb52608e58e198b3da7",
       "dependencies": [
         "unsafe-coerce"
       ]
     },
     "newtype": {
       "git": "https://github.com/purescript/purescript-newtype.git",
-      "ref": "0a0563efca18fe6b2e9d4cc0b8574e507dee4453"
+      "ref": "0a0563efca18fe6b2e9d4cc0b8574e507dee4453",
       "dependencies": [
         "prelude",
         "safe-coerce"
