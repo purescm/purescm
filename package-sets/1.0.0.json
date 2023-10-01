@@ -78,7 +78,7 @@
       "ref": "0a0563efca18fe6b2e9d4cc0b8574e507dee4453"
       "dependencies": [
         "prelude",
-        "safe-coerce",
+        "safe-coerce"
       ]
     }
   }
