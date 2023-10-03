@@ -1,29 +1,14 @@
 {
-  "version": "1.0.0",
   "compiler": "0.15.10",
   "published": "2023-09-30",
+  "version": "1.0.0",
   "packages": {
-    "prelude": {
-      "git": "https://github.com/purescm/purescript-prelude.git",
-      "ref": "b250d70c7bc6528c12e0598c50ad87b7267ccfa9",
-      "dependencies": []
-    },
-    "partial": {
-      "git": "https://github.com/purescm/purescript-partial.git",
-      "ref": "d8b6daf068e4aab0ad85a42d0f890ed37f416923",
-      "dependencies": []
-    },
-    "functions": {
-      "git": "https://github.com/purescm/purescript-functions.git",
-      "ref": "94e0a9a3b7f831abebcb1bf65587fca03f04e034",
+    "assert": {
+      "git": "https://github.com/purescm/purescript-assert.git",
+      "ref": "348b91f4542cf75efab232e8eb52dd5d3e6a9435",
       "dependencies": [
-        "prelude"
-      ]
-    },
-    "effect": {
-      "git": "https://github.com/purescm/purescript-effect.git",
-      "ref": "8aee2c2fbf5425bf8fa4537a5ad2070170622acf",
-      "dependencies": [
+        "console",
+        "effect",
         "prelude"
       ]
     },
@@ -35,22 +20,30 @@
         "prelude"
       ]
     },
-    "assert": {
-      "git": "https://github.com/purescm/purescript-assert.git",
-      "ref": "348b91f4542cf75efab232e8eb52dd5d3e6a9435",
+    "effect": {
+      "git": "https://github.com/purescm/purescript-effect.git",
+      "ref": "8aee2c2fbf5425bf8fa4537a5ad2070170622acf",
       "dependencies": [
-        "console",
-        "effect",
         "prelude"
       ]
     },
-    "refs": {
-      "git": "https://github.com/purescm/purescript-refs.git",
-      "ref": "2ac82d3867e8ac02df03b6a04d635e0acd4b95db",
+    "functions": {
+      "git": "https://github.com/purescm/purescript-functions.git",
+      "ref": "94e0a9a3b7f831abebcb1bf65587fca03f04e034",
       "dependencies": [
-        "effect",
         "prelude"
       ]
+    },
+    "newtype": "5.0.0",
+    "partial": {
+      "git": "https://github.com/purescm/purescript-partial.git",
+      "ref": "d8b6daf068e4aab0ad85a42d0f890ed37f416923",
+      "dependencies": []
+    },
+    "prelude": {
+      "git": "https://github.com/purescm/purescript-prelude.git",
+      "ref": "b250d70c7bc6528c12e0598c50ad87b7267ccfa9",
+      "dependencies": []
     },
     "record": {
       "git": "https://github.com/purescm/purescript-record.git",
@@ -61,13 +54,19 @@
         "unsafe-coerce"
       ]
     },
+    "refs": {
+      "git": "https://github.com/purescm/purescript-refs.git",
+      "ref": "2ac82d3867e8ac02df03b6a04d635e0acd4b95db",
+      "dependencies": [
+        "effect",
+        "prelude"
+      ]
+    },
+    "safe-coerce": "2.0.0",
     "unsafe-coerce": {
       "git": "https://github.com/purescm/purescript-unsafe-coerce.git",
       "ref": "20dbd7797e985b631459b8dbd4072cf3096ee1da",
       "dependencies": []
-    },
-    "safe-coerce": "2.0.0",
-    "newtype": "5.0.0"
+    }
   }
 }
-
