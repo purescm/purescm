@@ -20,6 +20,14 @@
         "prelude"
       ]
     },
+    "control": {
+      "git": "https://github.com/purescm/purescript-control.git",
+      "ref": "e9158b4499252aa976237a75468b876d283182eb",
+      "dependencies": [
+        "prelude",
+        "newtype"
+      ]
+    },
     "effect": {
       "git": "https://github.com/purescm/purescript-effect.git",
       "ref": "8aee2c2fbf5425bf8fa4537a5ad2070170622acf",
@@ -34,6 +42,8 @@
         "prelude"
       ]
     },
+    "invariant": "6.0.0",
+    "maybe": "6.0.0",
     "newtype": "5.0.0",
     "partial": {
       "git": "https://github.com/purescm/purescript-partial.git",
@@ -42,7 +52,7 @@
     },
     "prelude": {
       "git": "https://github.com/purescm/purescript-prelude.git",
-      "ref": "b250d70c7bc6528c12e0598c50ad87b7267ccfa9",
+      "ref": "d5e517bfc74bc7323783d435358ae4eb1782c63b",
       "dependencies": []
     },
     "record": {
