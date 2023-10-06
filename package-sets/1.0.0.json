@@ -42,6 +42,7 @@
         "prelude"
       ]
     },
+    "maybe": "6.0.0",
     "newtype": "5.0.0",
     "partial": {
       "git": "https://github.com/purescm/purescript-partial.git",
