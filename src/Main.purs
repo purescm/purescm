@@ -92,7 +92,7 @@ buildCmdArgParser =
           \Defaults to './output'."
           # ArgParser.default (Path.concat [ ".", "output" ])
     , outputDir:
-        ArgParser.argument [ "--output-dir" ]
+        ArgParser.argument [ "--output" ]
           "Path to output directory for backend files.\n\
           \Defaults to './output'."
           # ArgParser.default (Path.concat [ ".", "output" ])
@@ -116,7 +116,7 @@ bundleCmdArgParser =
           \Defaults to './output'."
           # ArgParser.default (Path.concat [ ".", "output" ])
     , outputDir:
-        ArgParser.argument [ "--output-dir" ]
+        ArgParser.argument [ "--output" ]
           "Path to output directory for backend files.\n\
           \Defaults to './output'."
           # ArgParser.default (Path.concat [ ".", "output" ])
