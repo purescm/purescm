@@ -45,6 +45,14 @@
     "invariant": "6.0.0",
     "maybe": "6.0.0",
     "newtype": "5.0.0",
+    "numbers": {
+      "git": "https://github.com/purescm/purescript-numbers.git",
+      "ref": "bc6d165addfd08552054a6100088ae13f8c4f47f",
+      "dependencies": [
+        "functions",
+        "maybe"
+      ]
+    },
     "partial": {
       "git": "https://github.com/purescm/purescript-partial.git",
       "ref": "d8b6daf068e4aab0ad85a42d0f890ed37f416923",
