@@ -14,7 +14,7 @@
     },
     "console": {
       "git": "https://github.com/purescm/purescript-console.git",
-      "ref": "4a30427e490b6f38be16bb5e0bc8f68ecc1c9999",
+      "ref": "dc769b2f72215c141b53bfe65fc4c1b3c06d22b6",
       "dependencies": [
         "effect",
         "prelude"
