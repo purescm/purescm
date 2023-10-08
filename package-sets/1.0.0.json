@@ -40,6 +40,7 @@
       ]
     },
     "either": "6.1.0",
+    "exists": "6.0.0",
     "functions": {
       "git": "https://github.com/purescm/purescript-functions.git",
       "ref": "94e0a9a3b7f831abebcb1bf65587fca03f04e034",
