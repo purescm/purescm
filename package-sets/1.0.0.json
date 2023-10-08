@@ -12,6 +12,7 @@
         "prelude"
       ]
     },
+    "bifunctors": "6.0.0",
     "console": {
       "git": "https://github.com/purescm/purescript-console.git",
       "ref": "dc769b2f72215c141b53bfe65fc4c1b3c06d22b6",
@@ -20,6 +21,8 @@
         "prelude"
       ]
     },
+    "const": "6.0.0",
+    "contravariant": "6.0.0",
     "control": {
       "git": "https://github.com/purescm/purescript-control.git",
       "ref": "e9158b4499252aa976237a75468b876d283182eb",
@@ -28,6 +31,7 @@
         "newtype"
       ]
     },
+    "distributive": "6.0.0",
     "effect": {
       "git": "https://github.com/purescm/purescript-effect.git",
       "ref": "8aee2c2fbf5425bf8fa4537a5ad2070170622acf",
@@ -35,10 +39,22 @@
         "prelude"
       ]
     },
+    "either": "6.1.0",
     "functions": {
       "git": "https://github.com/purescm/purescript-functions.git",
       "ref": "94e0a9a3b7f831abebcb1bf65587fca03f04e034",
       "dependencies": [
+        "prelude"
+      ]
+    },
+    "functors": "5.0.0",
+    "identity": "6.0.0",
+    "integers": {
+      "git": "https://github.com/purescm/purescript-integers.git",
+      "ref": "0a9ef55a25a72a46b3c336b89eab429eee8b1f7b",
+      "dependencies": [
+        "maybe",
+        "numbers",
         "prelude"
       ]
     },
@@ -63,6 +79,7 @@
       "ref": "d5e517bfc74bc7323783d435358ae4eb1782c63b",
       "dependencies": []
     },
+    "profunctor": "6.0.0",
     "record": {
       "git": "https://github.com/purescm/purescript-record.git",
       "ref": "8a993da0d328f72167a4742e0e2a428a790510bc",
@@ -81,6 +98,8 @@
       ]
     },
     "safe-coerce": "2.0.0",
+    "tuples": "7.0.0",
+    "type-equality": "4.0.1",
     "unsafe-coerce": {
       "git": "https://github.com/purescm/purescript-unsafe-coerce.git",
       "ref": "20dbd7797e985b631459b8dbd4072cf3096ee1da",
