@@ -2,16 +2,27 @@ package:
   name: purescm-snapshots
   dependencies:
     - assert
+    - bifunctors
     - console
+    - contravariant
     - control
+    - distributive
     - effect
+    - either
     - functions
+    - functors
+    - identity
+    - integers
     - newtype
+    - numbers
     - partial
     - prelude
+    - profunctor
     - record
     - refs
     - safe-coerce
+    - tuples
+    - type-equality
     - unsafe-coerce
 workspace:
   backend:
@@ -19,5 +30,5 @@ workspace:
     args:
       - build
   package_set:
-    url: https://raw.githubusercontent.com/purescm/purescm/8accfeb81b4115091c11ce7502ee73ff5bdb5494/package-sets/1.0.0.json
-    hash: sha256-7eecfkcQv0R95QIJU0DY8MA/8smJg6bw046jW7DHID4=
+    url: https://raw.githubusercontent.com/purescm/purescm/6e258dd2054ed7c1cb895ea6c788521df2ecf4dd/package-sets/1.0.0.json
+    hash: sha256-nJuzEbxaLSZmIokYSIwGkc3GyVC8pWaurLAIpnRLao0=
