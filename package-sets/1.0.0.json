@@ -70,6 +70,7 @@
         "maybe"
       ]
     },
+    "orders": "6.0.0",
     "partial": {
       "git": "https://github.com/purescm/purescript-partial.git",
       "ref": "d8b6daf068e4aab0ad85a42d0f890ed37f416923",
