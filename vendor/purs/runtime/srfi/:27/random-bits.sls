@@ -45,15 +45,15 @@
 ;   SE, 25-Mar-2002: pack/unpack need not allocate
 ;   SE, 27-Mar-2002: changed interface to core generator
 ;   SE, 10-Apr-2002: updated spec of mrg32k3a-random-integer
-(library (srfi :27 random-bits)
+(library (purs runtime srfi :27 random-bits)
   (export random-integer random-real default-random-source
     make-random-source random-source? random-source-state-ref
     random-source-state-set! random-source-randomize!
     random-source-pseudo-randomize! random-source-make-integers
     random-source-make-reals)
   (import (rnrs) (rnrs r5rs)
-    (only (srfi :19 time) current-time time-nanosecond)
-    (srfi :23 error tricks) (srfi private include))
+    (only (purs runtime srfi :19 time) current-time time-nanosecond)
+    (purs runtime srfi :23 error tricks) (purs runtime srfi private include))
   (define-record-type (:random-source
                         :random-source-make
                         :random-source?)
@@ -62,7 +62,7 @@
   (define (:random-source-current-time)
     (time-nanosecond (current-time)))
   (SRFI-23-error->R6RS
-    "(library (srfi :27 random-bits))"
+    "(library (purs runtime srfi :27 random-bits))"
     (begin
       (define (mrg32k3a-random-m1 state)
         (let ([x11 (vector-ref state 0)]
