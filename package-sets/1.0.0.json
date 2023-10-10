@@ -34,7 +34,7 @@
     "distributive": "6.0.0",
     "effect": {
       "git": "https://github.com/purescm/purescript-effect.git",
-      "ref": "5d207d783ba7c568af8cfe0e999ba6e1db9a2d07",
+      "ref": "a1fa3fd970ec82c05a664a4cae715b684cbe2253",
       "dependencies": [
         "prelude"
       ]
@@ -78,7 +78,7 @@
     },
     "prelude": {
       "git": "https://github.com/purescm/purescript-prelude.git",
-      "ref": "d5e517bfc74bc7323783d435358ae4eb1782c63b",
+      "ref": "28f789ed80604306a396e6ffc43a6e43783e1c79",
       "dependencies": []
     },
     "profunctor": "6.0.0",
