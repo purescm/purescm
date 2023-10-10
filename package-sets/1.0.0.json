@@ -25,39 +25,18 @@
     "contravariant": "6.0.0",
     "control": {
       "git": "https://github.com/purescm/purescript-control.git",
-      "ref": "e9158b4499252aa976237a75468b876d283182eb",
-      "dependencies": [
-        "prelude",
-        "newtype"
-      ]
+      "ref": "e9158b4499252aa976237a75468b876d283182eb"
     },
     "distributive": "6.0.0",
     "effect": {
       "git": "https://github.com/purescm/purescript-effect.git",
-      "ref": "a1fa3fd970ec82c05a664a4cae715b684cbe2253",
-      "dependencies": [
-        "prelude"
-      ]
+      "ref": "a1fa3fd970ec82c05a664a4cae715b684cbe2253"
     },
     "either": "6.1.0",
     "exists": "6.0.0",
     "foldable-traversable": {
       "git": "https://github.com/purescm/purescript-foldable-traversable.git",
-      "ref": "9b265472a9e8a2cbcf21a756b0d7e584eb2c6fdf",
-      "dependencies": [
-        "prelude",
-        "bifunctors",
-        "const",
-        "control",
-        "either",
-        "functors",
-        "identity",
-        "maybe",
-        "newtype",
-        "orders",
-        "prelude",
-        "tuples"
-      ]
+      "ref": "9b265472a9e8a2cbcf21a756b0d7e584eb2c6fdf"
     },
     "functions": {
       "git": "https://github.com/purescm/purescript-functions.git",
@@ -70,23 +49,14 @@
     "identity": "6.0.0",
     "integers": {
       "git": "https://github.com/purescm/purescript-integers.git",
-      "ref": "0a9ef55a25a72a46b3c336b89eab429eee8b1f7b",
-      "dependencies": [
-        "maybe",
-        "numbers",
-        "prelude"
-      ]
+      "ref": "0a9ef55a25a72a46b3c336b89eab429eee8b1f7b"
     },
     "invariant": "6.0.0",
     "maybe": "6.0.0",
     "newtype": "5.0.0",
     "numbers": {
       "git": "https://github.com/purescm/purescript-numbers.git",
-      "ref": "bc6d165addfd08552054a6100088ae13f8c4f47f",
-      "dependencies": [
-        "functions",
-        "maybe"
-      ]
+      "ref": "bc6d165addfd08552054a6100088ae13f8c4f47f"
     },
     "orders": "6.0.0",
     "partial": {
@@ -96,8 +66,7 @@
     },
     "prelude": {
       "git": "https://github.com/purescm/purescript-prelude.git",
-      "ref": "28f789ed80604306a396e6ffc43a6e43783e1c79",
-      "dependencies": []
+      "ref": "28f789ed80604306a396e6ffc43a6e43783e1c79"
     },
     "profunctor": "6.0.0",
     "record": {
