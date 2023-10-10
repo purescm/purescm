@@ -41,6 +41,24 @@
     },
     "either": "6.1.0",
     "exists": "6.0.0",
+    "foldable-traversable": {
+      "git": "https://github.com/purescm/purescript-foldable-traversable.git",
+      "ref": "9b265472a9e8a2cbcf21a756b0d7e584eb2c6fdf",
+      "dependencies": [
+        "prelude",
+        "bifunctors",
+        "const",
+        "control",
+        "either",
+        "functors",
+        "identity",
+        "maybe",
+        "newtype",
+        "orders",
+        "prelude",
+        "tuples"
+      ]
+    },
     "functions": {
       "git": "https://github.com/purescm/purescript-functions.git",
       "ref": "94e0a9a3b7f831abebcb1bf65587fca03f04e034",
