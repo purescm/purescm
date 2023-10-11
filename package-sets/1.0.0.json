@@ -89,6 +89,10 @@
     "safe-coerce": "2.0.0",
     "tuples": "7.0.0",
     "type-equality": "4.0.1",
+    "unfoldable": {
+      "git": "https://github.com/purescm/purescript-unfoldable.git",
+      "ref": "1cc7559e3d23537b02199d589c762087e0442f00"
+    },
     "unsafe-coerce": {
       "git": "https://github.com/purescm/purescript-unsafe-coerce.git",
       "ref": "20dbd7797e985b631459b8dbd4072cf3096ee1da",
