@@ -6,6 +6,8 @@
 npm i --global purescm@next
 ```
 
+You also need to install `chezscheme` and have the `scheme` or `chez` binary available in your `$PATH`.
+
 ## Usage
 
 The best way to use `purescm` is to use the [spago](https://github.com/purescript/spago) integration for alternative PureScript backends. In `spago.yaml` use the `backend` config like so:
