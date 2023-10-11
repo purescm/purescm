@@ -46,6 +46,7 @@
       ]
     },
     "functors": "5.0.0",
+    "gen": "4.0.0",
     "identity": "6.0.0",
     "integers": {
       "git": "https://github.com/purescm/purescript-integers.git",
@@ -54,6 +55,7 @@
     "invariant": "6.0.0",
     "maybe": "6.0.0",
     "newtype": "5.0.0",
+    "nonempty": "7.0.0",
     "numbers": {
       "git": "https://github.com/purescm/purescript-numbers.git",
       "ref": "bc6d165addfd08552054a6100088ae13f8c4f47f"
@@ -87,6 +89,7 @@
       ]
     },
     "safe-coerce": "2.0.0",
+    "tailrec": "6.1.0",
     "tuples": "7.0.0",
     "type-equality": "4.0.1",
     "unfoldable": {
