@@ -55,6 +55,7 @@
     "invariant": "6.0.0",
     "maybe": "6.0.0",
     "newtype": "5.0.0",
+    "nonempty": "7.0.0",
     "numbers": {
       "git": "https://github.com/purescm/purescript-numbers.git",
       "ref": "bc6d165addfd08552054a6100088ae13f8c4f47f"
