@@ -13,6 +13,7 @@
       ]
     },
     "bifunctors": "6.0.0",
+    "catenable-lists": "7.0.0",
     "console": {
       "git": "https://github.com/purescm/purescript-console.git",
       "ref": "dc769b2f72215c141b53bfe65fc4c1b3c06d22b6",
@@ -33,6 +34,10 @@
       "ref": "a1fa3fd970ec82c05a664a4cae715b684cbe2253"
     },
     "either": "6.1.0",
+    "enums": {
+      "git": "https://github.com/purescm/purescript-enums.git",
+      "ref": "5da5c4e4075ec64b75a9a3730ef98869d5d1fbba"
+    },
     "exists": "6.0.0",
     "foldable-traversable": {
       "git": "https://github.com/purescm/purescript-foldable-traversable.git",
@@ -53,6 +58,11 @@
       "ref": "0a9ef55a25a72a46b3c336b89eab429eee8b1f7b"
     },
     "invariant": "6.0.0",
+    "lazy": {
+      "git": "https://github.com/purescm/purescript-lazy.git",
+      "ref": "383f0f9dd026b38a8fe4a8a8d8a4ecec543fbb2c"
+    },
+    "lists": "7.0.0",
     "maybe": "6.0.0",
     "newtype": "5.0.0",
     "nonempty": "7.0.0",
@@ -100,6 +110,7 @@
       "git": "https://github.com/purescm/purescript-unsafe-coerce.git",
       "ref": "20dbd7797e985b631459b8dbd4072cf3096ee1da",
       "dependencies": []
-    }
+    },
+    "validation": "6.0.0"
   }
 }
