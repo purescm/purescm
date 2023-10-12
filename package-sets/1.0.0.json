@@ -43,7 +43,6 @@
       "git": "https://github.com/purescm/purescript-foldable-traversable.git",
       "ref": "9b265472a9e8a2cbcf21a756b0d7e584eb2c6fdf"
     },
-    "free": "7.1.0",
     "functions": {
       "git": "https://github.com/purescm/purescript-functions.git",
       "ref": "94e0a9a3b7f831abebcb1bf65587fca03f04e034",
