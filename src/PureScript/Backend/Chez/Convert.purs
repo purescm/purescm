@@ -332,23 +332,23 @@ codegenChain chainMode codegenEnv = collect []
     _ ->
       S.unthunk $ codegenExpr codegenEnv expression
 
-  finish :: Boolean -> Array _ -> NeutralExpr -> ChezExpr
+  finish :: Boolean -> Array _ -> ChezExpr -> ChezExpr
   finish shouldUnthunk bindings expression = do
     let
       maybeUnthunk :: ChezExpr -> ChezExpr
       maybeUnthunk = if shouldUnthunk then S.unthunk else identity
     case NEA.fromArray bindings of
-      Nothing -> maybeUnthunk $ codegenExpr codegenEnv expression
-      Just bindings' -> S.Let recursive bindings' $ maybeUnthunk $ codegenExpr codegenEnv expression
+      Nothing -> maybeUnthunk expression
+      Just bindings' -> S.Let recursive bindings' $ maybeUnthunk expression
 
   collect :: Array _ -> NeutralExpr -> ChezExpr
   collect bindings expression = case unwrap expression of
     Let i l v e' ->
       collect (Array.snoc bindings $ Tuple (toChezIdent i l) (codegenExpr codegenEnv v)) e'
     EffectPure e' | chainMode.effect ->
-      finish false bindings e'
+      finish false bindings (codegenExpr codegenEnv e')
     PrimEffect e' | chainMode.effect ->
-      codegenPrimEffect codegenEnv e'
+      finish false bindings (codegenPrimEffect codegenEnv e')
     EffectBind i l v e' | chainMode.effect ->
       collect
         (Array.snoc bindings $ Tuple (toChezIdent i l) (codegenEffectBind v))
@@ -356,7 +356,7 @@ codegenChain chainMode codegenEnv = collect []
     EffectDefer e' | chainMode.effect ->
       collect bindings e'
     _ ->
-      finish chainMode.effect bindings expression
+      finish chainMode.effect bindings (codegenExpr codegenEnv expression)
 
 codegenPrimOp :: CodegenEnv -> BackendOperator NeutralExpr -> ChezExpr
 codegenPrimOp codegenEnv@{ currentModule } = case _ of
