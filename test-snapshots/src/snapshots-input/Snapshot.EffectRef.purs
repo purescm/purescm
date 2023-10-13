@@ -31,7 +31,14 @@ onLetTest = do
   v <- read n
   assert $ v == 5
 
+primEffectAtTheEnd :: Effect Int
+primEffectAtTheEnd = do
+  n <- new 1
+  read n
+
 main :: Effect Unit
 main = do
   basicTest
   onLetTest
+  _ <- primEffectAtTheEnd
+  pure unit

@@ -7,11 +7,18 @@
     main
     onLet
     onLetTest
-    positionZero)
+    positionZero
+    primEffectAtTheEnd)
   (import
     (prefix (chezscheme) scm:)
     (prefix (purs runtime lib) rt:)
+    (prefix (Data.Unit lib) Data.Unit.)
     (prefix (Test.Assert lib) Test.Assert.))
+
+  (scm:define primEffectAtTheEnd
+    (scm:lambda ()
+      (scm:let ([n0 (scm:box 1)])
+        (scm:unbox n0))))
 
   (scm:define positionZero
     (scm:lambda ()
@@ -44,5 +51,8 @@
 
   (scm:define main
     (scm:lambda ()
-      (scm:let ([_ (basicTest)])
-        (onLetTest)))))
+      (scm:let*
+        ([_ (basicTest)]
+         [_ (onLetTest)]
+         [_ (primEffectAtTheEnd)])
+          Data.Unit.unit))))
