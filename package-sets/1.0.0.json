@@ -99,6 +99,11 @@
       ]
     },
     "safe-coerce": "2.0.0",
+    "st": {
+      "git": "https://github.com/purescm/purescript-st.git",
+      "ref": "403451a2ca1a9b39149f12e3d98f03ee945f6c35"
+    },
+    "semirings": "7.0.0",
     "tailrec": "6.1.0",
     "tuples": "7.0.0",
     "type-equality": "4.0.1",
