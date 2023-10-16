@@ -64,6 +64,10 @@
     },
     "lists": "7.0.0",
     "maybe": "6.0.0",
+    "minibench": {
+      "git": "https://github.com/purescm/purescript-minibench.git",
+      "ref": "f411a9023fe3ee685077d48940e59abce031a775"
+    },
     "newtype": "5.0.0",
     "nonempty": "7.0.0",
     "numbers": {
