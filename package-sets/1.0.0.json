@@ -38,11 +38,16 @@
       "git": "https://github.com/purescm/purescript-enums.git",
       "ref": "5da5c4e4075ec64b75a9a3730ef98869d5d1fbba"
     },
+    "exceptions": {
+      "git": "https://github.com/purescm/purescript-exceptions.git",
+      "ref": "a7c66a2c1b8a7d120efa7e33b9931ea4664b965a"
+    },
     "exists": "6.0.0",
     "foldable-traversable": {
       "git": "https://github.com/purescm/purescript-foldable-traversable.git",
       "ref": "9b265472a9e8a2cbcf21a756b0d7e584eb2c6fdf"
     },
+    "free": "7.1.0",
     "functions": {
       "git": "https://github.com/purescm/purescript-functions.git",
       "ref": "94e0a9a3b7f831abebcb1bf65587fca03f04e034",
@@ -105,6 +110,7 @@
     },
     "semirings": "7.0.0",
     "tailrec": "6.1.0",
+    "transformers": "6.0.0",
     "tuples": "7.0.0",
     "type-equality": "4.0.1",
     "unfoldable": {
