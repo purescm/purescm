@@ -3,6 +3,10 @@
   "published": "2023-09-30",
   "version": "1.0.0",
   "packages": {
+    "arrays": {
+      "git": "https://github.com/purescm/purescript-arrays.git",
+      "ref": "b1b5a6ec28acedb5dc97495b08a2b204465f817b"
+    },
     "assert": {
       "git": "https://github.com/purescm/purescript-assert.git",
       "ref": "348b91f4542cf75efab232e8eb52dd5d3e6a9435",
@@ -43,6 +47,7 @@
       "ref": "a7c66a2c1b8a7d120efa7e33b9931ea4664b965a"
     },
     "exists": "6.0.0",
+    "filterable": "5.0.0",
     "foldable-traversable": {
       "git": "https://github.com/purescm/purescript-foldable-traversable.git",
       "ref": "9b265472a9e8a2cbcf21a756b0d7e584eb2c6fdf"
@@ -79,6 +84,7 @@
       "git": "https://github.com/purescm/purescript-numbers.git",
       "ref": "bc6d165addfd08552054a6100088ae13f8c4f47f"
     },
+    "ordered-collections": "3.1.1",
     "orders": "6.0.0",
     "partial": {
       "git": "https://github.com/purescm/purescript-partial.git",
