@@ -24,11 +24,12 @@ package:
     - tuples
     - type-equality
     - unsafe-coerce
+    - lists
 workspace:
   backend:
     cmd: ../index.dev.js
     args:
       - build
   package_set:
-    url: https://raw.githubusercontent.com/purescm/purescm/6e258dd2054ed7c1cb895ea6c788521df2ecf4dd/package-sets/1.0.0.json
-    hash: sha256-nJuzEbxaLSZmIokYSIwGkc3GyVC8pWaurLAIpnRLao0=
+    url: https://raw.githubusercontent.com/purescm/purescm/48ab9b595a5db534a07d28d8a9ca51f2cb52e8a9/package-sets/1.0.0.json
+    hash: sha256-nHbdwreTi2JUlz2KvzC/ac/uJUyeXiTc8uDFE0ptNkA=

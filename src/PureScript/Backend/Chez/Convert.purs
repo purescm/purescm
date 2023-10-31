@@ -150,6 +150,17 @@ codegenTopLevelBinding codegenEnv (Tuple (Ident i) n) =
 
 codegenExpr :: CodegenEnv -> NeutralExpr -> ChezExpr
 codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
+  Var (Qualified (Just (ModuleName "Data.List.Types")) (Ident "Cons")) ->
+    -- (lambda (x) (lambda (xs) (scm:cons x xs)))
+    S.List
+      [ S.Identifier (scmPrefixed "lambda")
+      , S.List [ S.Identifier "x" ]
+      , S.List
+          [ S.Identifier $ scmPrefixed "lambda"
+          , S.List [ S.Identifier "xs" ]
+          , S.List [ S.Identifier $ scmPrefixed "cons", S.Identifier "x", S.Identifier "xs" ]
+          ]
+      ]
   Var qi ->
     S.Identifier $ flattenQualified currentModule qi
   Local i l ->
@@ -179,11 +190,23 @@ codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
     S.runUncurriedFn
       (S.Identifier $ rtPrefixed "array-ref")
       [ codegenExpr codegenEnv e, S.Integer $ wrap $ show i ]
+  Accessor e
+    (GetCtorField (Qualified (Just (ModuleName "Data.List.Types")) (Ident "Cons")) _ _ _ "value0" _) ->
+    S.List [ S.Identifier (scmPrefixed "car"), (codegenExpr codegenEnv e) ]
+  Accessor e
+    (GetCtorField (Qualified (Just (ModuleName "Data.List.Types")) (Ident "Cons")) _ _ _ "value1" _) ->
+    S.List [ S.Identifier (scmPrefixed "cdr"), (codegenExpr codegenEnv e) ]
   Accessor e (GetCtorField qi _ _ _ field _) ->
     S.recordAccessor (codegenExpr codegenEnv e) (flattenQualified currentModule qi) field
   Update e f ->
     S.recordUpdate (codegenExpr codegenEnv e) (map (codegenExpr codegenEnv) <$> f)
 
+  CtorSaturated (Qualified (Just (ModuleName "Data.List.Types")) (Ident "Nil")) _ _ _ _ ->
+    S.List [ S.Identifier $ scmPrefixed "quote", S.List [] ]
+  CtorSaturated (Qualified (Just (ModuleName "Data.List.Types")) (Ident "Cons")) _ _ _ xs ->
+    S.runUncurriedFn
+      (S.Identifier $ scmPrefixed "cons")
+      (map (codegenExpr codegenEnv <<< Tuple.snd) xs)
   CtorSaturated qi _ _ _ [] ->
     S.Identifier $ flattenQualified currentModule qi
   CtorSaturated qi _ _ _ [ Tuple _ x ] ->
@@ -374,6 +397,10 @@ codegenPrimOp codegenEnv@{ currentModule } = case _ of
         S.List [ S.Identifier $ scmPrefixed "fl-", x' ]
       OpArrayLength ->
         S.List [ S.Identifier $ rtPrefixed "array-length", x' ]
+      OpIsTag (Qualified (Just (ModuleName "Data.List.Types")) (Ident "Cons")) ->
+        S.List [ S.Identifier (scmPrefixed "pair?"), x' ]
+      OpIsTag (Qualified (Just (ModuleName "Data.List.Types")) (Ident "Nil")) ->
+        S.List [ S.Identifier (scmPrefixed "null?"), x' ]
       OpIsTag qi ->
         S.app
           (S.Identifier $ S.recordTypePredicate $ flattenQualified currentModule qi)
