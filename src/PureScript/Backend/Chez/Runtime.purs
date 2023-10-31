@@ -77,16 +77,16 @@ createObjectCopyFn = makeExportedFunction "object-copy" (NEA.singleton "v") $ S.
 
 -- Curried version of `cons`
 listConsFn :: forall m. Monad m => MonadState (Array ChezExport) m => m ChezDefinition
-listConsFn = makeExportedValue "cons" $ 
-    S.List
-      [ S.Identifier (scmPrefixed "lambda")
-      , S.List [ S.Identifier "x" ]
-      , S.List
-          [ S.Identifier $ scmPrefixed "lambda"
-          , S.List [ S.Identifier "xs" ]
-          , S.List [ S.Identifier $ scmPrefixed "cons", S.Identifier "x", S.Identifier "xs" ]
-          ]
-      ]
+listConsFn = makeExportedValue "cons" $
+  S.List
+    [ S.Identifier (scmPrefixed "lambda")
+    , S.List [ S.Identifier "x" ]
+    , S.List
+        [ S.Identifier $ scmPrefixed "lambda"
+        , S.List [ S.Identifier "xs" ]
+        , S.List [ S.Identifier $ scmPrefixed "cons", S.Identifier "x", S.Identifier "xs" ]
+        ]
+    ]
 
 importSRFI :: String -> ChezImport
 importSRFI srfi = ImportSet $ ImportPrefix
