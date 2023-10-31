@@ -182,10 +182,10 @@ codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
       (S.Identifier $ rtPrefixed "array-ref")
       [ codegenExpr codegenEnv e, S.Integer $ wrap $ show i ]
   Accessor e
-    (GetCtorField (Qualified (Just (ModuleName "Data.List.Types")) (Ident "Cons")) _ _ _ "value0" _) ->
+    (GetCtorField (Qualified (Just (ModuleName "Data.List.Types")) (Ident "Cons")) _ _ _ _ 0) ->
     S.List [ S.Identifier (scmPrefixed "car"), (codegenExpr codegenEnv e) ]
   Accessor e
-    (GetCtorField (Qualified (Just (ModuleName "Data.List.Types")) (Ident "Cons")) _ _ _ "value1" _) ->
+    (GetCtorField (Qualified (Just (ModuleName "Data.List.Types")) (Ident "Cons")) _ _ _ _ 1) ->
     S.List [ S.Identifier (scmPrefixed "cdr"), (codegenExpr codegenEnv e) ]
   Accessor e (GetCtorField qi _ _ _ field _) ->
     S.recordAccessor (codegenExpr codegenEnv e) (flattenQualified currentModule qi) field
