@@ -151,16 +151,7 @@ codegenTopLevelBinding codegenEnv (Tuple (Ident i) n) =
 codegenExpr :: CodegenEnv -> NeutralExpr -> ChezExpr
 codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
   Var (Qualified (Just (ModuleName "Data.List.Types")) (Ident "Cons")) ->
-    -- (lambda (x) (lambda (xs) (scm:cons x xs)))
-    S.List
-      [ S.Identifier (scmPrefixed "lambda")
-      , S.List [ S.Identifier "x" ]
-      , S.List
-          [ S.Identifier $ scmPrefixed "lambda"
-          , S.List [ S.Identifier "xs" ]
-          , S.List [ S.Identifier $ scmPrefixed "cons", S.Identifier "x", S.Identifier "xs" ]
-          ]
-      ]
+    S.Identifier (rtPrefixed "cons")
   Var qi ->
     S.Identifier $ flattenQualified currentModule qi
   Local i l ->
