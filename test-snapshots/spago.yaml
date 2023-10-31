@@ -1,35 +1,58 @@
 package:
   name: purescm-snapshots
   dependencies:
+    - arrays
     - assert
     - bifunctors
+    - catenable-lists
     - console
+    - const
     - contravariant
     - control
     - distributive
     - effect
     - either
+    - enums
+    - exceptions
+    - exists
+    - filterable
+    - foldable-traversable
+    - free
     - functions
     - functors
+    - gen
     - identity
     - integers
+    - invariant
+    - lazy
+    - lists
+    - maybe
+    - minibench
     - newtype
+    - nonempty
     - numbers
+    - ordered-collections
+    - orders
+    - parallel
     - partial
     - prelude
     - profunctor
     - record
     - refs
     - safe-coerce
+    - semirings
+    - st
+    - tailrec
+    - transformers
     - tuples
     - type-equality
+    - unfoldable
     - unsafe-coerce
-    - lists
+    - validation
 workspace:
   backend:
     cmd: ../index.dev.js
     args:
       - build
   package_set:
-    url: https://raw.githubusercontent.com/purescm/purescm/48ab9b595a5db534a07d28d8a9ca51f2cb52e8a9/package-sets/1.0.0.json
-    hash: sha256-nHbdwreTi2JUlz2KvzC/ac/uJUyeXiTc8uDFE0ptNkA=
+    path: ../package-sets/1.0.0.json
