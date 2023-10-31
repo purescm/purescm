@@ -3,11 +3,11 @@
     "flake-compat": {
       "flake": false,
       "locked": {
-        "lastModified": 1673956053,
-        "narHash": "sha256-4gtG9iQuiKITOjNQQeQIpoIB6b16fm+504Ch3sNKLd8=",
+        "lastModified": 1696426674,
+        "narHash": "sha256-kvjfFW7WAETZlt09AgDn1MrtKzP7t90Vf7vypd3OL1U=",
         "owner": "edolstra",
         "repo": "flake-compat",
-        "rev": "35bb57c0c8d8b62bbfd284272c928ceb64ddbde9",
+        "rev": "0f9255e01c2351cc7d116c072cb317785dd33b33",
         "type": "github"
       },
       "original": {
@@ -58,15 +58,15 @@
         "slimlock": "slimlock"
       },
       "locked": {
-        "lastModified": 1695548718,
-        "narHash": "sha256-zjfsJfHT/YedX2sAgK9g6X8XTsRH5Cr18hS1iBFvb+w=",
-        "owner": "f-f",
+        "lastModified": 1697766752,
+        "narHash": "sha256-jTGJhKuv/KPsMOnfIUSqoTckf4jo3e+9e0XY2cvXbD4=",
+        "owner": "thomashoneyman",
         "repo": "purescript-overlay",
-        "rev": "278ca324b97e3d9f8c2a744d06a99f4e7d5f2699",
+        "rev": "1a6676b94f064113980b142454e3eefeecce5dcc",
         "type": "github"
       },
       "original": {
-        "owner": "f-f",
+        "owner": "thomashoneyman",
         "repo": "purescript-overlay",
         "type": "github"
       }
