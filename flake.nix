@@ -12,7 +12,7 @@
       flake = false;
     };
 
-    purescript-overlay.url = "github:f-f/purescript-overlay";
+    purescript-overlay.url = "github:thomashoneyman/purescript-overlay";
     purescript-overlay.inputs.nixpkgs.follows = "nixpkgs";
   };
 
