@@ -86,6 +86,7 @@
     },
     "ordered-collections": "3.1.1",
     "orders": "6.0.0",
+    "parallel": "7.0.0",
     "partial": {
       "git": "https://github.com/purescm/purescript-partial.git",
       "ref": "d8b6daf068e4aab0ad85a42d0f890ed37f416923",
@@ -98,12 +99,7 @@
     "profunctor": "6.0.0",
     "record": {
       "git": "https://github.com/purescm/purescript-record.git",
-      "ref": "8a993da0d328f72167a4742e0e2a428a790510bc",
-      "dependencies": [
-        "functions",
-        "prelude",
-        "unsafe-coerce"
-      ]
+      "ref": "dc5ee9c0c86ca7c8a3db1e2b54c293d41475e20c"
     },
     "refs": {
       "git": "https://github.com/purescm/purescript-refs.git",
