@@ -9,7 +9,7 @@
     },
     "assert": {
       "git": "https://github.com/purescm/purescript-assert.git",
-      "ref": "2ac5b7117fc6f2205e80a43bb57ee5ab28030782"
+      "ref": "bfef782e0e7a3fe041273c61e69c65dc54c1b2bf"
     },
     "bifunctors": "6.0.0",
     "catenable-lists": "7.0.0",
