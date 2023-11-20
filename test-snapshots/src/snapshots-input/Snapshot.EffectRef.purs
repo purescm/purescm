@@ -4,7 +4,8 @@ module Snapshot.EffectRef where
 import Prelude
 
 import Effect (Effect)
-import Effect.Ref (Ref, modify_, new, read)
+import Effect.Ref (Ref, modify, modify_, new, read)
+import Effect.Class.Console (log)
 import Test.Assert (assert)
 
 positionZero :: Effect (Ref Int)
@@ -36,9 +37,17 @@ primEffectAtTheEnd = do
   n <- new 1
   read n
 
+newCase :: Effect Unit
+newCase = do
+  counter <- new 0
+  newCounter <- modify (_ + 1) counter
+  log $ "New counter is " <> show newCounter
+  assert $ newCounter == 1
+
 main :: Effect Unit
 main = do
   basicTest
   onLetTest
+  newCase
   _ <- primEffectAtTheEnd
   pure unit

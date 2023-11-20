@@ -492,4 +492,11 @@ codegenPrimEffect codegenEnv = case _ of
     S.app (S.Identifier $ scmPrefixed "unbox") (codegenExpr codegenEnv r)
   EffectRefWrite r v ->
     S.List
-      [ S.Identifier $ scmPrefixed "set-box!", codegenExpr codegenEnv r, codegenExpr codegenEnv v ]
+      [ S.Identifier $ scmPrefixed "begin"
+      , S.List
+          [ S.Identifier $ scmPrefixed "set-box!"
+          , codegenExpr codegenEnv r
+          , codegenExpr codegenEnv v
+          ]
+      , S.List [ S.Identifier $ scmPrefixed "unbox", codegenExpr codegenEnv r ]
+      ]
