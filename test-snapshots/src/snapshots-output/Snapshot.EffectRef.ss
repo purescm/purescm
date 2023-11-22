@@ -5,6 +5,7 @@
   (export
     basicTest
     main
+    newCase
     onLet
     onLetTest
     positionZero
@@ -12,7 +13,9 @@
   (import
     (prefix (chezscheme) scm:)
     (prefix (purs runtime lib) rt:)
+    (prefix (Data.Show lib) Data.Show.)
     (prefix (Data.Unit lib) Data.Unit.)
+    (prefix (Effect.Console lib) Effect.Console.)
     (prefix (Test.Assert lib) Test.Assert.))
 
   (scm:define primEffectAtTheEnd
@@ -40,12 +43,21 @@
            [v2 (scm:unbox n1)])
             ((Test.Assert.assert (scm:fx=? v2 5)))))))
 
+  (scm:define newCase
+    (scm:lambda ()
+      (scm:let*
+        ([counter0 (scm:box 0)]
+         [_1 (scm:unbox counter0)]
+         [newCounter2 (scm:begin (scm:set-box! counter0 (scm:fx+ _1 1)) (scm:unbox counter0))]
+         [_ ((Effect.Console.log (scm:string-append "New counter is " (Data.Show.showIntImpl newCounter2))))])
+          ((Test.Assert.assert (scm:fx=? newCounter2 1))))))
+
   (scm:define basicTest
     (scm:lambda ()
       (scm:let*
         ([n0 (scm:box 0)]
          [_1 (scm:unbox n0)]
-         [a$p2 (scm:set-box! n0 (scm:fx+ _1 1))]
+         [a$p2 (scm:begin (scm:set-box! n0 (scm:fx+ _1 1)) (scm:unbox n0))]
          [v3 (scm:unbox n0)])
           ((Test.Assert.assert (scm:fx=? v3 1))))))
 
@@ -54,5 +66,6 @@
       (scm:let*
         ([_ (basicTest)]
          [_ (onLetTest)]
+         [_ (newCase)]
          [_ (primEffectAtTheEnd)])
           Data.Unit.unit))))
