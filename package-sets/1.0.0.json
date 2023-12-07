@@ -107,7 +107,7 @@
     },
     "strings": {
       "git": "https://github.com/anttih/purescript-strings.git",
-      "ref": "1e26c21c576311f08239078ec61af25ef9ff8953"
+      "ref": "c67d4d6dfa173564a1b8c96a577f2ae1e5186718"
     },
     "semirings": "7.0.0",
     "tailrec": "6.1.0",
