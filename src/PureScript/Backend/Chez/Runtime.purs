@@ -107,10 +107,10 @@ runtimeModule = do
           ]
       , pure $ S.Define "string-comparator" $ S.List
           [ S.Identifier "srfi:128:make-comparator"
-          , S.Identifier $ scmPrefixed "string?"
-          , S.Identifier $ scmPrefixed "string=?"
-          , S.Identifier $ scmPrefixed "string<?"
-          , S.Identifier $ scmPrefixed "string-hash"
+          , S.Identifier "bytestring?"
+          , S.Identifier "bytestring=?"
+          , S.Identifier "bytestring<?"
+          , S.Identifier "bytestring-hash"
           ]
       , makeBooleanComparison ">?"
       , makeBooleanComparison ">=?"
@@ -131,11 +131,33 @@ runtimeModule = do
       { identifiers: NEA.cons' "purs" [ "runtime", moduleLib ]
       , version: []
       }
-  , exports
+  , exports: exports <>
+      [ ExportIdentifier "string->bytestring"
+      , ExportIdentifier "bytestring-append"
+      , ExportIdentifier "bytestring=?"
+      , ExportIdentifier "bytestring>?"
+      , ExportIdentifier "bytestring>=?"
+      , ExportIdentifier "bytestring<?"
+      , ExportIdentifier "bytestring<=?"
+      ]
   , imports:
       [ ImportSet $ ImportPrefix
           (ImportLibrary { identifiers: NEA.singleton "chezscheme", version: Nothing })
           libChezSchemePrefix
+      , ImportSet $ ImportOnly
+          ( ImportLibrary
+              { identifiers: NEA.cons' "purs" [ "runtime", "bytestring" ], version: Nothing }
+          )
+          [ "string->bytestring"
+          , "bytestring?"
+          , "bytestring=?"
+          , "bytestring<?"
+          , "bytestring>?"
+          , "bytestring<=?"
+          , "bytestring>=?"
+          , "bytestring-hash"
+          , "bytestring-append"
+          ]
       , importSRFI "125"
       , importSRFI "128"
       , importSRFI "214"

@@ -18,13 +18,13 @@
     (Snapshot.Literals.Record foreign))
 
   (scm:define insert
-    (((Record.insert (rt:make-object (scm:cons "reflectSymbol" (scm:lambda (_)
-      "anotherField")))) (scm:gensym "purs-undefined")) (scm:gensym "purs-undefined")))
+    (((Record.insert (rt:make-object (scm:cons (rt:string->bytestring "reflectSymbol") (scm:lambda (_)
+      (rt:string->bytestring "anotherField"))))) (scm:gensym "purs-undefined")) (scm:gensym "purs-undefined")))
 
   (scm:define recordUpdate
     (scm:lambda (v0)
       (scm:let ([$record (rt:object-copy v0)])
-        (scm:begin (rt:object-set! $record "fooBarBaz" 10) $record))))
+        (scm:begin (rt:object-set! $record (rt:string->bytestring "fooBarBaz") 10) $record))))
 
   (scm:define recordAddField
     (scm:lambda (_)
@@ -32,18 +32,18 @@
 
   (scm:define recordAccess
     (scm:lambda (v0)
-      (rt:object-ref v0 "fooBarBaz")))
+      (rt:object-ref v0 (rt:string->bytestring "fooBarBaz"))))
 
   (scm:define main
     (scm:let*
-      ([r0 (rt:make-object (scm:cons "fooBarBaz" 5))]
+      ([r0 (rt:make-object (scm:cons (rt:string->bytestring "fooBarBaz") 5))]
        [s1 (recordUpdate r0)]
        [t2 ((recordAddField (scm:gensym "purs-undefined")) s1)]
        [_3 (Test.Assert.assert (scm:fx=? (recordAccess t2) 10))])
         (scm:lambda ()
           (scm:let*
             ([_ (_3)]
-             [_ ((Test.Assert.assert (scm:fx=? (rt:object-ref t2 "anotherField") 42)))]
+             [_ ((Test.Assert.assert (scm:fx=? (rt:object-ref t2 (rt:string->bytestring "anotherField")) 42)))]
              [_ ((Test.Assert.assert (scm:fx=? (recordAccess s1) 10)))]
              [_ ((Test.Assert.assert (scm:fx=? (recordAccess r0) 5)))])
-              ((Test.Assert.assert (scm:fx=? (recordAccess (rt:make-object (scm:cons "fooBarBaz" minusTwo))) minusTwo))))))))
+              ((Test.Assert.assert (scm:fx=? (recordAccess (rt:make-object (scm:cons (rt:string->bytestring "fooBarBaz") minusTwo))) minusTwo))))))))

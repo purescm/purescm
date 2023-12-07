@@ -192,25 +192,25 @@
 (define (irregex-match-numeric-index location m opt)
   (cond
    ((not (irregex-match-data? m))
-    (error (string-append location ": not match data") m))
+    (error (native-string-append location ": not match data") m))
    ((not (pair? opt)) 0)
    ((pair? (cdr opt))
-    (apply error (string-append location ": too many arguments") m opt))
+    (apply error (native-string-append location ": too many arguments") m opt))
    (else
     (let ((n (car opt)))
       (if (number? n)
           (if (and (integer? n) (exact? n))
               (if (irregex-match-valid-numeric-index? m n)
                   (and (irregex-match-matched-numeric-index? m n) n)
-                  (error (string-append location ": not a valid index")
+                  (error (native-string-append location ": not a valid index")
                          m n))
-              (error (string-append location ": not an exact integer") n))
+              (error (native-string-append location ": not an exact integer") n))
           (let lp ((ls (irregex-match-names m))
                    (unknown? #t))
             (cond
              ((null? ls)
               (and unknown?
-                   (error (string-append location ": unknown match name") n)))
+                   (error (native-string-append location ": unknown match name") n)))
              ((eq? n (caar ls))
               (if (%irregex-match-start-chunk m (cdar ls))
                   (cdar ls)
@@ -409,30 +409,6 @@
           (else
            #f))))
 
-;; SRFI-13 extracts
-
-(define (%%string-copy! to tstart from fstart fend)
-  (do ((i fstart (+ i 1))
-       (j tstart (+ j 1)))
-      ((>= i fend))
-    (string-set! to j (string-ref from i))))
-
-(define (string-cat-reverse string-list)
-  (string-cat-reverse/aux
-   (fold (lambda (s a) (+ (string-length s) a)) 0 string-list)
-   string-list))
-
-(define (string-cat-reverse/aux len string-list)
-  (let ((res (make-string len)))
-    (let lp ((i len) (ls string-list))
-      (if (pair? ls)
-          (let* ((s (car ls))
-                 (slen (string-length s))
-                 (i (- i slen)))
-            (%%string-copy! res i s 0 slen)
-            (lp i (cdr ls)))))
-    res))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; List Utilities
 
@@ -558,7 +534,7 @@
 ;;     (proc sre (- tail-len unused-len))))
 
 (define close-token (list 'close))
-(define dot-token (string->symbol "."))
+(define dot-token (string->symbol (string->bytestring ".")))
 
 (define (with-read-from-string str i proc)
   (define end (string-length str))

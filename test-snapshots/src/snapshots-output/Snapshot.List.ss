@@ -19,7 +19,7 @@
     (prefix (Test.Assert lib) Test.Assert.))
 
   (scm:define show
-    (rt:object-ref (Data.List.Types.showList Data.Show.showInt) "show"))
+    (rt:object-ref (Data.List.Types.showList Data.Show.showInt) (rt:string->bytestring "show")))
 
   (scm:define xs
     (scm:cons 1 (scm:quote ())))
@@ -73,4 +73,4 @@
                   [(scm:null? v5) (scm:and (scm:null? v16) v27)]
                   [scm:else (scm:and (scm:pair? v5) (scm:and (scm:pair? v16) (((go4 (scm:cdr v5)) (scm:cdr v16)) (scm:and v27 (scm:fx=? (scm:car v16) (scm:car v5))))))]))))])
             (((go4 (cons2 (scm:cons 3 (scm:quote ())))) (scm:cons 2 (scm:cons 3 (scm:quote ())))) #t))))])
-            ((Test.Assert.assert (scm:string=? (show (scm:cons 1 (scm:cons 2 (scm:quote ())))) "(1 : 2 : Nil)"))))))))
+            ((Test.Assert.assert (rt:bytestring=? (show (scm:cons 1 (scm:cons 2 (scm:quote ())))) (rt:string->bytestring "(1 : 2 : Nil)")))))))))

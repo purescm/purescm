@@ -28,61 +28,61 @@
     (prefix (purs runtime lib) rt:))
 
   (scm:define unicode7
-    "Foo \b\b\b\b Bar")
+    (rt:string->bytestring "Foo \b\b\b\b Bar"))
 
   (scm:define unicode6
-    "2342✓")
+    (rt:string->bytestring "2342✓"))
 
   (scm:define unicode5
-    "Foo ✓ Bar ✓ \n Baz ✓")
+    (rt:string->bytestring "Foo ✓ Bar ✓ \n Baz ✓"))
 
   (scm:define unicode4
-    "✓")
+    (rt:string->bytestring "✓"))
 
   (scm:define unicode3
-    "✓")
+    (rt:string->bytestring "✓"))
 
   (scm:define unicode2
-    "􏿿")
+    (rt:string->bytestring "􏿿"))
 
   (scm:define unicode1
-    "\x0000;")
+    (rt:string->bytestring "\x0000;"))
 
   (scm:define escape8
-    "'")
+    (rt:string->bytestring "'"))
 
   (scm:define escape7
-    "\"")
+    (rt:string->bytestring "\""))
 
   (scm:define escape6
-    "\\")
+    (rt:string->bytestring "\\"))
 
   (scm:define escape5
-    "\r\n")
+    (rt:string->bytestring "\r\n"))
 
   (scm:define escape4
-    "\r")
+    (rt:string->bytestring "\r"))
 
   (scm:define escape3
-    "\r")
+    (rt:string->bytestring "\r"))
 
   (scm:define escape2
-    "\n")
+    (rt:string->bytestring "\n"))
 
   (scm:define escape1
-    "\t")
+    (rt:string->bytestring "\t"))
 
   (scm:define block5
-    "foo\nbar\nbaz\n")
+    (rt:string->bytestring "foo\nbar\nbaz\n"))
 
   (scm:define block4
-    "foo\nbar\nbaz")
+    (rt:string->bytestring "foo\nbar\nbaz"))
 
   (scm:define block3
-    "foo\nbar")
+    (rt:string->bytestring "foo\nbar"))
 
   (scm:define block2
-    "\nfoo\nbar\n")
+    (rt:string->bytestring "\nfoo\nbar\n"))
 
   (scm:define block1
-    "block"))
+    (rt:string->bytestring "block")))

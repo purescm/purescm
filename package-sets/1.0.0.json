@@ -9,17 +9,13 @@
     },
     "assert": {
       "git": "https://github.com/purescm/purescript-assert.git",
-      "ref": "bfef782e0e7a3fe041273c61e69c65dc54c1b2bf"
+      "ref": "f62b298619629f27acf15d1ed43d1cae7c206589"
     },
     "bifunctors": "6.0.0",
     "catenable-lists": "7.0.0",
     "console": {
       "git": "https://github.com/purescm/purescript-console.git",
-      "ref": "dc769b2f72215c141b53bfe65fc4c1b3c06d22b6",
-      "dependencies": [
-        "effect",
-        "prelude"
-      ]
+      "ref": "96c7021362c375f764fdb114b1ae2910fa7a71dc"
     },
     "const": "6.0.0",
     "contravariant": "6.0.0",
@@ -60,7 +56,7 @@
     "identity": "6.0.0",
     "integers": {
       "git": "https://github.com/purescm/purescript-integers.git",
-      "ref": "0a9ef55a25a72a46b3c336b89eab429eee8b1f7b"
+      "ref": "f6693ebc9c964f2233861dd089e6f75112bd54bc"
     },
     "invariant": "6.0.0",
     "lazy": {
@@ -71,13 +67,13 @@
     "maybe": "6.0.0",
     "minibench": {
       "git": "https://github.com/purescm/purescript-minibench.git",
-      "ref": "f411a9023fe3ee685077d48940e59abce031a775"
+      "ref": "52f7bafdd62bca8b5580a4c7f3373a73c700fc99"
     },
     "newtype": "5.0.0",
     "nonempty": "7.0.0",
     "numbers": {
       "git": "https://github.com/purescm/purescript-numbers.git",
-      "ref": "bc6d165addfd08552054a6100088ae13f8c4f47f"
+      "ref": "15500c24e09117c3ffe41c823bb5f7fde2d5a835"
     },
     "ordered-collections": "3.1.1",
     "orders": "6.0.0",
@@ -89,7 +85,7 @@
     },
     "prelude": {
       "git": "https://github.com/purescm/purescript-prelude.git",
-      "ref": "28f789ed80604306a396e6ffc43a6e43783e1c79"
+      "ref": "798367fa122eeafa52d1d377321346a399514192"
     },
     "profunctor": "6.0.0",
     "record": {
@@ -108,6 +104,10 @@
     "st": {
       "git": "https://github.com/purescm/purescript-st.git",
       "ref": "403451a2ca1a9b39149f12e3d98f03ee945f6c35"
+    },
+    "strings": {
+      "git": "https://github.com/anttih/purescript-strings.git",
+      "ref": "1e26c21c576311f08239078ec61af25ef9ff8953"
     },
     "semirings": "7.0.0",
     "tailrec": "6.1.0",

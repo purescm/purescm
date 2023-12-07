@@ -18,10 +18,10 @@
     (prefix (purs runtime lib) rt:))
 
   (scm:define string
-    "string")
+    (rt:string->bytestring "string"))
 
   (scm:define record2
-    (rt:make-object (scm:cons "foo" "bar")))
+    (rt:make-object (scm:cons (rt:string->bytestring "foo") (rt:string->bytestring "bar"))))
 
   (scm:define record
     (rt:make-object))

@@ -18,19 +18,19 @@
         Data.Unit.unit)))
 
   (scm:define lastComponentIsRun
-    (scm:let ([_0 (dontInlineMe "a")])
+    (scm:let ([_0 (dontInlineMe (rt:string->bytestring "a"))])
       (scm:lambda ()
         (scm:let*
           ([_ (_0)]
-           [_ ((dontInlineMe "b"))])
-            ((dontInlineMe "c"))))))
+           [_ ((dontInlineMe (rt:string->bytestring "b")))])
+            ((dontInlineMe (rt:string->bytestring "c")))))))
 
   (scm:define lastPureIsUnwrapped
-    (scm:let ([_0 (dontInlineMe "a")])
+    (scm:let ([_0 (dontInlineMe (rt:string->bytestring "a"))])
       (scm:lambda ()
         (scm:let*
           ([value1 (_0)]
-           [_ ((dontInlineMe "b"))])
+           [_ ((dontInlineMe (rt:string->bytestring "b")))])
             value1))))
 
   (scm:define main

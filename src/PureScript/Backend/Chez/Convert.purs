@@ -176,7 +176,12 @@ codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
   Accessor e (GetProp i) ->
     S.runUncurriedFn
       (S.Identifier $ rtPrefixed "object-ref")
-      [ codegenExpr codegenEnv e, S.StringExpr $ Json.stringify $ Json.fromString i ]
+      [ codegenExpr codegenEnv e
+      , S.List
+          [ S.Identifier $ rtPrefixed "string->bytestring"
+          , S.StringExpr $ Json.stringify $ Json.fromString i
+          ]
+      ]
   Accessor e (GetIndex i) ->
     S.runUncurriedFn
       (S.Identifier $ rtPrefixed "array-ref")
@@ -256,7 +261,10 @@ codegenLiteral :: CodegenEnv -> Literal NeutralExpr -> ChezExpr
 codegenLiteral codegenEnv = case _ of
   LitInt i -> S.Integer $ wrap $ show i
   LitNumber n -> S.Float $ wrap $ codegenFloat n
-  LitString s -> S.StringExpr $ jsonToChezString $ Json.stringify $ Json.fromString s
+  LitString s -> S.List
+    [ S.Identifier $ rtPrefixed "string->bytestring"
+    , S.StringExpr $ jsonToChezString $ Json.stringify $ Json.fromString s
+    ]
   LitChar c -> codegenChar c
   LitBoolean b -> S.Identifier $ if b then "#t" else "#f"
   LitArray a -> S.vector $ codegenExpr codegenEnv <$> a
@@ -426,6 +434,7 @@ codegenPrimOp codegenEnv@{ currentModule } = case _ of
           OpGte -> comparisonExpression ">=?"
           OpLt -> comparisonExpression "<?"
           OpLte -> comparisonExpression "<=?"
+
     in
       case o of
         OpArrayIndex ->
@@ -480,9 +489,23 @@ codegenPrimOp codegenEnv@{ currentModule } = case _ of
         OpNumberOrd o' ->
           makeComparison "fl" o'
         OpStringAppend ->
-          S.List [ S.Identifier $ scmPrefixed "string-append", x', y' ]
-        OpStringOrd o' ->
-          makeComparison "string" o'
+          S.List [ S.Identifier $ rtPrefixed "bytestring-append", x', y' ]
+        OpStringOrd o' -> do
+          let
+            makeStringComparison :: BackendOperatorOrd -> ChezExpr
+            makeStringComparison = do
+              let
+                comparisonExpression :: String -> ChezExpr
+                comparisonExpression opName =
+                  S.List [ S.Identifier $ Array.fold [ rtPrefixed "bytestring", opName ], x', y' ]
+              case _ of
+                OpEq -> comparisonExpression "=?"
+                OpNotEq -> S.List [ S.Identifier $ scmPrefixed "not", comparisonExpression "=?" ]
+                OpGt -> comparisonExpression ">?"
+                OpGte -> comparisonExpression ">=?"
+                OpLt -> comparisonExpression "<?"
+                OpLte -> comparisonExpression "<=?"
+          makeStringComparison o'
 
 codegenPrimEffect :: CodegenEnv -> BackendEffect NeutralExpr -> ChezExpr
 codegenPrimEffect codegenEnv = case _ of

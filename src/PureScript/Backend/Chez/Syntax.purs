@@ -126,7 +126,13 @@ record r = do
   let
     field :: Prop ChezExpr -> ChezExpr
     field (Prop k v) = List
-      [ Identifier $ scmPrefixed "cons", StringExpr $ Json.stringify $ Json.fromString k, v ]
+      [ Identifier $ scmPrefixed "cons"
+      , List
+          [ Identifier $ rtPrefixed "string->bytestring"
+          , StringExpr $ Json.stringify $ Json.fromString k
+          ]
+      , v
+      ]
   List $ [ Identifier $ rtPrefixed "make-object" ] <> (field <$> r)
 
 quote :: ChezExpr -> ChezExpr
@@ -165,7 +171,10 @@ recordUpdate h f = do
       List
         [ Identifier $ rtPrefixed "object-set!"
         , Identifier "$record"
-        , StringExpr $ Json.stringify $ Json.fromString k
+        , List
+            [ Identifier $ rtPrefixed "string->bytestring"
+            , StringExpr $ Json.stringify $ Json.fromString k
+            ]
         , v
         ]
   Let false

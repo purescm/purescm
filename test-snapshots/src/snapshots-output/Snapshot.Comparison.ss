@@ -15,7 +15,7 @@
   (scm:define stringComparison
     (scm:lambda (x0)
       (scm:lambda (y1)
-        (rt:make-array (scm:string=? x0 y1) (scm:not (scm:string=? x0 y1)) (scm:string<? x0 y1) (scm:string<=? x0 y1) (scm:string>=? x0 y1) (scm:string>? x0 y1)))))
+        (rt:make-array (rt:bytestring=? x0 y1) (scm:not (rt:bytestring=? x0 y1)) (rt:bytestring<? x0 y1) (rt:bytestring<=? x0 y1) (rt:bytestring>=? x0 y1) (rt:bytestring>? x0 y1)))))
 
   (scm:define numberComparison
     (scm:lambda (x0)

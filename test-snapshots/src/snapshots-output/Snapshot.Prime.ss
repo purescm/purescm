@@ -94,58 +94,58 @@
 
   (scm:define normal
     (scm:lambda (dict0)
-      (rt:object-ref dict0 "normal")))
+      (rt:object-ref dict0 (rt:string->bytestring "normal"))))
 
   (scm:define useNormal
     (scm:lambda (dictNormal0)
       (scm:lambda (dictNormal11)
         (scm:lambda (a2)
           (scm:lambda (b3)
-            (scm:string-append ((rt:object-ref dictNormal0 "normal") a2) ((rt:object-ref dictNormal11 "normal") b3)))))))
+            (rt:bytestring-append ((rt:object-ref dictNormal0 (rt:string->bytestring "normal")) a2) ((rt:object-ref dictNormal11 (rt:string->bytestring "normal")) b3)))))))
 
   (scm:define instanceName$p
-    (rt:make-object (scm:cons "normal" (scm:lambda (v0)
+    (rt:make-object (scm:cons (rt:string->bytestring "normal") (scm:lambda (v0)
       (scm:cond
-        [(F1? v0) "F1"]
-        [(F2? v0) "F2"]
+        [(F1? v0) (rt:string->bytestring "F1")]
+        [(F2? v0) (rt:string->bytestring "F2")]
         [scm:else (scm:raise (scm:condition (scm:make-error) (scm:make-message-condition "Failed pattern match")))])))))
 
   (scm:define useInstance
-    "F1F2")
+    (rt:string->bytestring "F1F2"))
 
   (scm:define ignore
     (scm:lambda (dict0)
-      (rt:object-ref dict0 "ignore")))
+      (rt:object-ref dict0 (rt:string->bytestring "ignore"))))
 
   (scm:define useClass
     (scm:lambda (dictClassName$p0)
-      (rt:object-ref dictClassName$p0 "ignore")))
+      (rt:object-ref dictClassName$p0 (rt:string->bytestring "ignore"))))
 
   (scm:define foo$poo
-    "foo'oo")
+    (rt:string->bytestring "foo'oo"))
 
   (scm:define useFooPrime3
-    "foo'oo")
+    (rt:string->bytestring "foo'oo"))
 
   (scm:define foo$p$p
-    "foo'")
+    (rt:string->bytestring "foo'"))
 
   (scm:define useFooPrime2
-    "foo'")
+    (rt:string->bytestring "foo'"))
 
   (scm:define foo$p
-    "foo'")
+    (rt:string->bytestring "foo'"))
 
   (scm:define useFooPrime1
-    "foo'")
+    (rt:string->bytestring "foo'"))
 
   (scm:define foo
-    "foo")
+    (rt:string->bytestring "foo"))
 
   (scm:define classMember$p
     (scm:lambda (dict0)
-      (rt:object-ref dict0 "classMember'")))
+      (rt:object-ref dict0 (rt:string->bytestring "classMember'"))))
 
   (scm:define useMember
     (scm:lambda (dictClassMember0)
-      (rt:object-ref dictClassMember0 "classMember'"))))
+      (rt:object-ref dictClassMember0 (rt:string->bytestring "classMember'")))))
