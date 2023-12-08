@@ -8,7 +8,7 @@
     fst)
   (import
     (prefix (chezscheme) scm:)
-    (prefix (purs runtime lib) rt:)
+    (prefix (purs runtime) rt:)
     (prefix (Snapshot.Import.Constructor lib) Snapshot.Import.Constructor.)
     (prefix (Snapshot.Import.Impl lib) Snapshot.Import.Impl.)
     (prefix (Snapshot.Import.Product lib) Snapshot.Import.Product.))

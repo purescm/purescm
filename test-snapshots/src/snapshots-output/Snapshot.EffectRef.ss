@@ -12,7 +12,7 @@
     primEffectAtTheEnd)
   (import
     (prefix (chezscheme) scm:)
-    (prefix (purs runtime lib) rt:)
+    (prefix (purs runtime) rt:)
     (prefix (Data.Show lib) Data.Show.)
     (prefix (Data.Unit lib) Data.Unit.)
     (prefix (Effect.Console lib) Effect.Console.)
