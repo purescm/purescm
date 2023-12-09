@@ -25,10 +25,10 @@
     (scm:cons 1 (scm:quote ())))
 
   (scm:define curried
-    rt:kons)
+    rt:list-cons)
 
   (scm:define cons2
-    (rt:kons 2))
+    (rt:list-cons 2))
 
   (scm:define cdr
     (scm:lambda (v0)

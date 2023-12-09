@@ -151,7 +151,7 @@ codegenTopLevelBinding codegenEnv (Tuple (Ident i) n) =
 codegenExpr :: CodegenEnv -> NeutralExpr -> ChezExpr
 codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
   Var (Qualified (Just (ModuleName "Data.List.Types")) (Ident "Cons")) ->
-    S.Identifier (rtPrefixed "kons")
+    S.Identifier (rtPrefixed "list-cons")
   Var qi ->
     S.Identifier $ flattenQualified currentModule qi
   Local i l ->

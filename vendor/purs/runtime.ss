@@ -3,7 +3,7 @@
 (library
   (purs runtime)
   (export
-    kons
+    list-cons
     object-copy
     object-set!
     object-ref
@@ -65,7 +65,7 @@
     (lambda (v)
       (srfi:125:hash-table-copy v #t)))
 
-  (define kons
+  (define list-cons
     (lambda (x) (lambda (xs) (cons x xs))))
 
 
