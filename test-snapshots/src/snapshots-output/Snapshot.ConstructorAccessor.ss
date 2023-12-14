@@ -38,7 +38,7 @@
     z)
   (import
     (prefix (chezscheme) scm:)
-    (prefix (purs runtime lib) rt:))
+    (prefix (purs runtime) rt:))
 
   (scm:define-record-type (First$ First First?)
     (scm:fields (scm:immutable value0 First-value0)))

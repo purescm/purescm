@@ -10,7 +10,7 @@
     Product?)
   (import
     (prefix (chezscheme) scm:)
-    (prefix (purs runtime lib) rt:))
+    (prefix (purs runtime) rt:))
 
   (scm:define-record-type (Product$ Product* Product?)
     (scm:fields (scm:immutable value0 Product-value0) (scm:immutable value1 Product-value1)))

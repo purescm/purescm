@@ -80,7 +80,7 @@ codegenModule { name, bindings, imports, foreign: foreign_ } =
             libChezSchemePrefix
         , ImportSet $ ImportPrefix
             ( ImportLibrary
-                { identifiers: NEA.cons' "purs" [ "runtime", moduleLib ], version: Nothing }
+                { identifiers: NEA.cons' "purs" [ "runtime" ], version: Nothing }
             )
             runtimePrefix
         ] <> pursImports <> foreignImport
@@ -151,7 +151,7 @@ codegenTopLevelBinding codegenEnv (Tuple (Ident i) n) =
 codegenExpr :: CodegenEnv -> NeutralExpr -> ChezExpr
 codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
   Var (Qualified (Just (ModuleName "Data.List.Types")) (Ident "Cons")) ->
-    S.Identifier (rtPrefixed "cons")
+    S.Identifier (rtPrefixed "list-cons")
   Var qi ->
     S.Identifier $ flattenQualified currentModule qi
   Local i l ->

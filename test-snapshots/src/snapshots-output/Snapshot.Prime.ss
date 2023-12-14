@@ -37,7 +37,7 @@
     useNormal)
   (import
     (prefix (chezscheme) scm:)
-    (prefix (purs runtime lib) rt:))
+    (prefix (purs runtime) rt:))
 
   (scm:define NCtor
     (scm:lambda (x0)

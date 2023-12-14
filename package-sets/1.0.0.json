@@ -5,7 +5,7 @@
   "packages": {
     "arrays": {
       "git": "https://github.com/purescm/purescript-arrays.git",
-      "ref": "b1b5a6ec28acedb5dc97495b08a2b204465f817b"
+      "ref": "39770954e86b5a5f311f470a718790210c4e37ff"
     },
     "assert": {
       "git": "https://github.com/purescm/purescript-assert.git",
@@ -45,7 +45,7 @@
     "filterable": "5.0.0",
     "foldable-traversable": {
       "git": "https://github.com/purescm/purescript-foldable-traversable.git",
-      "ref": "9b265472a9e8a2cbcf21a756b0d7e584eb2c6fdf"
+      "ref": "6c7d0e5ea7931e46264adf0cd8c27395fd1d055b"
     },
     "free": "7.1.0",
     "functions": {
@@ -89,12 +89,12 @@
     },
     "prelude": {
       "git": "https://github.com/purescm/purescript-prelude.git",
-      "ref": "28f789ed80604306a396e6ffc43a6e43783e1c79"
+      "ref": "c5b6872befbe5f6bbfe966335c619e60cb4f60e4"
     },
     "profunctor": "6.0.0",
     "record": {
       "git": "https://github.com/purescm/purescript-record.git",
-      "ref": "dc5ee9c0c86ca7c8a3db1e2b54c293d41475e20c"
+      "ref": "23d84398d3c6458be5033657a416e09dfc59f19c"
     },
     "refs": {
       "git": "https://github.com/purescm/purescript-refs.git",
@@ -107,7 +107,7 @@
     "safe-coerce": "2.0.0",
     "st": {
       "git": "https://github.com/purescm/purescript-st.git",
-      "ref": "403451a2ca1a9b39149f12e3d98f03ee945f6c35"
+      "ref": "362137c0bad7dba398b3f2c7a00ed117fb8b8b99"
     },
     "semirings": "7.0.0",
     "tailrec": "6.1.0",
