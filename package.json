@@ -1,9 +1,10 @@
 {
   "name": "purescm",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "main": "index.js",
   "type": "module",
   "files": [
+    "vendor/**/*.ss",
     "vendor/**/*.sls",
     "bundle/index.js"
   ],
