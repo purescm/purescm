@@ -4,6 +4,7 @@
   "main": "index.js",
   "type": "module",
   "files": [
+    "vendor/**/*.ss",
     "vendor/**/*.sls",
     "bundle/index.js"
   ],
