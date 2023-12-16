@@ -45,7 +45,7 @@
     "filterable": "5.0.0",
     "foldable-traversable": {
       "git": "https://github.com/purescm/purescript-foldable-traversable.git",
-      "ref": "6c7d0e5ea7931e46264adf0cd8c27395fd1d055b"
+      "ref": "7d53cd78b7937b5e3830ac414d78338211165cfd"
     },
     "free": "7.1.0",
     "functions": {
@@ -107,7 +107,7 @@
     "safe-coerce": "2.0.0",
     "st": {
       "git": "https://github.com/purescm/purescript-st.git",
-      "ref": "362137c0bad7dba398b3f2c7a00ed117fb8b8b99"
+      "ref": "eb2f1021e6be089fb8fc0c596f3779f65262e54c"
     },
     "semirings": "7.0.0",
     "tailrec": "6.1.0",
