@@ -8,7 +8,7 @@ import Prelude
 import Effect (Effect)
 import Prim.Row (class Lacks)
 import Record as Record
-import Test.Assert (assert)
+import Test.Assert (assert, assertThrows)
 import Type.Proxy (Proxy(..))
 
 recordAccess :: forall a r. { fooBarBaz :: a | r } -> a
@@ -22,6 +22,10 @@ recordAddField = Record.insert (Proxy :: _ "anotherField") 42
 
 foreign import minusTwo :: Int
 
+foreign import data Foreign :: Type
+
+foreign import unsafeGetNotFound :: forall r. Record r -> Foreign
+
 main :: Effect Unit
 main = do
   let r = { fooBarBaz: 5 }
@@ -34,3 +38,4 @@ main = do
   assert $ recordAccess s == 10
   assert $ recordAccess r == 5
   assert $ recordAccess u == minusTwo
+  assertThrows $ \_ -> unsafeGetNotFound u

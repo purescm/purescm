@@ -176,7 +176,9 @@ codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
   Accessor e (GetProp i) ->
     S.runUncurriedFn
       (S.Identifier $ rtPrefixed "object-ref")
-      [ codegenExpr codegenEnv e, S.StringExpr $ Json.stringify $ Json.fromString i ]
+      [ codegenExpr codegenEnv e
+      , S.recordLabel i
+      ]
   Accessor e (GetIndex i) ->
     S.runUncurriedFn
       (S.Identifier $ rtPrefixed "array-ref")

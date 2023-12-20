@@ -48,7 +48,7 @@ scheme --program output/main
 
 ## Vendored Dependencies
 
-In order to represent `Array` and record types in `purescm`, the backend has a runtime dependency on implementations of SRFI 214 (Flexvectors) and SRFI 125 (Intermediate hash tables). This is due in part to how [vectors](https://cisco.github.io/ChezScheme/csug9.5/objects.html#./objects:h5) are more like "arrays" than "array lists" and [hashtables](https://cisco.github.io/ChezScheme/csug9.5/objects.html#./objects:h12)' canonical accessor, `hashtable-ref`, takes a `default` value rather than raising an exception.
+In order to represent `Array` and record types in `purescm`, the backend has a runtime dependency on implementation of SRFI 214 (Flexvectors). This is due in part to how [vectors](https://cisco.github.io/ChezScheme/csug9.5/objects.html#./objects:h5) are more like "arrays" than "array lists".
 
 We vendor [chez-srfi](https://github.com/arcfide/chez-srfi) using the following steps:
 

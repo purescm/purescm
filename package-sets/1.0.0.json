@@ -5,7 +5,7 @@
   "packages": {
     "arrays": {
       "git": "https://github.com/purescm/purescript-arrays.git",
-      "ref": "4ebb4544c279d9fc8cb3ab0177c8b3b5a181861f"
+      "ref": "5d6ca235d3c2055443eb736e408ffd8755ef763d"
     },
     "assert": {
       "git": "https://github.com/purescm/purescript-assert.git",
@@ -89,12 +89,12 @@
     },
     "prelude": {
       "git": "https://github.com/purescm/purescript-prelude.git",
-      "ref": "630d0da2a7416142b7c23646e75253e88b75bd38"
+      "ref": "2da527bf51dd5f70bade71b044e48887c4e0245e"
     },
     "profunctor": "6.0.0",
     "record": {
       "git": "https://github.com/purescm/purescript-record.git",
-      "ref": "d191dfe6336a54adf986bd1e8077f4211357383b"
+      "ref": "107f650716ca4ff633c4abb170df1ccf86ced210"
     },
     "refs": {
       "git": "https://github.com/purescm/purescript-refs.git",

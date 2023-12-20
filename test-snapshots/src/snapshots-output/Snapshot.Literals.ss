@@ -21,7 +21,7 @@
     "string")
 
   (scm:define record2
-    (rt:make-object (scm:cons "foo" "bar")))
+    (rt:make-object (scm:cons (scm:string->symbol "foo") "bar")))
 
   (scm:define record
     (rt:make-object))

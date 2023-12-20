@@ -17,16 +17,11 @@
     boolean>?)
   (import
     (chezscheme)
-    (prefix (purs runtime srfi :125) srfi:125:)
-    (prefix (purs runtime srfi :128) srfi:128:)
     (prefix (purs runtime srfi :214) srfi:214:))
 
   (define boolean->integer
     (lambda (x)
       (if x 1 0)))
-
-  (define string-comparator
-    (srfi:128:make-comparator string? string=? string<? string-hash))
 
   (define boolean>?
     (lambda (x)
@@ -55,15 +50,32 @@
   (define array-length srfi:214:flexvector-length)
 
   (define make-object
-    (lambda args (srfi:125:alist->hash-table args string-comparator)))
+    (lambda args
+      (let ([obj (make-hashtable symbol-hash eq?)])
+        (for-each
+          (lambda (pair)
+            (symbol-hashtable-set! obj (car pair) (cdr pair)))
+          args)
+        obj)))
 
-  (define object-ref srfi:125:hash-table-ref)
+  (define nil (cons #f #f))
+  (define (nil? obj) (eq? obj nil))
 
-  (define object-set! srfi:125:hash-table-set!)
+  (define object-ref
+    (lambda (ht k)
+      (let ([value (symbol-hashtable-ref ht k nil)])
+        (if (nil? value)
+          (raise-continuable
+            (condition
+              (make-error)
+              (make-message-condition (format "Object key ~a not defined" k))))
+          value))))
+
+  (define object-set! symbol-hashtable-set!)
 
   (define object-copy
     (lambda (v)
-      (srfi:125:hash-table-copy v #t)))
+      (hashtable-copy v #t)))
 
   (define list-cons
     (lambda (x) (lambda (xs) (cons x xs))))
