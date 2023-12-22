@@ -89,7 +89,7 @@
     },
     "prelude": {
       "git": "https://github.com/purescm/purescript-prelude.git",
-      "ref": "2da527bf51dd5f70bade71b044e48887c4e0245e"
+      "ref": "5db11fe5f91108d933b70354e85cbb138581f75e"
     },
     "profunctor": "6.0.0",
     "record": {
