@@ -45,8 +45,12 @@
           bytestring-foldcase
           bytestring-downcase
           bytestring-upcase
-          bytestring-take-code-points)
+          bytestring-take-code-points
+
+          bytestring-make-regex
+          bytestring-regex-match)
   (import (chezscheme)
+          (only (purs runtime finalizers) finalizer)
           (purs runtime code-unit-vector)
           (prefix (purs runtime srfi :214) srfi:214:))
 
@@ -63,6 +67,14 @@
 
   (define (bytestring-empty? bs)
     (fx=? (bytestring-length bs) 0))
+
+  ;; Copies the bytestring into a freshly allocated bytevector.
+  ;; The resulting bytestring's buffer does not share any content
+  ;; with any other bytestring.
+  (define (bytestring-copy-fresh bs)
+    (let ([bv (make-bytevector (bytestring-length bs))])
+      (bytevector-copy! (bytestring-buffer bs) (bytestring-offset bs) bv 0 (bytestring-length bs))
+      (make-bytestring bv 0 (bytestring-length bs))))
 
   ;; Do x and y point to the same object in memory?
   (define (bytestring-eq? x y)
@@ -718,5 +730,104 @@
       (let ([bv (code-unit-vector-alloc 1)])
         (code-unit-vector-set! bv 0 point)
         bv)))
+
+
+  ;; 
+  ;; Regex
+  ;;
+
+  (define-structure
+    (regex code))
+
+  (define (bytestring-make-regex bs)
+    (let* ([errorcode (foreign-alloc 4)]
+           [erroroffset (foreign-alloc 4)]
+           [fresh-pat (if (not (fx=? (bytestring-offset bs) 0))
+                        ; need to make a fresh copy to not pass a bytevector
+                        ; with non-zero offset.
+                        (bytestring-copy-fresh bs)
+                        bs)]
+           [code (pcre2_compile_16
+                   (bytestring-buffer fresh-pat)
+                   (fx/ (bytestring-length fresh-pat) code-unit-length)
+                   0
+                   errorcode
+                   erroroffset
+                   0)])
+      (if (fx=? code 0)
+        #f
+        (finalizer (make-regex code)
+                   (lambda (o) (pcre-code-free (regex-code o)))))))
+
+  (define (bytestring-regex-match regex subject)
+    (let* ([match-data (pcre2_match_data_create_from_pattern_16 (regex-code regex) 0)]
+           [rc (pcre2_match_16
+                 (regex-code regex)
+                 (foreign-ref (bytestring-buffer subject))
+                 (fx/ (bytestring-length subject) code-unit-length)
+                 0
+                 0
+                 match-data
+                 0)])
+      (if (fx<? rc 0)
+        (begin (pcre2_match_data_free_16 match-data) #f)
+        (let* ([ovector (pcre2_get_ovector_pointer_16 match-data)]
+               [count (pcre2_get_ovector_count_16 match-data)]
+               [out (srfi:214:make-flexvector count)])
+          (let recur ([i 0])
+            (if (fx<? i count)
+              (let* ([sub-start (foreign-ref 'size_t ovector (fx* (fx* i 2) (foreign-sizeof 'size_t)))]
+                     [sub-end (foreign-ref 'size_t ovector (fx* (fx1+ (fx* i 2)) (foreign-sizeof 'size_t)))]
+                     [sub-len (fx* (fx- sub-end sub-start) code-unit-length)]
+                     [match-bs (make-bytestring
+                                 (bytestring-buffer subject)
+                                 (fx* sub-start code-unit-length)
+                                 sub-len)])
+                (srfi:214:flexvector-set! out i match-bs)
+                (recur (fx1+ i)))
+              (begin
+                (pcre2_match_data_free_16 match-data)
+                out)))))))
+
+  ;;
+  ;; PCRE bindings
+  ;;
+
+  (define pcre-init
+    (begin
+      (load-shared-object "libpcre2-16.so")))
+
+  ; pcre2_code *pcre2_compile(PCRE2_SPTR pattern, PCRE2_SIZE length, uint32_t options, int *errorcode, PCRE2_SIZE *erroroffset, pcre2_compile_context *ccontext);
+  (define pcre2_compile_16
+    (foreign-procedure "pcre2_compile_16" (u16* size_t unsigned-32 iptr iptr iptr)
+                       iptr))
+
+  ; pcre2_match_data *pcre2_match_data_create_from_pattern( const pcre2_code *code, pcre2_general_context *gcontext);
+  (define pcre2_match_data_create_from_pattern_16
+    (foreign-procedure "pcre2_match_data_create_from_pattern_16" (iptr iptr)
+                       iptr))
+
+  ; int pcre2_match(const pcre2_code *code, PCRE2_SPTR subject, PCRE2_SIZE length, PCRE2_SIZE startoffset, uint32_t options, pcre2_match_data *match_data, pcre2_match_context *mcontext);
+  (define pcre2_match_16
+    (foreign-procedure "pcre2_match_16" (iptr u16* size_t size_t unsigned-32 iptr iptr)
+                       int))
+
+  (define pcre2_get_ovector_pointer_16
+    (foreign-procedure "pcre2_get_ovector_pointer_16" (iptr)
+                       iptr))
+
+  (define pcre2_get_ovector_count_16
+    (foreign-procedure "pcre2_get_ovector_count_16" (iptr)
+                       unsigned-32))
+
+  (define pcre2_match_data_free_16
+    (foreign-procedure "pcre2_match_data_free_16" (iptr)
+                       void))
+  
+  (define pcre-code-free
+    (foreign-procedure "pcre2_code_free_16" (iptr)
+                       void))
+
+
   )
 

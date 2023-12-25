@@ -38,7 +38,10 @@
               nodejs-slim-16_x
               chez-racket
               esbuild
+              pcre2
+              pkg-config
             ];
+            LD_LIBRARY_PATH = "${pkgs.pcre2.out.outPath}/lib";
           };
         };
         formatter = pkgs.nixpkgs-fmt;
