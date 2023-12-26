@@ -38,7 +38,6 @@ import PureScript.Backend.Chez.Builder (basicBuildMain)
 import PureScript.Backend.Chez.Constants (moduleForeign, moduleLib, schemeExt)
 import PureScript.Backend.Chez.Convert (codegenModule)
 import PureScript.Backend.Chez.Printer as Printer
-import PureScript.Backend.Chez.Runtime (runtimeModule)
 import PureScript.Backend.Optimizer.CoreFn (Module(..), ModuleName(..))
 import Spago.Generated.BuildInfo as BuildInfo
 
@@ -161,9 +160,6 @@ runBuild :: BuildArgs -> Aff Unit
 runBuild args = do
   let runtimePath = Path.concat [ args.outputDir, "purs", "runtime" ]
   mkdirp runtimePath
-  let runtimeFilePath = Path.concat [ runtimePath, moduleLib <> schemeExt ]
-  let runtimeContents = Dodo.print plainText Dodo.twoSpaces $ Printer.printLibrary $ runtimeModule
-  FS.writeTextFile UTF8 runtimeFilePath runtimeContents
   basicBuildMain
     { coreFnDirectory: args.coreFnDir
     , coreFnGlobs: pure "**"

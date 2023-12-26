@@ -9,7 +9,7 @@
     main)
   (import
     (prefix (chezscheme) scm:)
-    (prefix (purs runtime lib) rt:)
+    (prefix (purs runtime) rt:)
     (prefix (Data.Unit lib) Data.Unit.))
 
   (scm:define dontInlineMe

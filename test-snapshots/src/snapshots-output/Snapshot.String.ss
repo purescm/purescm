@@ -7,7 +7,7 @@
     testStringMain)
   (import
     (prefix (chezscheme) scm:)
-    (prefix (purs runtime lib) rt:)
+    (prefix (purs runtime) rt:)
     (Snapshot.String foreign))
 
   (scm:define main

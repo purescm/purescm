@@ -121,16 +121,19 @@ unthunk e = List [ e ]
 app :: ChezExpr -> ChezExpr -> ChezExpr
 app f x = List [ f, x ]
 
+recordLabel :: String -> ChezExpr
+recordLabel key = List
+  [ Identifier $ scmPrefixed "string->symbol"
+  , StringExpr $ Json.stringify $ Json.fromString key
+  ]
+
 record :: Array (Prop ChezExpr) -> ChezExpr
 record r = do
   let
     field :: Prop ChezExpr -> ChezExpr
     field (Prop k v) = List
       [ Identifier $ scmPrefixed "cons"
-      , List
-          [ Identifier $ rtPrefixed "string->bytestring"
-          , StringExpr $ Json.stringify $ Json.fromString k
-          ]
+      , recordLabel k
       , v
       ]
   List $ [ Identifier $ rtPrefixed "make-object" ] <> (field <$> r)
@@ -171,10 +174,7 @@ recordUpdate h f = do
       List
         [ Identifier $ rtPrefixed "object-set!"
         , Identifier "$record"
-        , List
-            [ Identifier $ rtPrefixed "string->bytestring"
-            , StringExpr $ Json.stringify $ Json.fromString k
-            ]
+        , recordLabel k
         , v
         ]
   Let false

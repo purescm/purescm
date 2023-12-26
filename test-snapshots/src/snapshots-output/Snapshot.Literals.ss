@@ -15,13 +15,13 @@
     string)
   (import
     (prefix (chezscheme) scm:)
-    (prefix (purs runtime lib) rt:))
+    (prefix (purs runtime) rt:))
 
   (scm:define string
     (rt:string->bytestring "string"))
 
   (scm:define record2
-    (rt:make-object (scm:cons (rt:string->bytestring "foo") (rt:string->bytestring "bar"))))
+    (rt:make-object (scm:cons (scm:string->symbol "foo") (rt:string->bytestring "bar"))))
 
   (scm:define record
     (rt:make-object))

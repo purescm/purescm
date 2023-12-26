@@ -12,23 +12,23 @@
     xs)
   (import
     (prefix (chezscheme) scm:)
-    (prefix (purs runtime lib) rt:)
+    (prefix (purs runtime) rt:)
     (prefix (Data.List.Types lib) Data.List.Types.)
     (prefix (Data.Maybe lib) Data.Maybe.)
     (prefix (Data.Show lib) Data.Show.)
     (prefix (Test.Assert lib) Test.Assert.))
 
   (scm:define show
-    (rt:object-ref (Data.List.Types.showList Data.Show.showInt) (rt:string->bytestring "show")))
+    (rt:object-ref (Data.List.Types.showList Data.Show.showInt) (scm:string->symbol "show")))
 
   (scm:define xs
     (scm:cons 1 (scm:quote ())))
 
   (scm:define curried
-    rt:cons)
+    rt:list-cons)
 
   (scm:define cons2
-    (rt:cons 2))
+    (rt:list-cons 2))
 
   (scm:define cdr
     (scm:lambda (v0)

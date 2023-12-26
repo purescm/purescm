@@ -37,7 +37,7 @@
     useNormal)
   (import
     (prefix (chezscheme) scm:)
-    (prefix (purs runtime lib) rt:))
+    (prefix (purs runtime) rt:))
 
   (scm:define NCtor
     (scm:lambda (x0)
@@ -94,17 +94,17 @@
 
   (scm:define normal
     (scm:lambda (dict0)
-      (rt:object-ref dict0 (rt:string->bytestring "normal"))))
+      (rt:object-ref dict0 (scm:string->symbol "normal"))))
 
   (scm:define useNormal
     (scm:lambda (dictNormal0)
       (scm:lambda (dictNormal11)
         (scm:lambda (a2)
           (scm:lambda (b3)
-            (rt:bytestring-append ((rt:object-ref dictNormal0 (rt:string->bytestring "normal")) a2) ((rt:object-ref dictNormal11 (rt:string->bytestring "normal")) b3)))))))
+            (rt:bytestring-append ((rt:object-ref dictNormal0 (scm:string->symbol "normal")) a2) ((rt:object-ref dictNormal11 (scm:string->symbol "normal")) b3)))))))
 
   (scm:define instanceName$p
-    (rt:make-object (scm:cons (rt:string->bytestring "normal") (scm:lambda (v0)
+    (rt:make-object (scm:cons (scm:string->symbol "normal") (scm:lambda (v0)
       (scm:cond
         [(F1? v0) (rt:string->bytestring "F1")]
         [(F2? v0) (rt:string->bytestring "F2")]
@@ -115,11 +115,11 @@
 
   (scm:define ignore
     (scm:lambda (dict0)
-      (rt:object-ref dict0 (rt:string->bytestring "ignore"))))
+      (rt:object-ref dict0 (scm:string->symbol "ignore"))))
 
   (scm:define useClass
     (scm:lambda (dictClassName$p0)
-      (rt:object-ref dictClassName$p0 (rt:string->bytestring "ignore"))))
+      (rt:object-ref dictClassName$p0 (scm:string->symbol "ignore"))))
 
   (scm:define foo$poo
     (rt:string->bytestring "foo'oo"))
@@ -144,8 +144,8 @@
 
   (scm:define classMember$p
     (scm:lambda (dict0)
-      (rt:object-ref dict0 (rt:string->bytestring "classMember'"))))
+      (rt:object-ref dict0 (scm:string->symbol "classMember'"))))
 
   (scm:define useMember
     (scm:lambda (dictClassMember0)
-      (rt:object-ref dictClassMember0 (rt:string->bytestring "classMember'")))))
+      (rt:object-ref dictClassMember0 (scm:string->symbol "classMember'")))))

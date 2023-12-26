@@ -56,3 +56,6 @@ workspace:
       - build
   package_set:
     path: ../package-sets/1.0.0.json
+  extra_packages:
+    prelude:
+      path: ../../core/prelude
