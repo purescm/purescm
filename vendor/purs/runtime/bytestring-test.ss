@@ -20,7 +20,7 @@
         (string->bytestring "123")
         (bytestring-append (string->bytestring s) (string->bytestring "456")))
       3
-      (fx+ 3 (bytestring-length-code-units (string->bytestring s)))))
+      (fx+ 3 (bytestring-length (string->bytestring s)))))
 
   (define (replace s p r)
     (bytestring-replace (lit s) (lit p) (lit r)))
@@ -40,12 +40,12 @@
       (assert (fx=? 228 (bytestring-ref-code-point (lit "ä") 0)))
 
       ;; length in code units
-      (assert (fx=? 0 (bytestring-length-code-units (lit ""))))
-      (assert (fx=? 1 (bytestring-length-code-units (lit "a"))))
-      (assert (fx=? 1 (bytestring-length-code-units (lit "ä"))))
-      (assert (fx=? 2 (bytestring-length-code-units (lit "ää"))))
-      (assert (fx=? 2 (bytestring-length-code-units (lit "🍔"))))
-      (assert (fx=? 4 (bytestring-length-code-units (lit "🍔🍔"))))
+      (assert (fx=? 0 (bytestring-length (lit ""))))
+      (assert (fx=? 1 (bytestring-length (lit "a"))))
+      (assert (fx=? 1 (bytestring-length (lit "ä"))))
+      (assert (fx=? 2 (bytestring-length (lit "ää"))))
+      (assert (fx=? 2 (bytestring-length (lit "🍔"))))
+      (assert (fx=? 4 (bytestring-length (lit "🍔🍔"))))
 
       ;; length in code points
       (assert (fx=? 0 (bytestring-length-code-points (lit ""))))
@@ -54,14 +54,15 @@
       (assert (fx=? 2 (bytestring-length-code-points (lit "äが"))))
       (assert (fx=? 2 (bytestring-length-code-points (lit "🍔🍔"))))
 
-      (assert (fx=? (bytestring-hash (lit ""))
-                    (bytestring-hash (lit ""))))
-
-      (assert (fx=? (bytestring-hash (lit "foo"))
-                    (bytestring-hash (lit "foo"))))
-
-      (assert (not (fx=? (bytestring-hash (lit "foo"))
-                         (bytestring-hash (lit "bar")))))
+      ;; ; ;; hash
+      ;; ; (assert (fx=? (bytestring-hash (bytestring-slice (lit "foo bar") 4 7))
+      ;; ;               (bytestring-hash (lit "bar"))))
+      ;; ; (assert (fx=? (bytestring-hash (lit ""))
+      ;; ;               (bytestring-hash (lit ""))))
+      ;; ; (assert (fx=? (bytestring-hash (lit "foo"))
+      ;; ;               (bytestring-hash (lit "foo"))))
+      ;; ; (assert (not (fx=? (bytestring-hash (lit "foo"))
+      ;; ;                    (bytestring-hash (lit "bar")))))
 
       ;; slicing
       (assert (string=?
@@ -113,10 +114,6 @@
       (assert (fx=? 0 (bytestring-last-index-of (lit "") (lit ""))))
       (assert (not (bytestring-index-of (lit "foo bar") (lit "baz"))))
       (assert (fx=? 8 (bytestring-last-index-of (lit "foo bar foo") (lit "foo"))))
-
-      ;; hash
-      (assert (fx=? (bytestring-hash (bytestring-slice (lit "foo bar") 4 7))
-                    (bytestring-hash (lit "bar"))))
 
       ;; comparisons
       (assert (bytestring=? (lit "abc") (lit "abc")))
@@ -210,7 +207,7 @@
       (assert (bytestring=? (bytestring-join-with (srfi:214:flexvector (lit "𝕒") (lit "𝕔")) (lit "𝕓")) (lit "𝕒𝕓𝕔")))
 
 
-      ; Code points
+      ;; ; Code points
 
       (assert (fx=? 7 (bytestring-length-code-points
                         (code-points->bytestring #x61 #xDC00 #xD800 #xD800 #x16805 #x16A06 #x7A))))
@@ -246,6 +243,6 @@
       (assert (bytestring=? (bytestring-take-code-points (lit "𝕒𝕓𝕔") 3) (lit "𝕒𝕓𝕔")))
       (assert (bytestring=? (bytestring-take-code-points (lit "𝕒𝕓𝕔") 4) (lit "𝕒𝕓𝕔")))
 
-      'unit
+      (display "All good!\n")
       ))
   )

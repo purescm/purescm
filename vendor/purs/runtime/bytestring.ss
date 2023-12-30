@@ -1,7 +1,7 @@
 #!chezscheme
 (library (purs runtime bytestring)
   (export bytestring-ref
-          bytestring-length-code-units
+          bytestring-length
           bytestring-uncons-code-unit
           bytestring-uncons-code-point
           (rename (make-bytestring-of-length make-bytestring))
@@ -9,7 +9,7 @@
           bytestring-empty?
           bytestring?
           bytestring=?
-          bytestring-hash
+          ; bytestring-hash
           bytestring-slice
           bytestring-trim
           bytestring-take
@@ -45,26 +45,21 @@
           bytestring-foldcase
           bytestring-downcase
           bytestring-upcase
-          bytestring-take-code-points
-          )
-  (import (only (rnrs bytevectors) native-endianness)
-          (chezscheme)
+          bytestring-take-code-points)
+  (import (chezscheme)
+          (purs runtime code-unit-vector)
           (prefix (purs runtime srfi :214) srfi:214:))
 
-  ;; Immutable UTF-16 encoded slice into a bytevector buffer.
-  ;; Uses the system's native endianness. Does not include a BOM.
   (define-structure
     (bytestring
-      ;; the UTF-16 encoded bytevector
+      ;; UTF-16 encoded memory buffer
       buffer
-      ;; start offset byte of the slice
+      ;; start offset of the slice
       offset
-      ;; size of the slice in bytes
+      ;; size of the slice in code units
       length))
 
-  (define code-unit-length 2)
-
-  (define empty-bytestring (make-bytestring (bytevector) 0 0))
+  (define empty-bytestring (make-bytestring empty-code-unit-vector 0 0))
 
   (define (bytestring-empty? bs)
     (fx=? (bytestring-length bs) 0))
@@ -77,18 +72,14 @@
 
   ;; this is our version of `make-string`
   (define (make-bytestring-of-length n)
-    (make-bytestring (make-bytevector n) 0 n))
-
-  ;; length in words
-  (define (bytestring-length-code-units bs)
-    (fx/ (bytestring-length bs) 2))
+    (make-bytestring (code-unit-vector-alloc n) 0 n))
 
   ;; NOTE: this only takes in PS chars which are guaranteed to
   ;; be only one word in size (one code unit)
   (define (bytestring-singleton c)
-    (let ([bv (make-bytevector code-unit-length)])
-      (bytevector-u16-native-set! bv 0 (char->integer c))
-      (make-bytestring bv 0 code-unit-length)))
+    (let ([bv (code-unit-vector-alloc 1)])
+      (code-unit-vector-set! bv 0 (char->integer c))
+      (make-bytestring bv 0 1)))
 
   (define (bytestring=? x y)
     ;; Assumes the buffers have the same length
@@ -109,59 +100,110 @@
         [else #f])
       #f))
 
-  ;; Mostly taken from Chez Scheme `newhash.ss` and updated to work with `bytestring`
-  (define (bytestring-hash bs)
-    (define (hcabs hc) (if (fx< hc 0) (fxnot hc) hc))
-    (define (update hc k)
-      (let ([hc2 (fx+/wraparound hc (fxsll/wraparound (fx+/wraparound hc k) 10))])
-        (fxlogxor hc2 (fxsrl hc2 6))))
-    (define (bvupdate hc bv i)
-      (update hc (bytevector-u8-ref bv i)))
-    (let ([n (bytestring-length bs)]
-          [offset (bytestring-offset bs)]
-          [bv (bytestring-buffer bs)])
-      (if (fx<= n 16)
-          (do ([i 0 (fx+ i 1)] [hc 440697712 (bvupdate hc bv (fx+ i offset))])
-            ((fx= i n) (hcabs hc)))
-          (do ([i 0 (fx+ i 1)]
-               [hc 440697712 (bvupdate hc bv (fx+ i offset))])
-              ((fx= i 5)
-               (do ([i (fx- n 5) (fx+ i 1)]
-                    [hc hc (bvupdate hc bv (fx+ i offset))])
-                   ((fx= i n)
-                    (let ([stride (fxsrl n 4)])
-                      (do ([i 5 (fx+ i stride)]
-                           [hc hc (bvupdate hc bv (fx+ i offset))])
-                          ((fx>= i n) (hcabs hc)))))))))))
+  ; ;; Mostly taken from Chez Scheme `newhash.ss` and updated to work with `bytestring`
+  ; (define (bytestring-hash bs)
+  ;   (define (hcabs hc) (if (fx< hc 0) (fxnot hc) hc))
+  ;   (define (update hc k)
+  ;     (let ([hc2 (fx+/wraparound hc (fxsll/wraparound (fx+/wraparound hc k) 10))])
+  ;       (fxlogxor hc2 (fxsrl hc2 6))))
+  ;   (define (bvupdate hc bv i)
+  ;     (update hc (bytevector-u8-ref bv i)))
+  ;   (let ([n (bytestring-length bs)]
+  ;         [offset (bytestring-offset bs)]
+  ;         [bv (bytestring-buffer bs)])
+  ;     (if (fx<= n 16)
+  ;         (do ([i 0 (fx+ i 1)] [hc 440697712 (bvupdate hc bv (fx+ i offset))])
+  ;           ((fx= i n) (hcabs hc)))
+  ;         (do ([i 0 (fx+ i 1)]
+  ;              [hc 440697712 (bvupdate hc bv (fx+ i offset))])
+  ;             ((fx= i 5)
+  ;              (do ([i (fx- n 5) (fx+ i 1)]
+  ;                   [hc hc (bvupdate hc bv (fx+ i offset))])
+  ;                  ((fx= i n)
+  ;                   (let ([stride (fxsrl n 4)])
+  ;                     (do ([i 5 (fx+ i stride)]
+  ;                          [hc hc (bvupdate hc bv (fx+ i offset))])
+  ;                         ((fx>= i n) (hcabs hc)))))))))))
 
   (define (string->bytestring s)
-    (let ([bv (string->utf16 s (native-endianness))])
-      (make-bytestring bv 0 (bytevector-length bv))))
+    (let* ([sn (string-length s)]
+           [buf-size (do ([si 0 (fx+ si 1)]
+                          [n 0 (+ n (if (char<=? (string-ref s si) #\xffff) 1 2))])
+                 ((fx= si sn) n))]
+           [buf (code-unit-vector-alloc buf-size)])
+      (let loop ([ci 0] [i 0])
+        (if (fx<? ci sn)
+          (let ([point (char->integer (string-ref s ci))])
+            (if (fx>? point #x10FFFF)
+              (raise-continuable
+                (make-message-condition
+                  (format "Value ~d is too large to encode as UTF-16 code point" point))))
+            (if (fx<=? #x10000 point)
+              (let* ([code (fx- point #x10000)]
+                     [w1 (fxlogor #xD800 (fxsrl code 10))]
+                     [w2 (fxlogor #xDC00 (fxlogand code #x3FF))])
+                (code-unit-vector-set! buf i w1)
+                (code-unit-vector-set! buf (fx1+ i) w2)
+                (loop (fx1+ ci) (fx+ i 2)))
+              (begin
+                (code-unit-vector-set! buf i point)
+                (loop (fx1+ ci) (fx1+ i)))))))
+      (make-bytestring buf 0 buf-size)))
 
   (define (bytestring->string bs)
-    (let ([buf (make-bytevector (bytestring-length bs))])
-      (bytevector-copy! (bytestring-buffer bs) (bytestring-offset bs) buf 0 (bytestring-length bs))
-      (utf16->string buf (native-endianness))))
+    ; First allocate a string based on the code unit size
+    ; and then truncate at the end.
+    (let* ([len (bytestring-length bs)]
+           [out (make-string len)]
+           [buf (bytestring-buffer bs)]
+           [offset (bytestring-offset bs)])
+      (let loop ([i 0] [char-i 0])
+        (if (fx<? i len)
+          (let* ([w1 (code-unit-vector-ref buf (fx+ offset i))])
+            (cond
+              ;; Two-word encoding? Check for high surrogate
+              [(and (fx<= #xD800 w1 #xDBFF) (fx>=? (bytestring-length bs) 4))
+               (let ([w2 (code-unit-vector-ref buf (fx+ offset i 1))])
+                 ;; low surrogate?
+                 (if (fx<= #xDC00 w2 #xDFFF)
+                   (begin
+                     (string-set! out
+                                  char-i
+                                  (integer->char
+                                    (fx+
+                                      (fxlogor
+                                        (fxsll (fx- w1 #xD800) 10)
+                                        (fx- w2 #xDC00))
+                                      #x10000)))
+                     (loop (fx+ i 2) (fx1+ char-i)))
+                   ;; low surrogate not found, just return the high surrogate
+                   (loop (fx+ i 1) (fx1+ char-i))))]
+              ;; misplaced continuation word?
+              [(fx<= #xDC00 w1 #xDFFF)
+               (begin
+                 (string-set! out char-i (integer->char w1))
+                 (loop (fx+ i 1) (fx1+ char-i)))]
+              ;; one-word encoding
+              [else (begin (string-set! out char-i (integer->char w1)) (loop (fx+ i 1) (fx1+ char-i)))]))
+          (begin (string-truncate! out char-i) out)))))
 
   (define (bytestring-read-code-unit bs)
-    (bytevector-u16-native-ref (bytestring-buffer bs) (bytestring-offset bs)))
+    (code-unit-vector-ref (bytestring-buffer bs) (bytestring-offset bs)))
 
   (define (bytestring-read-word-end bs)
-    (bytevector-u16-native-ref (bytestring-buffer bs) (fx- (fx+ (bytestring-offset bs) (bytestring-length bs)) code-unit-length)))
+    (code-unit-vector-ref (bytestring-buffer bs) (fx- (fx+ (bytestring-offset bs) (bytestring-length bs)) 1)))
 
   (define (bytestring-forward-code-units bs n)
-    (let ([i (fx* n code-unit-length)])
-      (make-bytestring
-        (bytestring-buffer bs)
-        (fx+ (bytestring-offset bs) i)
-        (fx- (bytestring-length bs) i))))
+    (make-bytestring
+      (bytestring-buffer bs)
+      (fx+ (bytestring-offset bs) n)
+      (fx- (bytestring-length bs) n)))
 
   (define (bytestring-drop-code-units bs n)
-    (let ([i (fx* n code-unit-length)])
-      (make-bytestring
-        (bytestring-buffer bs)
-        (bytestring-offset bs)
-        (fx- (bytestring-length bs) i))))
+    (make-bytestring
+      (bytestring-buffer bs)
+      (bytestring-offset bs)
+      (fx- (bytestring-length bs) n)))
 
   (define ($bytestring-uncons-code-unit bs)
     (if (bytestring-empty? bs)
@@ -180,10 +222,9 @@
   ;; Returns a scheme `char`.
   (define (bytestring-ref bs n)
     (define (bytestring-ref-code-unit bs n)
-      (let ([bv (bytestring-buffer bs)]
-            [i (fx* n code-unit-length)])
-        (if (fx<? i (bytestring-length bs))
-          (bytevector-u16-native-ref bv (fx+ i (bytestring-offset bs)))
+      (let ([bv (bytestring-buffer bs)])
+        (if (fx<? n (bytestring-length bs))
+          (code-unit-vector-ref bv (fx+ n (bytestring-offset bs)))
           ;; not enough bytes to read a full code unit
           (raise-continuable
             (make-message-condition
@@ -194,17 +235,17 @@
   (define bytestring-slice
     (case-lambda
       [(bs start)
-       (bytestring-slice bs start (bytestring-length-code-units bs))]
+       (bytestring-slice bs start (bytestring-length bs))]
       [(bs start end)
-        (let* ([start-index (fxmin (fxmax 0 start) (bytestring-length-code-units bs))]
-               [end-index (fxmin (fxmax 0 end) (bytestring-length-code-units bs))]
+        (let* ([start-index (fxmin (fxmax 0 start) (bytestring-length bs))]
+               [end-index (fxmin (fxmax 0 end) (bytestring-length bs))]
                [len (fx- end-index start-index)])
           (if (fx<? len 0)
             empty-bytestring
             (make-bytestring
               (bytestring-buffer bs)
-              (fx+ (bytestring-offset bs) (fx* start-index code-unit-length))
-              (fx* len code-unit-length))))]))
+              (fx+ (bytestring-offset bs) start-index)
+              len)))]))
 
   (define (bytestring-take bs n)
     (bytestring-slice bs 0 n))
@@ -269,7 +310,7 @@
 
   (define (bytestring-last-index-of bs pattern)
     (if (bytestring-empty? pattern)
-      (bytestring-length-code-units bs)
+      (bytestring-length bs)
       (let loop ([i 0]
                  [last-match-candidate #f]
                  [candidate #f]    ; the index of the first matching char
@@ -296,20 +337,20 @@
 
   (define (bytestring-append x y)
     (let* ([len (fx+ (bytestring-length x) (bytestring-length y))]
-           [buf (make-bytevector len)])
-      (bytevector-copy! (bytestring-buffer x) (bytestring-offset x) buf 0 (bytestring-length x))
-      (bytevector-copy! (bytestring-buffer y) (bytestring-offset y) buf (bytestring-length x) (bytestring-length y))
+           [buf (code-unit-vector-alloc len)])
+      (code-unit-vector-copy! (bytestring-buffer x) (bytestring-offset x) buf 0 (bytestring-length x))
+      (code-unit-vector-copy! (bytestring-buffer y) (bytestring-offset y) buf (bytestring-length x) (bytestring-length y))
       (make-bytestring buf 0 len)))
 
   (define (bytestring-cat-reverse xs)
     (let* ([len (fold-right (lambda (s a) (fx+ (bytestring-length s) a)) 0 xs)]
-           [buf (make-bytevector len)])
+           [buf (code-unit-vector-alloc len)])
       (let loop ([i len] [ls xs])
         (if (pair? ls)
           (let* ([bs (car ls)]
                  [slen (bytestring-length bs)]
                  [index (fx- i slen)])
-            (bytevector-copy! (bytestring-buffer bs) (bytestring-offset bs) buf index slen)
+            (code-unit-vector-copy! (bytestring-buffer bs) (bytestring-offset bs) buf index slen)
             (loop index (cdr ls)))
           (make-bytestring buf 0 len)))))
 
@@ -319,7 +360,7 @@
            [separator-count (if (fx=? xs-count 0) 0 (fx1- xs-count))]
            [separator-len (bytestring-length separator)]
            [bv-len (fx+ len (fx* separator-count separator-len))]
-           [bv (make-bytevector bv-len)])
+           [bv (code-unit-vector-alloc bv-len)])
       (let loop ([i 0]
                  [bi 0])
         (if (fx<? i xs-count)
@@ -327,13 +368,13 @@
                  [len (bytestring-length s)])
             (if (fx>? i 0)
               (begin
-                (bytevector-copy!
+                (code-unit-vector-copy!
                   (bytestring-buffer separator)
                   (bytestring-offset separator)
                   bv
                   (fx+ bi)
                   separator-len)
-                (bytevector-copy!
+                (code-unit-vector-copy!
                   (bytestring-buffer s)
                   (bytestring-offset s)
                   bv
@@ -341,7 +382,7 @@
                   len)
                 (loop (fx1+ i) (fx+ bi len separator-len)))
               (begin
-                (bytevector-copy! (bytestring-buffer s) (bytestring-offset s) bv bi len)
+                (code-unit-vector-copy! (bytestring-buffer s) (bytestring-offset s) bv bi len)
                 (loop (fx1+ i) (fx+ bi len)))))
           (make-bytestring bv 0 bv-len)))))
 
@@ -366,16 +407,16 @@
     (string-ci=? (bytestring->string x) (bytestring->string y)))
 
   (define (char-flexvector->bytestring v)
-    (let* ([len (fx* code-unit-length (srfi:214:flexvector-length v))]
-           [bv (make-bytevector len)])
+    (let* ([len (srfi:214:flexvector-length v)]
+           [bv (code-unit-vector-alloc len)])
       (srfi:214:flexvector-for-each/index
         (lambda (i c)
-          (bytevector-u16-native-set! bv (fx* 2 i) (char->integer c))) 
+          (code-unit-vector-set! bv i (char->integer c))) 
         v)
       (make-bytestring bv 0 len)))
 
   (define (bytestring->char-flexvector bs)
-    (let* ([len (bytestring-length-code-units bs)]
+    (let* ([len (bytestring-length bs)]
            [fv (srfi:214:make-flexvector len)])
       (let loop ([i 0] [rest bs])
         (if (bytestring-empty? rest)
@@ -396,19 +437,18 @@
           bs
           (let* ([len (fx+ (fx- (bytestring-length bs) (bytestring-length pattern))
                            (bytestring-length replacement))]
-                 [bv (make-bytevector len)]
-                 [bi (fx* i code-unit-length)])
-            (bytevector-copy! (bytestring-buffer bs) (bytestring-offset bs) bv 0 bi)
-            (bytevector-copy! (bytestring-buffer replacement)
+                 [bv (code-unit-vector-alloc len)])
+            (code-unit-vector-copy! (bytestring-buffer bs) (bytestring-offset bs) bv 0 i)
+            (code-unit-vector-copy! (bytestring-buffer replacement)
                               (bytestring-offset replacement)
                               bv
-                              bi
+                              i
                               (bytestring-length replacement))
-            (bytevector-copy! (bytestring-buffer bs)
-                              (fx+ (bytestring-offset bs) bi (bytestring-length pattern))
+            (code-unit-vector-copy! (bytestring-buffer bs)
+                              (fx+ (bytestring-offset bs) i (bytestring-length pattern))
                               bv
-                              (fx+ bi (bytestring-length replacement))
-                              (fx- (bytestring-length bs) bi (bytestring-length pattern)))
+                              (fx+ i (bytestring-length replacement))
+                              (fx- (bytestring-length bs) i (bytestring-length pattern)))
             (make-bytestring bv 0 len))))))
 
   ; Find all occurences and return their indices as a list
@@ -420,7 +460,7 @@
           (let ([i (bytestring-index-of slice pattern)])
             (if i
               (cons (fx+ start i)
-                    (go (fx+ start i (bytestring-length-code-units pattern))))
+                    (go (fx+ start i (bytestring-length pattern))))
               '()))))))
 
   (define (bytestring-replace-all bs pattern replacement)
@@ -431,32 +471,32 @@
                                       (fx- (bytestring-length pattern)
                                            (bytestring-length replacement)))]
              [len (fx- (bytestring-length bs) replacements-delta)]
-             [bv (make-bytevector len)])
+             [bv (code-unit-vector-alloc len)])
         (let loop ([bsi 0] ; where we are at bs
                    [bvi 0] ; where we are at bv
                    [rest is])
           (if (null? rest)
             ; copy the left-overs into place
-            (bytevector-copy! (bytestring-buffer bs)
-                              (fx+ (bytestring-offset bs) bsi)
-                              bv
-                              bvi
-                              (fx- (bytestring-length bs) bsi))
-            (let* ([i (car rest)] [bi (fx* i code-unit-length)] [before-len (fx- bi bsi)])
+            (code-unit-vector-copy! (bytestring-buffer bs)
+                                    (fx+ (bytestring-offset bs) bsi)
+                                    bv
+                                    bvi
+                                    (fx- (bytestring-length bs) bsi))
+            (let* ([i (car rest)] [before-len (fx- i bsi)])
               ;; copy stuff before the match
-              (bytevector-copy! (bytestring-buffer bs)
+              (code-unit-vector-copy! (bytestring-buffer bs)
                                 (fx+ (bytestring-offset bs) bsi)
                                 bv
                                 bvi
                                 before-len)
               ;; the replacement itself
-              (bytevector-copy! (bytestring-buffer replacement)
+              (code-unit-vector-copy! (bytestring-buffer replacement)
                                 (bytestring-offset replacement)
                                 bv
                                 (fx+ bvi before-len)
                                 (bytestring-length replacement))
               (loop
-                (fx+ bi (bytestring-length pattern))
+                (fx+ i (bytestring-length pattern))
                 (fx+ (fx+ bvi before-len) (bytestring-length replacement))
                 (cdr rest)))))
         (make-bytestring bv 0 len))))
@@ -465,7 +505,7 @@
     (cond
       [(bytestring-empty? bs) (srfi:214:flexvector)]
       [(bytestring-empty? pattern)
-        (let* ([len (bytestring-length-code-units bs)]
+        (let* ([len (bytestring-length bs)]
                [fv (srfi:214:make-flexvector len)])
           (let loop ([i 0] [rest bs])
             (if (bytestring-empty? rest)
@@ -485,7 +525,7 @@
                 vec)
               (let ([index (car indices)])
                 (srfi:214:flexvector-set! vec i (bytestring-slice bs pi index))
-                (loop (cdr indices) (fx1+ i) (fx+ index (bytestring-length-code-units pattern)))))))]))
+                (loop (cdr indices) (fx1+ i) (fx+ index (bytestring-length pattern)))))))]))
 
 
   ;;
@@ -499,11 +539,11 @@
         (make-message-condition "bytestring-uncons-code-point: bytestring is empty"))
       (let* ([buf (bytestring-buffer bs)]
              [offset (bytestring-offset bs)]
-             [w1 (bytevector-u16-native-ref buf offset)])
+             [w1 (code-unit-vector-ref buf offset)])
         (cond
           ;; Two-word encoding? Check for high surrogate
-          [(and (fx<= #xD800 w1 #xDBFF) (fx>=? (bytestring-length bs) 4))
-           (let ([w2 (bytevector-u16-native-ref buf (fx+ offset 2))])
+          [(and (fx<= #xD800 w1 #xDBFF) (fx>=? (bytestring-length bs) 2))
+           (let ([w2 (code-unit-vector-ref buf (fx1+ offset))])
              ;; low surrogate?
              (if (fx<= #xDC00 w2 #xDFFF)
                (values
@@ -553,14 +593,14 @@
   ;; Let's you generate a bytestring with invalid unicode.
   (define (code-points->bytestring . xs)
     (let* ([bvs (map utf16-encode xs)]
-           [len (fold-left (lambda (total bv) (fx+ total (bytevector-length bv))) 0 bvs)]
-           [res (make-bytevector len)])
+           [len (fold-left (lambda (total bv) (fx+ total (code-unit-vector-length bv))) 0 bvs)]
+           [res (code-unit-vector-alloc len)])
       (let loop ([resi 0] [rest bvs])
         (if (null? rest)
           res
           (begin
-            (bytevector-copy! (car rest) 0 res resi (bytevector-length (car rest)))
-            (loop (fx+ resi (bytevector-length (car rest))) (cdr rest)))))
+            (code-unit-vector-copy! (car rest) 0 res resi (code-unit-vector-length (car rest)))
+            (loop (fx+ resi (code-unit-vector-length (car rest))) (cdr rest)))))
       (make-bytestring res 0 len)))
 
   (define (bytestring<? x y)
@@ -653,7 +693,7 @@
       (let loop ([i n] [tail bs])
         (cond
           [(and (fx>? i 0) (fx=? (bytestring-length tail) 0)) bs]
-          [(fx=? i 0) (bytestring-take bs (fx/ (fx- (bytestring-length bs) (bytestring-length tail)) code-unit-length))]
+          [(fx=? i 0) (bytestring-take bs (fx- (bytestring-length bs) (bytestring-length tail)))]
           [else
             (let-values ([(_ t) (bytestring-uncons-code-point tail)])
               (loop (fx1- i) t))]))))
@@ -668,16 +708,15 @@
         (make-message-condition
           (format "Value ~d is too large to encode as UTF-16 code point" point))))
     (if (fx<=? #x10000 point)
-      (let* ([bv (make-bytevector 4)]
+      (let* ([bv (code-unit-vector-alloc 2)]
              [code (fx- point #x10000)]
              [w1 (fxlogor #xD800 (fxsrl code 10))]
              [w2 (fxlogor #xDC00 (fxlogand code #x3FF))])
-        (bytevector-u16-native-set! bv 0 w1)
-        (bytevector-u16-native-set! bv 2 w2)
+        (code-unit-vector-set! bv 0 w1)
+        (code-unit-vector-set! bv 1 w2)
         bv)
-      (let ([bv (make-bytevector 2)])
-        (bytevector-u16-native-set! bv 0 point)
+      (let ([bv (code-unit-vector-alloc 1)])
+        (code-unit-vector-set! bv 0 point)
         bv)))
-
   )
 

@@ -234,7 +234,9 @@ runRun cliRoot args = do
     arguments = [ "-q", "--libdirs", libDirs ]
   res <- evalScheme arguments $ Array.fold
     [ "(base-exception-handler (lambda (e) (display-condition e (console-error-port)) (newline (console-error-port)) (exit -1)))"
-    , "(top-level-program (import (" <> args.moduleName <> " lib)) (main))"
+    , "(top-level-program (import (chezscheme) (only (purs runtime finalizers) run-finalizers) (" <> args.moduleName <> " lib))"
+    , "  (collect-request-handler (lambda () (collect) (run-finalizers)))"
+    , "  (main))"
     ]
   case res.exitCode of
     Just 0 -> pure unit
