@@ -772,7 +772,7 @@
           (let recur ([i 0])
             (if (fx<? i count)
               (let ([sub-start (foreign-ref 'size_t ovector (fx* (fx* i 2) (foreign-sizeof 'size_t)))])
-                ; TODO how do we get this value in a portable way?
+                ; TODO how do we get this value (PCRE2_UNSET) in a portable way?
                 (if (= sub-start 18446744073709551615)
                   (begin (srfi:214:flexvector-set! out i #f)
                          (recur (fx1+ i)))
