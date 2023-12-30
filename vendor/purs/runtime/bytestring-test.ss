@@ -248,31 +248,30 @@
                 bytestring=?
                 (bytestring-regex-match (bytestring-make-regex (lit "foo")) (lit "foo"))
                 (srfi:214:flexvector (lit "foo"))))
-      ;; (assert (not (bytestring-regex-match (bytestring-make-regex (lit "foo")) (lit "bar"))))
-      ;; (assert (srfi:214:flexvector=?
-      ;;           bytestring=?
-      ;;           (bytestring-regex-match (bytestring-make-regex (lit "(a)(b)(c)")) (lit "abc"))
-      ;;           (srfi:214:flexvector (lit "a") (lit "b") (lit "c"))))
-      ;; (assert (srfi:214:flexvector=?
-      ;;           bytestring=?
-      ;;           (bytestring-regex-match (bytestring-make-regex (lit "(a|b)(c)")) (lit "ac"))
-      ;;           (srfi:214:flexvector (lit "a") (lit "c"))))
-      ;; (assert (srfi:214:flexvector=?
-      ;;           bytestring=?
-      ;;           (bytestring-regex-match (bytestring-make-regex (lit "(a|b)(c)")) (lit "bc"))
-      ;;           (srfi:214:flexvector (lit "b") (lit "c"))))
-      ;; (assert (srfi:214:flexvector=?
-      ;;           bytestring=?
-      ;;           (bytestring-regex-match (bytestring-make-regex (string->bytestring "^[a-z]+$")) (lit "abc"))
-      ;;           (srfi:214:flexvector (lit "abc"))))
-      ;; (assert (srfi:214:flexvector=?
-      ;;           bytestring=?
-      ;;           (bytestring-regex-match (bytestring-make-regex (lit "^[a-z]+$")) (lit "abc"))
-      ;;           (srfi:214:flexvector (lit "abc"))))
-      ;; (display (bytestring-regex-match (bytestring-make-regex (lit "(a|(b))|(c)")) (lit "ac")))
-      ;; (assert (srfi:214:flexvector=?
-      ;;           (bytestring-regex-match (bytestring-make-regex (lit "(a|(b))|(c)")) (lit "ac"))
-      ;;           (srfi:214:flexvector (lit "a") #f (lit "c"))))
+      (assert (not (bytestring-regex-match (bytestring-make-regex (lit "foo")) (lit "bar"))))
+      (assert (srfi:214:flexvector=?
+                bytestring=?
+                (bytestring-regex-match (bytestring-make-regex (lit "(a)(b)(c)")) (lit "abc"))
+                (srfi:214:flexvector (lit "abc") (lit "a") (lit "b") (lit "c"))))
+      (assert (srfi:214:flexvector=?
+                bytestring=?
+                (bytestring-regex-match (bytestring-make-regex (lit "(a|b)(c)")) (lit "ac"))
+                (srfi:214:flexvector (lit "ac") (lit "a") (lit "c"))))
+      (assert (srfi:214:flexvector=?
+                bytestring=?
+                (bytestring-regex-match (bytestring-make-regex (lit "(a|b)(c)")) (lit "bc"))
+                (srfi:214:flexvector (lit "bc") (lit "b") (lit "c"))))
+      (assert (srfi:214:flexvector=?
+                bytestring=?
+                (bytestring-regex-match (bytestring-make-regex (string->bytestring "^[a-z]+$")) (lit "abc"))
+                (srfi:214:flexvector (lit "abc"))))
+      (assert (srfi:214:flexvector=?
+                bytestring=?
+                (bytestring-regex-match (bytestring-make-regex (lit "^[a-z]+$")) (lit "abc"))
+                (srfi:214:flexvector (lit "abc"))))
+      (assert (not (srfi:214:flexvector-ref
+                     (bytestring-regex-match (bytestring-make-regex (lit "(a|(b))|(c)")) (lit "ac"))
+                     2)))
 
       (display "All good!\n")
       ))

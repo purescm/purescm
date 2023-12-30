@@ -771,15 +771,19 @@
                [out (srfi:214:make-flexvector count)])
           (let recur ([i 0])
             (if (fx<? i count)
-              (let* ([sub-start (foreign-ref 'size_t ovector (fx* (fx* i 2) (foreign-sizeof 'size_t)))]
-                     [sub-end (foreign-ref 'size_t ovector (fx* (fx1+ (fx* i 2)) (foreign-sizeof 'size_t)))]
-                     [sub-len (fx- sub-end sub-start)]
-                     [match-bs (make-bytestring
-                                 (bytestring-buffer subject)
-                                 sub-start
-                                 sub-len)])
-                (srfi:214:flexvector-set! out i match-bs)
-                (recur (fx1+ i)))
+              (let ([sub-start (foreign-ref 'size_t ovector (fx* (fx* i 2) (foreign-sizeof 'size_t)))])
+                ; TODO how do we get this value in a portable way?
+                (if (= sub-start 18446744073709551615)
+                  (begin (srfi:214:flexvector-set! out i #f)
+                         (recur (fx1+ i)))
+                  (let* ([sub-end (foreign-ref 'size_t ovector (fx* (fx1+ (fx* i 2)) (foreign-sizeof 'size_t)))]
+                         [sub-len (fx- sub-end sub-start)]
+                         [match-bs (make-bytestring
+                                     (bytestring-buffer subject)
+                                     (fx+ (bytestring-offset subject) sub-start)
+                                     sub-len)])
+                    (srfi:214:flexvector-set! out i match-bs)
+                    (recur (fx1+ i)))))
               (begin
                 (pcre2_match_data_free_16 match-data)
                 out)))))))
