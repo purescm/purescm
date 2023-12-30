@@ -742,14 +742,9 @@
   (define (bytestring-make-regex bs)
     (let* ([errorcode (foreign-alloc 4)]
            [erroroffset (foreign-alloc 4)]
-           [fresh-pat (if (not (fx=? (bytestring-offset bs) 0))
-                        ; need to make a fresh copy to not pass a bytevector
-                        ; with non-zero offset.
-                        (bytestring-copy-fresh bs)
-                        bs)]
            [code (pcre2_compile_16
-                   (bytestring-buffer fresh-pat)
-                   (fx/ (bytestring-length fresh-pat) code-unit-length)
+                   (code-unit-vector-&ref (bytestring-buffer bs) (bytestring-offset bs))
+                   (bytestring-length bs)
                    0
                    errorcode
                    erroroffset
@@ -763,8 +758,8 @@
     (let* ([match-data (pcre2_match_data_create_from_pattern_16 (regex-code regex) 0)]
            [rc (pcre2_match_16
                  (regex-code regex)
-                 (foreign-ref (bytestring-buffer subject))
-                 (fx/ (bytestring-length subject) code-unit-length)
+                 (code-unit-vector-&ref (bytestring-buffer subject) (bytestring-offset subject))
+                 (bytestring-length subject)
                  0
                  0
                  match-data
@@ -778,10 +773,10 @@
             (if (fx<? i count)
               (let* ([sub-start (foreign-ref 'size_t ovector (fx* (fx* i 2) (foreign-sizeof 'size_t)))]
                      [sub-end (foreign-ref 'size_t ovector (fx* (fx1+ (fx* i 2)) (foreign-sizeof 'size_t)))]
-                     [sub-len (fx* (fx- sub-end sub-start) code-unit-length)]
+                     [sub-len (fx- sub-end sub-start)]
                      [match-bs (make-bytestring
                                  (bytestring-buffer subject)
-                                 (fx* sub-start code-unit-length)
+                                 sub-start
                                  sub-len)])
                 (srfi:214:flexvector-set! out i match-bs)
                 (recur (fx1+ i)))
@@ -799,7 +794,7 @@
 
   ; pcre2_code *pcre2_compile(PCRE2_SPTR pattern, PCRE2_SIZE length, uint32_t options, int *errorcode, PCRE2_SIZE *erroroffset, pcre2_compile_context *ccontext);
   (define pcre2_compile_16
-    (foreign-procedure "pcre2_compile_16" (u16* size_t unsigned-32 iptr iptr iptr)
+    (foreign-procedure "pcre2_compile_16" ((* BS) size_t unsigned-32 iptr iptr iptr)
                        iptr))
 
   ; pcre2_match_data *pcre2_match_data_create_from_pattern( const pcre2_code *code, pcre2_general_context *gcontext);
@@ -809,7 +804,7 @@
 
   ; int pcre2_match(const pcre2_code *code, PCRE2_SPTR subject, PCRE2_SIZE length, PCRE2_SIZE startoffset, uint32_t options, pcre2_match_data *match_data, pcre2_match_context *mcontext);
   (define pcre2_match_16
-    (foreign-procedure "pcre2_match_16" (iptr u16* size_t size_t unsigned-32 iptr iptr)
+    (foreign-procedure "pcre2_match_16" (iptr (* BS) size_t size_t unsigned-32 iptr iptr)
                        int))
 
   (define pcre2_get_ovector_pointer_16

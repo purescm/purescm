@@ -6,7 +6,8 @@
 ; Much like bytevector but with manually managed memory
 ;
 (library (purs runtime code-unit-vector)
-  (export code-unit-length
+  (export BS
+          code-unit-length
           empty-code-unit-vector
           code-unit-vector-alloc
           code-unit-vector-length

@@ -244,11 +244,10 @@
       (assert (bytestring=? (bytestring-take-code-points (lit "𝕒𝕓𝕔") 4) (lit "𝕒𝕓𝕔")))
 
       ;; regex
-      (display (bytestring-regex-match (bytestring-make-regex (lit "foo")) (lit "foo")))
-      ;; (assert (srfi:214:flexvector=?
-      ;;           bytestring=?
-      ;;           (bytestring-regex-match (bytestring-make-regex (lit "foo")) (lit "foo"))
-      ;;           (srfi:214:flexvector (lit "foo"))))
+      (assert (srfi:214:flexvector=?
+                bytestring=?
+                (bytestring-regex-match (bytestring-make-regex (lit "foo")) (lit "foo"))
+                (srfi:214:flexvector (lit "foo"))))
       ;; (assert (not (bytestring-regex-match (bytestring-make-regex (lit "foo")) (lit "bar"))))
       ;; (assert (srfi:214:flexvector=?
       ;;           bytestring=?
