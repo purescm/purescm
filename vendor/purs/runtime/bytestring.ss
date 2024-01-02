@@ -68,14 +68,6 @@
   (define (bytestring-empty? bs)
     (fx=? (bytestring-length bs) 0))
 
-  ;; Copies the bytestring into a freshly allocated bytevector.
-  ;; The resulting bytestring's buffer does not share any content
-  ;; with any other bytestring.
-  (define (bytestring-copy-fresh bs)
-    (let ([bv (make-bytevector (bytestring-length bs))])
-      (bytevector-copy! (bytestring-buffer bs) (bytestring-offset bs) bv 0 (bytestring-length bs))
-      (make-bytestring bv 0 (bytestring-length bs))))
-
   ;; Do x and y point to the same object in memory?
   (define (bytestring-eq? x y)
     (and (fx=? (bytestring-length x) (bytestring-length y))
@@ -174,7 +166,7 @@
           (let* ([w1 (code-unit-vector-ref buf (fx+ offset i))])
             (cond
               ;; Two-word encoding? Check for high surrogate
-              [(and (fx<= #xD800 w1 #xDBFF) (fx>=? (bytestring-length bs) 4))
+              [(and (fx<= #xD800 w1 #xDBFF) (fx>=? (bytestring-length bs) 2))
                (let ([w2 (code-unit-vector-ref buf (fx+ offset i 1))])
                  ;; low surrogate?
                  (if (fx<= #xDC00 w2 #xDFFF)
@@ -193,7 +185,7 @@
               ;; misplaced continuation word?
               [(fx<= #xDC00 w1 #xDFFF)
                (begin
-                 (string-set! out char-i (integer->char w1))
+                 (string-set! out char-i #\xfffd)
                  (loop (fx+ i 1) (fx1+ char-i)))]
               ;; one-word encoding
               [else (begin (string-set! out char-i (integer->char w1)) (loop (fx+ i 1) (fx1+ char-i)))]))
@@ -798,7 +790,7 @@
 
   ; pcre2_code *pcre2_compile(PCRE2_SPTR pattern, PCRE2_SIZE length, uint32_t options, int *errorcode, PCRE2_SIZE *erroroffset, pcre2_compile_context *ccontext);
   (define pcre2_compile_16
-    (foreign-procedure "pcre2_compile_16" ((* BS) size_t unsigned-32 iptr iptr iptr)
+    (foreign-procedure "pcre2_compile_16" ((* unsigned-16) size_t unsigned-32 iptr iptr iptr)
                        iptr))
 
   ; pcre2_match_data *pcre2_match_data_create_from_pattern( const pcre2_code *code, pcre2_general_context *gcontext);
@@ -808,7 +800,7 @@
 
   ; int pcre2_match(const pcre2_code *code, PCRE2_SPTR subject, PCRE2_SIZE length, PCRE2_SIZE startoffset, uint32_t options, pcre2_match_data *match_data, pcre2_match_context *mcontext);
   (define pcre2_match_16
-    (foreign-procedure "pcre2_match_16" (iptr (* BS) size_t size_t unsigned-32 iptr iptr)
+    (foreign-procedure "pcre2_match_16" (iptr (* unsigned-16) size_t size_t unsigned-32 iptr iptr)
                        int))
 
   (define pcre2_get_ovector_pointer_16
