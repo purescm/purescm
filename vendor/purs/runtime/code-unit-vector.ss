@@ -91,7 +91,6 @@
               ;; Two-word encoding? Check for high surrogate
               [(and (fx<= #xD800 w1 #xDBFF) (fx>=? (fx- len i) 2))
                (let ([w2 (code-unit-vector-ref vec (fx+ offset i 1))])
-                 ;; low surrogate?
                  (if (fx<= #xDC00 w2 #xDFFF)
                    (begin
                      (string-set! out
@@ -103,8 +102,9 @@
                                         (fx- w2 #xDC00))
                                       #x10000)))
                      (loop (fx+ i 2) (fx1+ char-i)))
-                   ;; low surrogate not found, just return the high surrogate
-                   (loop (fx+ i 1) (fx1+ char-i))))]
+                   (begin
+                     (string-set! out char-i #\xfffd)
+                     (loop (fx+ i 1) (fx1+ char-i)))))]
               ;; misplaced continuation word?
               [(fx<= #xDC00 w1 #xDFFF)
                (begin

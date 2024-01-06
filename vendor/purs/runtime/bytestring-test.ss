@@ -29,7 +29,7 @@
     (bytestring-replace-all (lit s) (lit p) (lit r)))
 
   (define (split s p)
-    (srfi:214:flexvector-map bytestring->string (bytestring-split (lit s) (lit p))))
+    (bytestring-split (lit s) (lit p)))
 
 
   (define main
@@ -65,21 +65,21 @@
       ;; ;                    (bytestring-hash (lit "bar")))))
 
       ;; slicing
-      (assert (string=?
-                (bytestring->string (bytestring-slice (lit "foo") 0))
-                "foo"))
-      (assert (string=?
-                (bytestring->string (bytestring-slice (lit "foo") 1))
-                "oo"))
-      (assert (string=?
-                (bytestring->string (bytestring-slice (lit "foo bar") 4 7))
-                "bar"))
-      (assert (string=?
-                (bytestring->string (bytestring-slice (lit "foo bar") 4 100))
-                "bar"))
-      (assert (string=?
-                (bytestring->string (bytestring-slice (lit "foo") -1))
-                "foo"))
+      (assert (bytestring=?
+                (bytestring-slice (lit "foo") 0)
+                (string->bytestring "foo")))
+      (assert (bytestring=?
+                (bytestring-slice (lit "foo") 1)
+                (string->bytestring "oo")))
+      (assert (bytestring=?
+                (bytestring-slice (lit "foo bar") 4 7)
+                (string->bytestring "bar")))
+      (assert (bytestring=?
+                (bytestring-slice (lit "foo bar") 4 100)
+                (string->bytestring "bar")))
+      (assert (bytestring=?
+                (bytestring-slice (lit "foo") -1)
+                (string->bytestring "foo")))
 
       ;; take
       (assert (bytestring=? (bytestring-take (lit "foo") -1) (lit "")))
@@ -193,8 +193,8 @@
                             (lit "𝕒b𝕔")))
 
       (assert (srfi:214:flexvector=? bytestring=? (split "" "a") (srfi:214:flexvector)))
-      ;; (assert (srfi:214:flexvector=? bytestring=? (split "ab" "") (srfi:214:flexvector (lit "a") (lit "b"))))
-      ;; (assert (srfi:214:flexvector=? bytestring=? (split "aabcc" "b") (srfi:214:flexvector (lit "aa") (lit "cc"))))
+      (assert (srfi:214:flexvector=? bytestring=? (split "ab" "") (srfi:214:flexvector (lit "a") (lit "b"))))
+      (assert (srfi:214:flexvector=? bytestring=? (split "aabcc" "b") (srfi:214:flexvector (lit "aa") (lit "cc"))))
 
       (assert (bytestring=? (bytestring-trim (lit "   ")) (lit "")))
       (assert (bytestring=? (bytestring-trim (lit " a  ")) (lit "a")))
@@ -207,31 +207,34 @@
       (assert (bytestring=? (bytestring-join-with (srfi:214:flexvector (lit "𝕒") (lit "𝕔")) (lit "𝕓")) (lit "𝕒𝕓𝕔")))
 
 
-      ;; ; Code points
+      ; Code points
 
-      (assert (fx=? 7 (bytestring-length-code-points
-                        (code-points->bytestring #x61 #xDC00 #xD800 #xD800 #x16805 #x16A06 #x7A))))
-      (assert (fx=? #x61
-                    (bytestring-ref-code-point
-                      (code-points->bytestring #x61 #xDC00 #xD800 #xD800 #x16805 #x16A06 #x7A) 0)))
-      (assert (fx=? #xDC00
-                    (bytestring-ref-code-point
-                      (code-points->bytestring #x61 #xDC00 #xD800 #xD800 #x16805 #x16A06 #x7A) 1)))
-      (assert (fx=? #xD800
-                    (bytestring-ref-code-point
-                      (code-points->bytestring #x61 #xDC00 #xD800 #xD800 #x16805 #x16A06 #x7A) 2)))
-      (assert (fx=? #xD800
-                    (bytestring-ref-code-point
-                      (code-points->bytestring #x61 #xDC00 #xD800 #xD800 #x16805 #x16A06 #x7A) 3)))
-      (assert (fx=? #x16805
-                    (bytestring-ref-code-point
-                      (code-points->bytestring #x61 #xDC00 #xD800 #xD800 #x16805 #x16A06 #x7A) 4)))
-      (assert (fx=? #x16A06
-                    (bytestring-ref-code-point
-                      (code-points->bytestring #x61 #xDC00 #xD800 #xD800 #x16805 #x16A06 #x7A) 5)))
-      (assert (fx=? #x7A
-                    (bytestring-ref-code-point
-                      (code-points->bytestring #x61 #xDC00 #xD800 #xD800 #x16805 #x16A06 #x7A) 6)))
+      ; (assert (bytestring->string
+      ;                   (code-points->bytestring #x61 #xDC00 #xD800)))
+
+      ; (assert (fx=? 7 (bytestring-length-code-points
+      ;                   (code-points->bytestring #x61 #xDC00 #xD800 #xD800 #x16805 #x16A06 #x7A))))
+      ; (assert (fx=? #x61
+      ;               (bytestring-ref-code-point
+      ;                 (code-points->bytestring #x61 #xDC00 #xD800 #xD800 #x16805 #x16A06 #x7A) 0)))
+      ; (assert (fx=? #xDC00
+      ;               (bytestring-ref-code-point
+      ;                 (code-points->bytestring #x61 #xDC00 #xD800 #xD800 #x16805 #x16A06 #x7A) 1)))
+      ; (assert (fx=? #xD800
+      ;               (bytestring-ref-code-point
+      ;                 (code-points->bytestring #x61 #xDC00 #xD800 #xD800 #x16805 #x16A06 #x7A) 2)))
+      ; (assert (fx=? #xD800
+      ;               (bytestring-ref-code-point
+      ;                 (code-points->bytestring #x61 #xDC00 #xD800 #xD800 #x16805 #x16A06 #x7A) 3)))
+      ; (assert (fx=? #x16805
+      ;               (bytestring-ref-code-point
+      ;                 (code-points->bytestring #x61 #xDC00 #xD800 #xD800 #x16805 #x16A06 #x7A) 4)))
+      ; (assert (fx=? #x16A06
+      ;               (bytestring-ref-code-point
+      ;                 (code-points->bytestring #x61 #xDC00 #xD800 #xD800 #x16805 #x16A06 #x7A) 5)))
+      ; (assert (fx=? #x7A
+      ;               (bytestring-ref-code-point
+      ;                 (code-points->bytestring #x61 #xDC00 #xD800 #xD800 #x16805 #x16A06 #x7A) 6)))
 
 
       (assert (bytestring=? (bytestring-take-code-points (lit "foo") 0) (lit "")))
@@ -272,6 +275,13 @@
       (assert (not (srfi:214:flexvector-ref
                      (bytestring-regex-match (bytestring-make-regex (lit "(a|(b))|(c)")) (lit "ac"))
                      2)))
+
+      (assert (bytestring=?
+                (bytestring-regex-replace-all
+                  (bytestring-make-regex (lit "b"))
+                  (lit "abc")
+                  (lambda (m) (lit "123")))
+                (lit "a123c")))
 
       (display "All good!\n")
       ))

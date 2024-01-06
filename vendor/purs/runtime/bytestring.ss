@@ -48,7 +48,8 @@
           bytestring-take-code-points
 
           bytestring-make-regex
-          bytestring-regex-match)
+          bytestring-regex-match
+          bytestring-regex-replace-all)
   (import (chezscheme)
           (only (purs runtime finalizers) finalizer)
           (purs runtime code-unit-vector)
@@ -675,6 +676,53 @@
 
   (define-structure
     (regex code))
+
+  (define (bytestring-regex-replace-all regex bs f)
+    (let*-values ([(delta all-matches)
+                    (let match-next ([sub-bs bs] [delta 0] [all-matches-reverse '()])
+                      (let ([matches (bytestring-regex-match regex sub-bs)])
+                        (if (and matches (fx>? (srfi:214:flexvector-length matches) 0))
+                          (let* ([match (srfi:214:flexvector-ref matches 0)]
+                                 [replacement (f match)])
+                            (match-next
+                              ; Should slice be used here?
+                              (make-bytestring
+                                (bytestring-buffer sub-bs)
+                                (fx+ (bytestring-offset match) (bytestring-length match))
+                                (fx- (bytestring-length sub-bs)
+                                     (fx- (fx+ (bytestring-offset match) (bytestring-length match))
+                                          (bytestring-offset bs))))
+                              (fx+ delta (fx- (bytestring-length replacement) (bytestring-length match)))
+                              (cons (cons match replacement) all-matches-reverse)))
+                          (values delta (reverse all-matches-reverse)))))]
+                  [(len) (fx+ (bytestring-length bs) delta)]
+                  [(bv) (code-unit-vector-alloc len)])
+      (let loop ([bsi (bytestring-offset bs)] [bvi 0] [rest all-matches])
+        (if (null? rest)
+          ; copy the left-overs into place
+          (code-unit-vector-copy! (bytestring-buffer bs)
+                                bsi
+                                bv
+                                bvi
+                                (fx- (bytestring-length bs) (fx- bsi (bytestring-offset bs))))
+          (let* ([match (caar rest)]
+                 [replacement (cdr (car rest))]
+                 [i (bytestring-offset match)]
+                 [before-len (fx- i bsi)])
+            ;; copy stuff before the match
+            (code-unit-vector-copy! (bytestring-buffer bs) bsi bv bvi before-len)
+            ;; the replacement itself
+            (code-unit-vector-copy! (bytestring-buffer replacement)
+                              (bytestring-offset replacement)
+                              bv
+                              (fx+ bvi before-len)
+                              (bytestring-length replacement))
+            (loop
+              (fx+ (bytestring-offset match) (bytestring-length match))
+              (fx+ (fx+ bvi before-len) (bytestring-length replacement))
+              (cdr rest)))))
+
+          (make-bytestring bv 0 len)))
 
   (define (bytestring-make-regex bs)
     (let* ([errorcode (foreign-alloc 4)]
