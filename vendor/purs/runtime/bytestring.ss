@@ -691,7 +691,7 @@
                                 (fx+ (bytestring-offset match) (bytestring-length match))
                                 (fx- (bytestring-length sub-bs)
                                      (fx- (fx+ (bytestring-offset match) (bytestring-length match))
-                                          (bytestring-offset bs))))
+                                          (bytestring-offset sub-bs))))
                               (fx+ delta (fx- (bytestring-length replacement) (bytestring-length match)))
                               (cons (cons match replacement) all-matches-reverse)))
                           (values delta (reverse all-matches-reverse)))))]

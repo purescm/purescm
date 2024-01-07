@@ -278,10 +278,38 @@
 
       (assert (bytestring=?
                 (bytestring-regex-replace-all
+                  (bytestring-make-regex (lit "[a-z]"))
+                  (string->bytestring "")
+                  (lambda (m) (lit "123")))
+                (string->bytestring "")))
+
+      (assert (bytestring=?
+                (bytestring-regex-replace-all
+                  (bytestring-make-regex (lit "aa"))
+                  (lit "bb")
+                  (lambda (m) (lit "123")))
+                (lit "bb")))
+
+      (assert (bytestring=?
+                (bytestring-regex-replace-all
                   (bytestring-make-regex (lit "b"))
                   (lit "abc")
                   (lambda (m) (lit "123")))
                 (lit "a123c")))
+
+      (assert (bytestring=?
+                (bytestring-regex-replace-all
+                  (bytestring-make-regex (lit "a"))
+                  (lit "aaa")
+                  (lambda (m) (lit "b")))
+                (lit "bbb")))
+
+      (assert (bytestring=?
+                (bytestring-regex-replace-all
+                  (bytestring-make-regex (lit "([a-z]{2})"))
+                  (lit "aazz")
+                  (lambda (m) (if (bytestring=? m (lit "aa")) (lit "foo") (lit "bar"))))
+                (lit "foobar")))
 
       (display "All good!\n")
       ))
