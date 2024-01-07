@@ -26,7 +26,7 @@
     (code-unit-vector pointer length))
 
   (define empty-code-unit-vector
-    (make-code-unit-vector #f 0))
+    (make-code-unit-vector (make-ftype-pointer unsigned-16 0) 0))
 
   (define (code-unit-vector-alloc n)
     (if (fx=? n 0)
