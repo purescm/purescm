@@ -350,7 +350,15 @@
     (string->symbol (bytestring->string bs)))
 
   (define (bytestring . chars)
-    (string->bytestring (apply string chars)))
+    (let* ([len (length chars)]
+           [cv (code-unit-vector-alloc len)])
+      (let loop ([i 0] [rest chars])
+        (if (null? rest)
+          cv
+          (begin
+            (code-unit-vector-set! cv i (char->integer (car rest)))
+            (loop (fx1+ i) (cdr rest)))))
+      (make-bytestring cv 0 len)))
 
   ;; TODO add a proper implementation
   (define (bytestring-ci=? x y)
