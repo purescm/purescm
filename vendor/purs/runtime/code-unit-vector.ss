@@ -31,9 +31,9 @@
   (define (code-unit-vector-alloc n)
     (if (fx=? n 0)
       empty-code-unit-vector
-      (let ([pointer (finalizer (make-ftype-pointer unsigned-16 (foreign-alloc (fx* n code-unit-length)))
-                                (lambda (p) (foreign-free (ftype-pointer-address p))))])
-        (make-code-unit-vector pointer n))))
+      (let ([pointer (make-ftype-pointer unsigned-16 (foreign-alloc (fx* n code-unit-length)))])
+        (finalizer (make-code-unit-vector pointer n)
+                   (lambda (p) (foreign-free (ftype-pointer-address (code-unit-vector-pointer p))))))))
 
   (define (code-unit-vector-ref vec i)
     (ftype-ref unsigned-16 () (code-unit-vector-pointer vec) i))
