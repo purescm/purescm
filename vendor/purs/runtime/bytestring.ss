@@ -683,7 +683,7 @@
   ;;
 
   (define-structure
-    (regex code))
+    (regex code source flags))
 
   (define (bytestring-regex-replace-all regex bs f)
     (let*-values ([(delta all-matches)
@@ -732,19 +732,21 @@
 
           (make-bytestring bv 0 len)))
 
+  (define PCRE2_ALT_BSUX #x00000002)
+
   (define (bytestring-make-regex bs)
     (let* ([errorcode (foreign-alloc 4)]
            [erroroffset (foreign-alloc 4)]
            [code (pcre2_compile_16
                    (code-unit-vector-&ref (bytestring-buffer bs) (bytestring-offset bs))
                    (bytestring-length bs)
-                   0
+                   PCRE2_ALT_BSUX
                    errorcode
                    erroroffset
                    0)])
       (if (fx=? code 0)
         #f
-        (finalizer (make-regex code)
+        (finalizer (make-regex code "" '())
                    (lambda (o) (pcre-code-free (regex-code o)))))))
 
   (define (bytestring-regex-match regex subject)
@@ -780,6 +782,34 @@
               (begin
                 (pcre2_match_data_free_16 match-data)
                 out)))))))
+
+  (define (hashtable-fold proc init hashtable)
+    (let-values ([(keys vals) (hashtable-entries hashtable)])
+      (let ([size (vector-length keys)])
+        (let loop ([i 0] [result init])
+          (if (fx>=? i size)
+              result
+              (loop
+                (fx+ i 1)
+                (proc
+                  (vector-ref keys i)
+                  (vector-ref vals i)
+                  result)))))))
+
+  (define (flags->options flags)
+    (define (flag->option flag)
+      (cond
+        [(eq? flag 'ignoreCase) 'i]
+        [(eq? flag 'multiline) 'm]
+        [(eq? flag 'dotAll) 's]
+        [else #f]))
+
+    (hashtable-fold
+      (lambda (k v acc)
+        (let ([o (flag->option k)])
+          (if (and v o) (cons o acc) acc)))
+      '()
+      flags))
 
   ;;
   ;; PCRE bindings
