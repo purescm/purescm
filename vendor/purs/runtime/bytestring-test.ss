@@ -16,9 +16,10 @@
   ; to get back a slice that equals the original input.
   (define (lit s)
     (bytestring-slice
-      (bytestring-append
+      (bytestring-concat
         (string->bytestring "123")
-        (bytestring-append (string->bytestring s) (string->bytestring "456")))
+        (string->bytestring s)
+        (string->bytestring "456"))
       3
       (fx+ 3 (bytestring-length (string->bytestring s)))))
 

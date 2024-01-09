@@ -49,7 +49,7 @@
         ([counter0 (scm:box 0)]
          [_1 (scm:unbox counter0)]
          [newCounter2 (scm:begin (scm:set-box! counter0 (scm:fx+ _1 1)) (scm:unbox counter0))]
-         [_ ((Effect.Console.log (rt:bytestring-append (rt:string->bytestring "New counter is ") (Data.Show.showIntImpl newCounter2))))])
+         [_ ((Effect.Console.log (rt:bytestring-concat (rt:string->bytestring "New counter is ") (Data.Show.showIntImpl newCounter2))))])
           ((Test.Assert.assert (scm:fx=? newCounter2 1))))))
 
   (scm:define basicTest

@@ -16,7 +16,7 @@
     boolean>=?
     boolean>?
     string->bytestring
-    bytestring-append
+    bytestring-concat
     bytestring=?
     bytestring>?
     bytestring>=?
@@ -25,7 +25,7 @@
   (import
     (chezscheme)
     (only (purs runtime bytestring) string->bytestring
-                                    bytestring-append
+                                    bytestring-concat
                                     bytestring=?
                                     bytestring>?
                                     bytestring>=?

@@ -17,7 +17,6 @@
           bytestring-index-of
           bytestring-last-index-of
           bytestring-singleton
-          bytestring-append
           bytestring-join-with
           bytestring->string
           bytestring->number
@@ -25,7 +24,7 @@
           bytestring->symbol
           string->bytestring
           bytestring-ci=?
-          bytestring-cat-reverse
+          bytestring-concat
           char-flexvector->bytestring
           bytestring->char-flexvector
 
@@ -285,23 +284,15 @@
                   (loop i last-match-candidate #f hs pattern)
                   (loop (fx1+ i) last-match-candidate #f hs-rest pattern))))]))))
 
-  (define (bytestring-append x y)
-    (let* ([len (fx+ (bytestring-length x) (bytestring-length y))]
-           [buf (code-unit-vector-alloc len)])
-      (code-unit-vector-copy! (bytestring-buffer x) (bytestring-offset x) buf 0 (bytestring-length x))
-      (code-unit-vector-copy! (bytestring-buffer y) (bytestring-offset y) buf (bytestring-length x) (bytestring-length y))
-      (make-bytestring buf 0 len)))
-
-  (define (bytestring-cat-reverse xs)
+  (define (bytestring-concat . xs)
     (let* ([len (fold-right (lambda (s a) (fx+ (bytestring-length s) a)) 0 xs)]
            [buf (code-unit-vector-alloc len)])
-      (let loop ([i len] [ls xs])
+      (let loop ([i 0] [ls xs])
         (if (pair? ls)
           (let* ([bs (car ls)]
-                 [slen (bytestring-length bs)]
-                 [index (fx- i slen)])
-            (code-unit-vector-copy! (bytestring-buffer bs) (bytestring-offset bs) buf index slen)
-            (loop index (cdr ls)))
+                 [slen (bytestring-length bs)])
+            (code-unit-vector-copy! (bytestring-buffer bs) (bytestring-offset bs) buf i slen)
+            (loop (fx+ i slen) (cdr ls)))
           (make-bytestring buf 0 len)))))
 
   (define (bytestring-join-with xs separator)

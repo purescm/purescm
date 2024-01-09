@@ -486,7 +486,7 @@ codegenPrimOp codegenEnv@{ currentModule } = case _ of
         OpNumberOrd o' ->
           makeComparison "fl" o'
         OpStringAppend ->
-          S.List [ S.Identifier $ rtPrefixed "bytestring-append", x', y' ]
+          S.List [ S.Identifier $ rtPrefixed "bytestring-concat", x', y' ]
         OpStringOrd o' -> do
           let
             makeStringComparison :: BackendOperatorOrd -> ChezExpr
