@@ -3,7 +3,8 @@
 ; 
 ; Code unit vector
 ; 
-; Much like bytevector but with manually managed memory
+; Much like bytevector but with manually managed memory to have better interop with
+; native libs like pcre2.
 ;
 (library (purs runtime code-unit-vector)
   (export code-unit-length
