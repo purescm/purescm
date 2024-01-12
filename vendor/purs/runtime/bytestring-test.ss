@@ -1,6 +1,7 @@
 (library (purs runtime bytestring-test)
   (export main)
   (import (chezscheme)
+          (prefix (purs runtime) rt:)
           (prefix (purs runtime srfi :214) srfi:214:)
           (purs runtime bytestring))
 
@@ -278,39 +279,60 @@
                      2)))
 
       (assert (bytestring=?
-                (bytestring-regex-replace-all
-                  (bytestring-make-regex (lit "[a-z]"))
+                (bytestring-regex-replace-by
+                  (bytestring-make-regex (lit "a") (rt:make-object '(global . #f)))
+                  (lit "aaa")
+                  (lambda (m xs) (lit "b")))
+                (lit "baa")))
+
+      (assert (bytestring=?
+                (bytestring-regex-replace-by
+                  (bytestring-make-regex (lit "foo") (rt:make-object '(global . #f)))
+                  (lit "bar")
+                  (lambda (m xs) (lit "fail")))
+                (lit "bar")))
+
+      (assert (bytestring=?
+                (bytestring-regex-replace-by
+                  (bytestring-make-regex (lit "[a-z]") (rt:make-object '(global . #t)))
                   (string->bytestring "")
-                  (lambda (m) (lit "123")))
+                  (lambda (m xs) (lit "123")))
                 (string->bytestring "")))
 
       (assert (bytestring=?
-                (bytestring-regex-replace-all
-                  (bytestring-make-regex (lit "aa"))
+                (bytestring-regex-replace-by
+                  (bytestring-make-regex (lit "aa") (rt:make-object '(global . #t)))
                   (lit "bb")
-                  (lambda (m) (lit "123")))
+                  (lambda (m xs) (lit "123")))
                 (lit "bb")))
 
       (assert (bytestring=?
-                (bytestring-regex-replace-all
-                  (bytestring-make-regex (lit "b"))
+                (bytestring-regex-replace-by
+                  (bytestring-make-regex (lit "b") (rt:make-object '(global . #t)))
                   (lit "abc")
-                  (lambda (m) (lit "123")))
+                  (lambda (m xs) (lit "123")))
                 (lit "a123c")))
 
       (assert (bytestring=?
-                (bytestring-regex-replace-all
-                  (bytestring-make-regex (lit "a"))
+                (bytestring-regex-replace-by
+                  (bytestring-make-regex (lit "a") (rt:make-object '(global . #t)))
                   (lit "aaa")
-                  (lambda (m) (lit "b")))
+                  (lambda (m xs) (lit "b")))
                 (lit "bbb")))
 
       (assert (bytestring=?
-                (bytestring-regex-replace-all
-                  (bytestring-make-regex (lit "([a-z]{2})"))
+                (bytestring-regex-replace-by
+                  (bytestring-make-regex (lit "([a-z]{2})") (rt:make-object '(global . #t)))
                   (lit "aazz")
-                  (lambda (m) (if (bytestring=? m (lit "aa")) (lit "foo") (lit "bar"))))
+                  (lambda (m xs) (if (bytestring=? m (lit "aa")) (lit "foo") (lit "bar"))))
                 (lit "foobar")))
+
+      (assert (bytestring=?
+                (bytestring-regex-replace-by
+                  (bytestring-make-regex (lit "Hello, ([a-z]+)") (rt:make-object '(global . #t)))
+                  (lit "Hello, purescript")
+                  (lambda (m xs) (srfi:214:flexvector-ref xs 0)))
+                (lit "purescript")))
 
       (display "All good!\n")
       ))

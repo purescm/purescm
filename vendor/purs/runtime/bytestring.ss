@@ -47,8 +47,10 @@
           bytestring-take-code-points
 
           bytestring-make-regex
+          regex-source
+          regex-flags
           bytestring-regex-match
-          bytestring-regex-replace-all)
+          bytestring-regex-replace-by)
   (import (chezscheme)
           (only (purs runtime finalizers) finalizer)
           (purs runtime code-unit-vector)
@@ -676,13 +678,19 @@
   (define-structure
     (regex code source flags))
 
+  (define (bytestring-regex-replace-by regex subject f)
+    (if (regex-has-flag regex PCRE2_SUBSTITUTE_GLOBAL)
+      (bytestring-regex-replace-all regex subject f)
+      (bytestring-regex-replace-single regex subject f)))
+
   (define (bytestring-regex-replace-all regex bs f)
     (let*-values ([(delta all-matches)
                     (let match-next ([sub-bs bs] [delta 0] [all-matches-reverse '()])
                       (let ([matches (bytestring-regex-match regex sub-bs)])
                         (if (and matches (fx>? (srfi:214:flexvector-length matches) 0))
                           (let* ([match (srfi:214:flexvector-ref matches 0)]
-                                 [replacement (f match)])
+                                 [_ (srfi:214:flexvector-remove-front! matches)]
+                                 [replacement (f match matches)])
                             (match-next
                               ; Should slice be used here?
                               (make-bytestring
@@ -723,22 +731,59 @@
 
           (make-bytestring bv 0 len)))
 
-  (define PCRE2_ALT_BSUX #x00000002)
+  (define (bytestring-regex-replace-single regex bs f)
+    (let ([matches (bytestring-regex-match regex bs)])
+      (if (and matches (fx>? (srfi:214:flexvector-length matches) 0))
+        (let* ([match (srfi:214:flexvector-ref matches 0)]
+               [_ (srfi:214:flexvector-remove-front! matches)]
+               [replacement (f match matches)]
+               [delta (fx- (bytestring-length replacement) (bytestring-length match))]
+               [len (fx+ (bytestring-length bs) delta)]
+               [buf (code-unit-vector-alloc len)])
+          (let* ([before-len (fx- (bytestring-offset match) (bytestring-offset bs))])
+            ;; copy stuff before the match
+            (code-unit-vector-copy!
+              (bytestring-buffer bs)
+              (bytestring-offset bs)
+              buf
+              0
+              before-len)
+            ;; the replacement itself
+            (code-unit-vector-copy!
+              (bytestring-buffer replacement)
+              (bytestring-offset replacement)
+              buf
+              before-len
+              (bytestring-length replacement))
+            ; copy the stuff after the match
+            (code-unit-vector-copy!
+              (bytestring-buffer bs)
+              (fx+ (bytestring-offset match) (bytestring-length match))
+              buf
+              (fx+ before-len (bytestring-length replacement))
+              (fx- (bytestring-length bs)
+                   (fx+ before-len (bytestring-length match))))
+            (make-bytestring buf 0 len)))
+        bs)))
 
-  (define (bytestring-make-regex bs)
-    (let* ([errorcode (foreign-alloc 4)]
-           [erroroffset (foreign-alloc 4)]
-           [code (pcre2_compile_16
-                   (code-unit-vector-&ref (bytestring-buffer bs) (bytestring-offset bs))
-                   (bytestring-length bs)
-                   PCRE2_ALT_BSUX
-                   errorcode
-                   erroroffset
-                   0)])
-      (if (fx=? code 0)
-        #f
-        (finalizer (make-regex code "" '())
-                   (lambda (o) (pcre-code-free (regex-code o)))))))
+  (define bytestring-make-regex
+    (case-lambda
+      [(bs) (bytestring-make-regex bs (make-hashtable symbol-hash eq?))]
+      [(bs flags)
+        (let* ([errorcode (foreign-alloc 4)]
+               [erroroffset (foreign-alloc 4)]
+               [options (flags->options flags)]
+               [code (pcre2_compile_16
+                       (code-unit-vector-&ref (bytestring-buffer bs) (bytestring-offset bs))
+                       (bytestring-length bs)
+                       options
+                       errorcode
+                       erroroffset
+                       0)])
+          (if (fx=? code 0)
+            #f
+            (finalizer (make-regex code (bytestring) options)
+                       (lambda (o) (pcre-code-free (regex-code o))))))]))
 
   (define (bytestring-regex-match regex subject)
     (let* ([match-data (pcre2_match_data_create_from_pattern_16 (regex-code regex) 0)]
@@ -774,37 +819,55 @@
                 (pcre2_match_data_free_16 match-data)
                 out)))))))
 
-  (define (hashtable-fold proc init hashtable)
-    (let-values ([(keys vals) (hashtable-entries hashtable)])
-      (let ([size (vector-length keys)])
-        (let loop ([i 0] [result init])
-          (if (fx>=? i size)
-              result
-              (loop
-                (fx+ i 1)
-                (proc
-                  (vector-ref keys i)
-                  (vector-ref vals i)
-                  result)))))))
+  ;;
+  ;; Regex flags
+  ;; 
 
   (define (flags->options flags)
-    (define (flag->option flag)
+    (define (hashtable-fold proc init hashtable)
+      (let-values ([(keys vals) (hashtable-entries hashtable)])
+        (let ([size (vector-length keys)])
+          (let loop ([i 0] [result init])
+            (if (fx>=? i size)
+                result
+                (loop
+                  (fx+ i 1)
+                  (proc
+                    (vector-ref keys i)
+                    (vector-ref vals i)
+                    result)))))))
+
+    (define (flag->bitmask flag)
       (cond
-        [(eq? flag 'ignoreCase) 'i]
-        [(eq? flag 'multiline) 'm]
-        [(eq? flag 'dotAll) 's]
-        [else #f]))
+        [(eq? flag 'dotAll) PCRE2_DOTALL]
+        [(eq? flag 'ignoreCase) PCRE2_CASELESS]
+        [(eq? flag 'multiline) PCRE2_MULTILINE]
+        [(eq? flag 'global) PCRE2_SUBSTITUTE_GLOBAL]
+        [else #x0]))
 
     (hashtable-fold
       (lambda (k v acc)
-        (let ([o (flag->option k)])
-          (if (and v o) (cons o acc) acc)))
-      '()
+        (let ([m (flag->bitmask k)])
+          (if v (fxlogor m acc) acc)))
+      DEFAULT_FLAGS
       flags))
 
   ;;
   ;; PCRE bindings
   ;;
+
+  (define PCRE2_ALT_BSUX #x00000002)
+  (define PCRE2_EXTRA_ALT_BSUX #x00000020)
+  (define PCRE2_SUBSTITUTE_GLOBAL #x00000100)
+  (define PCRE2_CASELESS #x00000008)
+  (define PCRE2_MULTILINE #x00000400)
+  (define PCRE2_DOTALL #x00000020)
+
+  (define DEFAULT_FLAGS (fxlogor PCRE2_ALT_BSUX
+                                 PCRE2_EXTRA_ALT_BSUX))
+
+  (define (regex-has-flag regex flag)
+    (fx>? (fxlogand (regex-flags regex) flag) 0))
 
   (define pcre-init
     (begin
@@ -824,6 +887,13 @@
   (define pcre2_match_16
     (foreign-procedure "pcre2_match_16" (iptr (* unsigned-16) size_t size_t unsigned-32 iptr iptr)
                        int))
+
+  ; ;  int pcre2_substitute(const pcre2_code *code, PCRE2_SPTR subject, PCRE2_SIZE length, PCRE2_SIZE startoffset, uint32_t options,
+  ; ;      pcre2_match_data *match_data, pcre2_match_context *mcontext, PCRE2_SPTR replacement, PCRE2_SIZE rlength, PCRE2_UCHAR *outputbuffer, PCRE2_SIZE *outlengthptr); 
+  ; (define pcre2_substitute_16
+  ;   (foreign-procedure "pcre2_substitute_16" (iptr (* unsigned-16) size_t size_t unsigned-32 iptr iptr (* unsigned-16) size_t (* unsigned-16) (* size_t))
+  ;                      int))
+
 
   (define pcre2_get_ovector_pointer_16
     (foreign-procedure "pcre2_get_ovector_pointer_16" (iptr)
