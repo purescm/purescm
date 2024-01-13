@@ -50,6 +50,7 @@
           regex-source
           regex-flags
           bytestring-regex-match
+          bytestring-regex-replace
           bytestring-regex-replace-by)
   (import (chezscheme)
           (only (purs runtime finalizers) finalizer)
@@ -766,6 +767,45 @@
             (make-bytestring buf 0 len)))
         bs)))
 
+  (define (bytestring-regex-replace regex subject replacement)
+    (let* ([match-data (pcre2_match_data_create_from_pattern_16 (regex-code regex) 0)]
+           [buf-len (make-ftype-pointer size_t (foreign-alloc (foreign-sizeof 'size_t)))]
+           [start-offset 0]
+           [match-context 0]
+           ; first calculate the size of the output buffer by passing in 0 as the bug size
+           ; and using PCRE2_SUBSTITUTE_OVERFLOW_LENGTH
+           [_ (ftype-set! size_t () buf-len 0 0)]
+           [_ (pcre2_substitute_16
+                (regex-code regex)
+                (code-unit-vector-&ref (bytestring-buffer subject) (bytestring-offset subject))
+                (bytestring-length subject)
+                start-offset
+                (fxlogor (fxlogand (regex-flags regex) PCRE2_SUBSTITUTE_GLOBAL)
+                         PCRE2_SUBSTITUTE_OVERFLOW_LENGTH)
+                match-data
+                match-context
+                (code-unit-vector-&ref (bytestring-buffer replacement) (bytestring-offset replacement))
+                (bytestring-length replacement)
+                ; basically a null pointer
+                (make-ftype-pointer unsigned-16 0)
+                (ftype-&ref size_t () buf-len))]
+           [buf (code-unit-vector-alloc (ftype-ref size_t () buf-len 0))]
+           ; now do the actual substitution
+           [_ (pcre2_substitute_16
+                (regex-code regex)
+                (code-unit-vector-&ref (bytestring-buffer subject) (bytestring-offset subject))
+                (bytestring-length subject)
+                start-offset
+                (fxlogand (regex-flags regex) PCRE2_SUBSTITUTE_GLOBAL)
+                match-data
+                match-context
+                (code-unit-vector-&ref (bytestring-buffer replacement) (bytestring-offset replacement))
+                (bytestring-length replacement)
+                (code-unit-vector-&ref buf 0)
+                (ftype-&ref size_t () buf-len))]
+           [len (ftype-ref size_t () buf-len 0)])
+      (make-bytestring buf 0 len)))
+
   (define bytestring-make-regex
     (case-lambda
       [(bs) (bytestring-make-regex bs (make-hashtable symbol-hash eq?))]
@@ -862,6 +902,8 @@
   (define PCRE2_CASELESS #x00000008)
   (define PCRE2_MULTILINE #x00000400)
   (define PCRE2_DOTALL #x00000020)
+  
+  (define PCRE2_SUBSTITUTE_OVERFLOW_LENGTH #x00001000)
 
   (define DEFAULT_FLAGS (fxlogor PCRE2_ALT_BSUX
                                  PCRE2_EXTRA_ALT_BSUX))
@@ -873,27 +915,21 @@
     (begin
       (load-shared-object "libpcre2-16.so")))
 
-  ; pcre2_code *pcre2_compile(PCRE2_SPTR pattern, PCRE2_SIZE length, uint32_t options, int *errorcode, PCRE2_SIZE *erroroffset, pcre2_compile_context *ccontext);
   (define pcre2_compile_16
     (foreign-procedure "pcre2_compile_16" ((* unsigned-16) size_t unsigned-32 iptr iptr iptr)
                        iptr))
 
-  ; pcre2_match_data *pcre2_match_data_create_from_pattern( const pcre2_code *code, pcre2_general_context *gcontext);
   (define pcre2_match_data_create_from_pattern_16
     (foreign-procedure "pcre2_match_data_create_from_pattern_16" (iptr iptr)
                        iptr))
 
-  ; int pcre2_match(const pcre2_code *code, PCRE2_SPTR subject, PCRE2_SIZE length, PCRE2_SIZE startoffset, uint32_t options, pcre2_match_data *match_data, pcre2_match_context *mcontext);
   (define pcre2_match_16
     (foreign-procedure "pcre2_match_16" (iptr (* unsigned-16) size_t size_t unsigned-32 iptr iptr)
                        int))
 
-  ; ;  int pcre2_substitute(const pcre2_code *code, PCRE2_SPTR subject, PCRE2_SIZE length, PCRE2_SIZE startoffset, uint32_t options,
-  ; ;      pcre2_match_data *match_data, pcre2_match_context *mcontext, PCRE2_SPTR replacement, PCRE2_SIZE rlength, PCRE2_UCHAR *outputbuffer, PCRE2_SIZE *outlengthptr); 
-  ; (define pcre2_substitute_16
-  ;   (foreign-procedure "pcre2_substitute_16" (iptr (* unsigned-16) size_t size_t unsigned-32 iptr iptr (* unsigned-16) size_t (* unsigned-16) (* size_t))
-  ;                      int))
-
+  (define pcre2_substitute_16
+    (foreign-procedure "pcre2_substitute_16" (iptr (* unsigned-16) size_t size_t unsigned-32 iptr iptr (* unsigned-16) size_t (* unsigned-16) (* size_t))
+                       int))
 
   (define pcre2_get_ovector_pointer_16
     (foreign-procedure "pcre2_get_ovector_pointer_16" (iptr)

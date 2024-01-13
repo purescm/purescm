@@ -7,7 +7,8 @@
 ; native libs like pcre2.
 ;
 (library (purs runtime code-unit-vector)
-  (export code-unit-length
+  (export make-code-unit-vector
+          code-unit-length
           empty-code-unit-vector
           code-unit-vector-alloc
           code-unit-vector-length

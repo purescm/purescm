@@ -334,6 +334,22 @@
                   (lambda (m xs) (srfi:214:flexvector-ref xs 0)))
                 (lit "purescript")))
 
+      ; replace
+
+      (assert (bytestring=?
+                (bytestring-regex-replace
+                  (bytestring-make-regex (lit "a") (rt:make-object '(global . #f)))
+                  (lit "aaa")
+                  (lit "b"))
+                (lit "baa")))
+
+      (assert (bytestring=?
+                (bytestring-regex-replace
+                  (bytestring-make-regex (lit "a") (rt:make-object '(global . #t)))
+                  (lit "aaa")
+                  (lit "b"))
+                (lit "bbb")))
+
       (display "All good!\n")
       ))
   )
