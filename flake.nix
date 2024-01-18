@@ -5,8 +5,6 @@
     nixpkgs.url =
       "github:nixos/nixpkgs?rev=402cc3633cc60dfc50378197305c984518b30773";
 
-    flake-utils.url = "github:numtide/flake-utils";
-
     flake-compat = {
       url = "github:edolstra/flake-compat";
       flake = false;
@@ -16,17 +14,24 @@
     purescript-overlay.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, flake-utils, purescript-overlay, ... }:
-    let supportedSystems = [ "x86_64-linux" "x86_64-darwin" "aarch64-darwin" ];
-    in flake-utils.lib.eachSystem supportedSystems (system:
-      let
-        overlays = [ purescript-overlay.overlays.default ];
-        pkgs = import nixpkgs {
-          inherit system overlays;
-        };
-      in
-      {
-        devShells = {
+  outputs = { self, nixpkgs, ... }@inputs:
+    let
+      supportedSystems = [ "x86_64-linux" "x86_64-darwin" "aarch64-darwin" ];
+
+      forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
+
+      nixpkgsFor = forAllSystems (system: import nixpkgs {
+        inherit system;
+        overlays = builtins.attrValues self.overlays;
+      });
+    in
+    {
+      overlays = {
+        purescript = inputs.purescript-overlay.overlays.default;
+      };
+
+      devShells = forAllSystems (system:
+        let pkgs = nixpkgsFor.${system}; in {
           default = pkgs.mkShell {
             name = "purescm";
             packages = with pkgs; [
@@ -40,7 +45,8 @@
               esbuild
             ];
           };
-        };
-        formatter = pkgs.nixpkgs-fmt;
-      });
+        });
+
+      formatter = forAllSystems (system: nixpkgsFor.${system}.nixpkgs-fmt);
+    };
 }
