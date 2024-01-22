@@ -335,7 +335,6 @@
                 (lit "purescript")))
 
       ; replace
-
       (assert (bytestring=?
                 (bytestring-regex-replace
                   (bytestring-make-regex (lit "a") (rt:make-object '(global . #f)))
@@ -349,6 +348,36 @@
                   (lit "aaa")
                   (lit "b"))
                 (lit "bbb")))
+
+
+      ; search
+      (assert (not
+                (bytestring-regex-search
+                  (bytestring-make-regex (lit "a") (rt:make-object '(global . #f)))
+                  (lit "b"))))
+
+      (assert (not
+                (bytestring-regex-search
+                  (bytestring-make-regex (lit "a") (rt:make-object '(global . #f)))
+                  (lit ""))))
+
+      (assert (equal?
+                (bytestring-regex-search
+                  (bytestring-make-regex (lit "a") (rt:make-object '(global . #f)))
+                  (lit "abc"))
+                0))
+
+      (assert (equal?
+                (bytestring-regex-search
+                  (bytestring-make-regex (lit "b") (rt:make-object '(global . #f)))
+                  (lit "abc"))
+                1))
+
+      (assert (equal?
+                (bytestring-regex-search
+                  (bytestring-make-regex (lit "c") (rt:make-object '(global . #f)))
+                  (lit "abc"))
+                2))
 
       (display "All good!\n")
       ))

@@ -50,6 +50,7 @@
           regex-source
           regex-flags
           bytestring-regex-match
+          bytestring-regex-search
           bytestring-regex-replace
           bytestring-regex-replace-by)
   (import (chezscheme)
@@ -772,10 +773,10 @@
            [buf-len (make-ftype-pointer size_t (foreign-alloc (foreign-sizeof 'size_t)))]
            [start-offset 0]
            [match-context 0]
-           ; first calculate the size of the output buffer by passing in 0 as the bug size
+           ; first calculate the size of the output buffer by passing in 0 as the buf size
            ; and using PCRE2_SUBSTITUTE_OVERFLOW_LENGTH
            [_ (ftype-set! size_t () buf-len 0 0)]
-           [_ (pcre2_substitute_16
+           [res (pcre2_substitute_16
                 (regex-code regex)
                 (code-unit-vector-&ref (bytestring-buffer subject) (bytestring-offset subject))
                 (bytestring-length subject)
@@ -789,9 +790,10 @@
                 ; basically a null pointer
                 (make-ftype-pointer unsigned-16 0)
                 (ftype-&ref size_t () buf-len))]
+           [len (ftype-ref size_t () buf-len 0)]
            [buf (code-unit-vector-alloc (ftype-ref size_t () buf-len 0))]
            ; now do the actual substitution
-           [_ (pcre2_substitute_16
+           [res2 (pcre2_substitute_16
                 (regex-code regex)
                 (code-unit-vector-&ref (bytestring-buffer subject) (bytestring-offset subject))
                 (bytestring-length subject)
@@ -802,9 +804,9 @@
                 (code-unit-vector-&ref (bytestring-buffer replacement) (bytestring-offset replacement))
                 (bytestring-length replacement)
                 (code-unit-vector-&ref buf 0)
-                (ftype-&ref size_t () buf-len))]
-           [len (ftype-ref size_t () buf-len 0)])
-      (make-bytestring buf 0 len)))
+                (ftype-&ref size_t () buf-len))])
+      (foreign-free (ftype-pointer-address buf-len))
+      (make-bytestring buf 0 (fx1- len))))
 
   (define bytestring-make-regex
     (case-lambda
@@ -820,10 +822,12 @@
                        errorcode
                        erroroffset
                        0)])
+          (foreign-free errorcode)
+          (foreign-free erroroffset)
           (if (fx=? code 0)
             #f
             (finalizer (make-regex code (bytestring) options)
-                       (lambda (o) (pcre-code-free (regex-code o))))))]))
+                       (lambda (o) (pcre2_code_free (regex-code o))))))]))
 
   (define (bytestring-regex-match regex subject)
     (let* ([match-data (pcre2_match_data_create_from_pattern_16 (regex-code regex) 0)]
@@ -858,6 +862,24 @@
               (begin
                 (pcre2_match_data_free_16 match-data)
                 out)))))))
+
+  (define (bytestring-regex-search regex subject)
+    (let* ([match-data (pcre2_match_data_create_from_pattern_16 (regex-code regex) 0)]
+           [rc (pcre2_match_16
+                 (regex-code regex)
+                 (code-unit-vector-&ref (bytestring-buffer subject) (bytestring-offset subject))
+                 (bytestring-length subject)
+                 0
+                 0
+                 match-data
+                 0)])
+      (if (fx<? rc 0)
+        (begin (pcre2_match_data_free_16 match-data) #f)
+        (let* ([ovector (pcre2_get_ovector_pointer_16 match-data)]
+               [match-index (foreign-ref 'size_t ovector 0)])
+          (pcre2_match_data_free_16 match-data)
+          match-index))))
+
 
   ;;
   ;; Regex flags
@@ -916,35 +938,35 @@
       (load-shared-object "libpcre2-16.so")))
 
   (define pcre2_compile_16
-    (foreign-procedure "pcre2_compile_16" ((* unsigned-16) size_t unsigned-32 iptr iptr iptr)
-                       iptr))
+    (foreign-procedure "pcre2_compile_16" ((* unsigned-16) size_t unsigned-32 uptr uptr uptr)
+                       uptr))
 
   (define pcre2_match_data_create_from_pattern_16
-    (foreign-procedure "pcre2_match_data_create_from_pattern_16" (iptr iptr)
-                       iptr))
+    (foreign-procedure "pcre2_match_data_create_from_pattern_16" (uptr uptr)
+                       uptr))
 
   (define pcre2_match_16
-    (foreign-procedure "pcre2_match_16" (iptr (* unsigned-16) size_t size_t unsigned-32 iptr iptr)
+    (foreign-procedure "pcre2_match_16" (uptr (* unsigned-16) size_t size_t unsigned-32 uptr uptr)
                        int))
 
   (define pcre2_substitute_16
-    (foreign-procedure "pcre2_substitute_16" (iptr (* unsigned-16) size_t size_t unsigned-32 iptr iptr (* unsigned-16) size_t (* unsigned-16) (* size_t))
+    (foreign-procedure "pcre2_substitute_16" (uptr (* unsigned-16) size_t size_t unsigned-32 uptr uptr (* unsigned-16) size_t (* unsigned-16) (* size_t))
                        int))
 
   (define pcre2_get_ovector_pointer_16
-    (foreign-procedure "pcre2_get_ovector_pointer_16" (iptr)
-                       iptr))
+    (foreign-procedure "pcre2_get_ovector_pointer_16" (uptr)
+                       uptr))
 
   (define pcre2_get_ovector_count_16
-    (foreign-procedure "pcre2_get_ovector_count_16" (iptr)
+    (foreign-procedure "pcre2_get_ovector_count_16" (uptr)
                        unsigned-32))
 
   (define pcre2_match_data_free_16
-    (foreign-procedure "pcre2_match_data_free_16" (iptr)
+    (foreign-procedure "pcre2_match_data_free_16" (uptr)
                        void))
   
-  (define pcre-code-free
-    (foreign-procedure "pcre2_code_free_16" (iptr)
+  (define pcre2_code_free
+    (foreign-procedure "pcre2_code_free_16" (uptr)
                        void))
 
 

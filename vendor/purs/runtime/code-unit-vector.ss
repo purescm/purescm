@@ -7,8 +7,7 @@
 ; native libs like pcre2.
 ;
 (library (purs runtime code-unit-vector)
-  (export make-code-unit-vector
-          code-unit-length
+  (export code-unit-length
           empty-code-unit-vector
           code-unit-vector-alloc
           code-unit-vector-length
@@ -33,7 +32,8 @@
   (define (code-unit-vector-alloc n)
     (if (fx=? n 0)
       empty-code-unit-vector
-      (let ([pointer (make-ftype-pointer unsigned-16 (foreign-alloc (fx* n code-unit-length)))])
+      (let ([pointer (make-ftype-pointer unsigned-16 (foreign-alloc (fx* (fx1+ n) (foreign-sizeof 'unsigned-16))))])
+        (ftype-set! unsigned-16 () pointer n #x0)
         (finalizer (make-code-unit-vector pointer n)
                    (lambda (p) (foreign-free (ftype-pointer-address (code-unit-vector-pointer p))))))))
 
