@@ -2,8 +2,8 @@
   description = "Chez Scheme backend for PureScript";
 
   inputs = {
-    nixpkgs.url =
-      "github:nixos/nixpkgs?rev=402cc3633cc60dfc50378197305c984518b30773";
+    # see flake.lock for pinned versions
+    nixpkgs.url = "github:nixos/nixpkgs/release-23.11";
 
     flake-compat = {
       url = "github:edolstra/flake-compat";
@@ -40,7 +40,7 @@
               purs-bin.purs-0_15_10
               purs-tidy
               spago-unstable
-              nodejs-slim-16_x
+              nodejs-slim
               chez-racket
               esbuild
             ];
