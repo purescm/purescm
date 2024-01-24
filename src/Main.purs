@@ -200,7 +200,8 @@ runBundle cliRoot args = do
   mkdirp args.outputDir
   let
     mainContent = Array.fold
-      [ "(import (" <> args.moduleName <> " lib))"
+      [ "(import (chezscheme) (only (purs runtime finalizers) run-finalizers) (" <> args.moduleName <> " lib))"
+      , "(collect-request-handler (lambda () (collect) (run-finalizers)))"
       , "(main)"
       ]
   FS.writeTextFile UTF8 mainPath mainContent
