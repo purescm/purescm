@@ -7,7 +7,7 @@
           (rename (make-bytestring-of-length make-bytestring))
           bytestring
           bytestring-empty?
-          bytestring?
+          (rename ($bytestring? bytestring?))
           bytestring=?
           ; bytestring-hash
           bytestring-slice
@@ -59,13 +59,18 @@
           (prefix (purs runtime srfi :214) srfi:214:))
 
   (define-structure
-    (bytestring
-      ;; UTF-16 encoded memory buffer
-      buffer
-      ;; start offset of the slice
-      offset
-      ;; size of the slice in code units
-      length))
+    ($bytestring buffer length))
+
+  (define (make-bytestring buf offset len)
+    (make-$bytestring (cons buf offset) len))
+
+  (define (bytestring-buffer bs)
+    (car ($bytestring-buffer bs)))
+
+  (define (bytestring-offset bs)
+    (cdr ($bytestring-buffer bs)))
+
+  (define bytestring-length $bytestring-length)
 
   (define empty-bytestring (make-bytestring empty-code-unit-vector 0 0))
 
@@ -133,9 +138,20 @@
   ;                          [hc hc (bvupdate hc bv (fx+ i offset))])
   ;                         ((fx>= i n) (hcabs hc)))))))))))
 
-  (define (string->bytestring s)
-    (let ([buf (string->code-unit-vector s)])
-      (make-bytestring buf 0 (code-unit-vector-length buf))))
+  (define-syntax string->bytestring
+    (lambda (x)
+      (syntax-case x ()
+        [(string->bytestring s)
+         (let ([d (syntax->datum #'s)])
+           (if (string? d)
+             #`(let ([bv #,(string->utf16 d 'little)])
+                 (make-bytestring (bytevector->code-unit-vector bv) 0 (fx/ (bytevector-length bv) 2)))
+             #'(let ([bv (string->utf16 s 'little)])
+                 (make-bytestring (bytevector->code-unit-vector bv) 0 (fx/ (bytevector-length bv) 2)))))])))
+
+  ; (define (string->bytestring s)
+  ;   (let ([buf (string->code-unit-vector s)])
+  ;     (make-bytestring buf 0 (code-unit-vector-length buf))))
 
   (define (bytestring->string bs)
     (code-unit-vector->string (bytestring-buffer bs) (bytestring-offset bs) (bytestring-length bs)))
@@ -377,6 +393,18 @@
           (let-values ([(c tail) (bytestring-uncons-code-unit rest)])
             (srfi:214:flexvector-set! fv i c)
             (loop (fx1+ i) tail))))))
+
+  (define (bytestring-&ref bs i)
+    (if (code-unit-vector-pointer? (bytestring-buffer bs))
+      (code-unit-vector-&ref (bytestring-buffer bs) (fx+ (bytestring-offset bs) i))
+      (begin
+        (let ([buffer (code-unit-vector-copy-ftype
+                        (bytestring-buffer bs)
+                        (bytestring-offset bs)
+                        (bytestring-length bs))])
+          (set-$bytestring-buffer! bs (cons buffer 0))
+          (code-unit-vector-&ref buffer i)))))
+
 
   ;; 
   ;; Modifications
@@ -778,30 +806,30 @@
            [_ (ftype-set! size_t () buf-len 0 0)]
            [res (pcre2_substitute_16
                 (regex-code regex)
-                (code-unit-vector-&ref (bytestring-buffer subject) (bytestring-offset subject))
+                (bytestring-&ref subject 0)
                 (bytestring-length subject)
                 start-offset
                 (fxlogor (fxlogand (regex-flags regex) PCRE2_SUBSTITUTE_GLOBAL)
                          PCRE2_SUBSTITUTE_OVERFLOW_LENGTH)
                 match-data
                 match-context
-                (code-unit-vector-&ref (bytestring-buffer replacement) (bytestring-offset replacement))
+                (bytestring-&ref replacement 0)
                 (bytestring-length replacement)
                 ; basically a null pointer
                 (make-ftype-pointer unsigned-16 0)
                 (ftype-&ref size_t () buf-len))]
            [len (ftype-ref size_t () buf-len 0)]
-           [buf (code-unit-vector-alloc (ftype-ref size_t () buf-len 0))]
+           [buf (code-unit-vector-alloc-ftype (ftype-ref size_t () buf-len 0))]
            ; now do the actual substitution
            [res2 (pcre2_substitute_16
                 (regex-code regex)
-                (code-unit-vector-&ref (bytestring-buffer subject) (bytestring-offset subject))
+                (bytestring-&ref subject 0)
                 (bytestring-length subject)
                 start-offset
                 (fxlogand (regex-flags regex) PCRE2_SUBSTITUTE_GLOBAL)
                 match-data
                 match-context
-                (code-unit-vector-&ref (bytestring-buffer replacement) (bytestring-offset replacement))
+                (bytestring-&ref replacement 0)
                 (bytestring-length replacement)
                 (code-unit-vector-&ref buf 0)
                 (ftype-&ref size_t () buf-len))])
@@ -816,7 +844,7 @@
                [erroroffset (foreign-alloc 4)]
                [options (flags->options flags)]
                [code (pcre2_compile_16
-                       (code-unit-vector-&ref (bytestring-buffer bs) (bytestring-offset bs))
+                       (bytestring-&ref bs 0)
                        (bytestring-length bs)
                        options
                        errorcode
@@ -833,7 +861,7 @@
     (let* ([match-data (pcre2_match_data_create_from_pattern_16 (regex-code regex) 0)]
            [rc (pcre2_match_16
                  (regex-code regex)
-                 (code-unit-vector-&ref (bytestring-buffer subject) (bytestring-offset subject))
+                 (bytestring-&ref subject 0)
                  (bytestring-length subject)
                  0
                  0
@@ -867,7 +895,7 @@
     (let* ([match-data (pcre2_match_data_create_from_pattern_16 (regex-code regex) 0)]
            [rc (pcre2_match_16
                  (regex-code regex)
-                 (code-unit-vector-&ref (bytestring-buffer subject) (bytestring-offset subject))
+                 (bytestring-&ref subject 0)
                  (bytestring-length subject)
                  0
                  0

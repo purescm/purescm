@@ -10,11 +10,15 @@
   (export code-unit-length
           empty-code-unit-vector
           code-unit-vector-alloc
+          code-unit-vector-alloc-ftype
           code-unit-vector-length
           code-unit-vector-copy!
           code-unit-vector-ref
           code-unit-vector-&ref
           code-unit-vector-set!
+          code-unit-vector-copy-ftype
+          code-unit-vector-pointer?
+          bytevector->code-unit-vector
           string->code-unit-vector
           code-unit-vector->string)
   (import (chezscheme)
@@ -24,27 +28,62 @@
 
   ; ftype-pointer and length in bytes
   (define-structure
-    (code-unit-vector pointer length))
+    (code-unit-vector bv pointer length))
 
   (define empty-code-unit-vector
-    (make-code-unit-vector (make-ftype-pointer unsigned-16 0) 0))
+    (make-code-unit-vector #f (make-ftype-pointer unsigned-16 0) 0))
+
+  (define (bytevector->code-unit-vector bv)
+    (make-code-unit-vector bv #f (fx/ (bytevector-length bv) code-unit-length)))
 
   (define (code-unit-vector-alloc n)
+    (make-code-unit-vector (make-bytevector (fx* n code-unit-length)) #f n))
+
+  (define (code-unit-vector-alloc-ftype n)
+    (make-code-unit-vector #f (ftype-pointer-alloc n) n))
+
+  (define (ftype-pointer-alloc n)
     (if (fx=? n 0)
-      empty-code-unit-vector
+      (make-ftype-pointer unsigned-16 0)
       (let ([pointer (make-ftype-pointer unsigned-16 (foreign-alloc (fx* (fx1+ n) (foreign-sizeof 'unsigned-16))))])
         (ftype-set! unsigned-16 () pointer n #x0)
-        (finalizer (make-code-unit-vector pointer n)
-                   (lambda (p) (foreign-free (ftype-pointer-address (code-unit-vector-pointer p))))))))
+        (finalizer pointer (lambda (p) (foreign-free (ftype-pointer-address p)))))))
 
   (define (code-unit-vector-ref vec i)
-    (ftype-ref unsigned-16 () (code-unit-vector-pointer vec) i))
+    (let ([p (code-unit-vector-pointer vec)])
+      (if p
+        (ftype-ref unsigned-16 () p i)
+        (bytevector-u16-ref (code-unit-vector-bv vec) (fx* i code-unit-length) 'little))))
 
   (define (code-unit-vector-set! vec i val)
-    (ftype-set! unsigned-16 () (code-unit-vector-pointer vec) i val))
+    (let ([p (code-unit-vector-pointer vec)])
+      (if p
+        (ftype-set! unsigned-16 () p i val)
+        (bytevector-u16-set! (code-unit-vector-bv vec) (fx* i code-unit-length) val 'little))))
 
   (define (code-unit-vector-&ref vec i)
-    (ftype-&ref unsigned-16 () (code-unit-vector-pointer vec) i))
+    (let ([p (code-unit-vector-pointer vec)])
+      (if p
+        (ftype-&ref unsigned-16 () p i)
+        (raise-continuable
+          (make-message-condition
+            "Trying to take a pointer ref of a non-ftype code unit vector")))))
+
+  (define (code-unit-vector-pointer? vec)
+    (if (code-unit-vector-pointer vec) #t #f))
+
+  ; reallocate a slice outside the scheme heap
+  (define (code-unit-vector-copy-ftype vec offset len)
+    (let ([p (ftype-pointer-alloc (code-unit-vector-length vec))])
+      (let loop ([i 0])
+        (when (fx<? i len)
+          (begin
+            (ftype-set! unsigned-16 ()
+              p
+              i
+              (code-unit-vector-ref vec (fx+ offset i)))
+            (loop (fx1+ i)))))
+      (make-code-unit-vector #f p len)))
 
   ; copies n bytes to dst
   (define (code-unit-vector-copy! src-buf src-offset dst dst-offset n)

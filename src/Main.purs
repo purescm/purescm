@@ -215,6 +215,7 @@ runBundle cliRoot args = do
     [ "(top-level-program (import (chezscheme))"
     , "  (with-exception-handler (lambda (e) (display-condition e (console-error-port)) (newline (console-error-port)) (exit -1))"
     , "    (lambda ()"
+    , "      (compile-profile #f)"
     , "      (optimize-level 3)"
     , "      (compile-file-message #f)"
     , "      (compile-imported-libraries #t)"
