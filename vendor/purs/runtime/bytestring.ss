@@ -799,6 +799,10 @@
   (define (bytestring-regex-replace regex subject replacement)
     (let* ([match-data (pcre2_match_data_create_from_pattern_16 (regex-code regex) 0)]
            [buf-len (make-ftype-pointer size_t (foreign-alloc (foreign-sizeof 'size_t)))]
+           [subject-addr (bytestring-&ref subject 0)]
+           [subject-len (bytestring-length subject)]
+           [replacement-addr (bytestring-&ref replacement 0)]
+           [replacement-len (bytestring-length replacement)]
            [start-offset 0]
            [match-context 0]
            ; first calculate the size of the output buffer by passing in 0 as the buf size
@@ -806,15 +810,15 @@
            [_ (ftype-set! size_t () buf-len 0 0)]
            [res (pcre2_substitute_16
                 (regex-code regex)
-                (bytestring-&ref subject 0)
-                (bytestring-length subject)
+                subject-addr
+                subject-len
                 start-offset
                 (fxlogor (fxlogand (regex-flags regex) PCRE2_SUBSTITUTE_GLOBAL)
                          PCRE2_SUBSTITUTE_OVERFLOW_LENGTH)
                 match-data
                 match-context
-                (bytestring-&ref replacement 0)
-                (bytestring-length replacement)
+                replacement-addr
+                replacement-len
                 ; basically a null pointer
                 (make-ftype-pointer unsigned-16 0)
                 (ftype-&ref size_t () buf-len))]
@@ -823,14 +827,14 @@
            ; now do the actual substitution
            [res2 (pcre2_substitute_16
                 (regex-code regex)
-                (bytestring-&ref subject 0)
-                (bytestring-length subject)
+                subject-addr
+                subject-len
                 start-offset
                 (fxlogand (regex-flags regex) PCRE2_SUBSTITUTE_GLOBAL)
                 match-data
                 match-context
-                (bytestring-&ref replacement 0)
-                (bytestring-length replacement)
+                replacement-addr
+                replacement-len
                 (code-unit-vector-&ref buf 0)
                 (ftype-&ref size_t () buf-len))])
       (foreign-free (ftype-pointer-address buf-len))
