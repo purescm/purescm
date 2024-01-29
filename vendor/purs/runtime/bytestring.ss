@@ -854,8 +854,10 @@
           (foreign-free erroroffset)
           (if (fx=? code 0)
             #f
-            (finalizer (make-regex code (bytestring) options)
-                       (lambda (o) (pcre2_code_free (regex-code o))))))]))
+            (begin
+              (pcre2_jit_compile_16 code PCRE2_JIT_COMPLETE)
+              (finalizer (make-regex code (bytestring) options)
+                         (lambda (o) (pcre2_code_free (regex-code o)))))))]))
 
   (define (bytestring-regex-match regex subject)
     (let* ([match-data (pcre2_match_data_create_from_pattern_16 (regex-code regex) 0)]
@@ -955,6 +957,8 @@
   
   (define PCRE2_SUBSTITUTE_OVERFLOW_LENGTH #x00001000)
 
+  (define PCRE2_JIT_COMPLETE #x00000001)
+
   (define DEFAULT_FLAGS (fxlogor PCRE2_ALT_BSUX
                                  PCRE2_EXTRA_ALT_BSUX))
 
@@ -996,6 +1000,13 @@
   (define pcre2_code_free
     (foreign-procedure "pcre2_code_free_16" (uptr)
                        void))
+
+
+  ; int pcre2_jit_compile(pcre2_code *code, uint32_t options);
+  (define pcre2_jit_compile_16
+    (foreign-procedure "pcre2_jit_compile_16" (uptr unsigned-32)
+                       void))
+
 
 
   )
