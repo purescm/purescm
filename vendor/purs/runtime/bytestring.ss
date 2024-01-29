@@ -144,9 +144,9 @@
         [(string->bytestring s)
          (let ([d (syntax->datum #'s)])
            (if (string? d)
-             #`(let ([bv #,(string->utf16 d 'little)])
+             #`(let ([bv #,(string->utf16 d (native-endianness))])
                  (make-bytestring (bytevector->code-unit-vector bv) 0 (fx/ (bytevector-length bv) 2)))
-             #'(let ([bv (string->utf16 s 'little)])
+             #'(let ([bv (string->utf16 s (native-endianness))])
                  (make-bytestring (bytevector->code-unit-vector bv) 0 (fx/ (bytevector-length bv) 2)))))])))
 
   ; (define (string->bytestring s)

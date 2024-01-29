@@ -53,13 +53,13 @@
     (let ([p (code-unit-vector-pointer vec)])
       (if p
         (ftype-ref unsigned-16 () p i)
-        (bytevector-u16-ref (code-unit-vector-bv vec) (fx* i code-unit-length) 'little))))
+        (bytevector-u16-native-ref (code-unit-vector-bv vec) (fx* i code-unit-length)))))
 
   (define (code-unit-vector-set! vec i val)
     (let ([p (code-unit-vector-pointer vec)])
       (if p
         (ftype-set! unsigned-16 () p i val)
-        (bytevector-u16-set! (code-unit-vector-bv vec) (fx* i code-unit-length) val 'little))))
+        (bytevector-u16-native-set! (code-unit-vector-bv vec) (fx* i code-unit-length) val))))
 
   (define (code-unit-vector-&ref vec i)
     (let ([p (code-unit-vector-pointer vec)])
