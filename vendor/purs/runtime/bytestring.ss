@@ -713,10 +713,12 @@
       (bytestring-regex-replace-all regex subject f)
       (bytestring-regex-replace-single regex subject f)))
 
+  (define identity (lambda (x) x))
+
   (define (bytestring-regex-replace-all regex bs f)
     (let*-values ([(delta all-matches)
                     (let match-next ([sub-bs bs] [delta 0] [all-matches-reverse '()])
-                      (let ([matches (bytestring-regex-match regex sub-bs)])
+                      (let ([matches (bytestring-regex-match regex sub-bs identity #f)])
                         (if (and matches (fx>? (srfi:214:flexvector-length matches) 0))
                           (let* ([match (srfi:214:flexvector-ref matches 0)]
                                  [_ (srfi:214:flexvector-remove-front! matches)]
@@ -762,7 +764,7 @@
           (make-bytestring bv 0 len)))
 
   (define (bytestring-regex-replace-single regex bs f)
-    (let ([matches (bytestring-regex-match regex bs)])
+    (let ([matches (bytestring-regex-match regex bs identity #f)])
       (if (and matches (fx>? (srfi:214:flexvector-length matches) 0))
         (let* ([match (srfi:214:flexvector-ref matches 0)]
                [_ (srfi:214:flexvector-remove-front! matches)]
@@ -863,7 +865,7 @@
               (finalizer (make-regex code (bytestring) options)
                          (lambda (o) (pcre2_code_free (regex-code o)))))))]))
 
-  (define (bytestring-regex-match regex subject)
+  (define (bytestring-regex-match regex subject on-match nomatch)
     (let* ([match-data (pcre2_match_data_create_from_pattern_16 (regex-code regex) 0)]
            [rc (pcre2_match_16
                  (regex-code regex)
@@ -883,7 +885,7 @@
               (let ([sub-start (foreign-ref 'size_t ovector (fx* (fx* i 2) (foreign-sizeof 'size_t)))])
                 ; TODO how do we get this value (PCRE2_UNSET) in a portable way?
                 (if (= sub-start 18446744073709551615)
-                  (begin (srfi:214:flexvector-set! out i #f)
+                  (begin (srfi:214:flexvector-set! out i nomatch)
                          (recur (fx1+ i)))
                   (let* ([sub-end (foreign-ref 'size_t ovector (fx* (fx1+ (fx* i 2)) (foreign-sizeof 'size_t)))]
                          [sub-len (fx- sub-end sub-start)]
@@ -891,7 +893,7 @@
                                      (bytestring-buffer subject)
                                      (fx+ (bytestring-offset subject) sub-start)
                                      sub-len)])
-                    (srfi:214:flexvector-set! out i match-bs)
+                    (srfi:214:flexvector-set! out i (on-match match-bs))
                     (recur (fx1+ i)))))
               (begin
                 (pcre2_match_data_free_16 match-data)
