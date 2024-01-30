@@ -706,7 +706,7 @@
   ;;
 
   (define-structure
-    (regex code source flags))
+    (regex code match-data source flags))
 
   (define (bytestring-regex-replace-by regex subject f)
     (if (regex-has-flag regex PCRE2_SUBSTITUTE_GLOBAL)
@@ -862,11 +862,13 @@
             #f
             (begin
               (pcre2_jit_compile_16 code PCRE2_JIT_COMPLETE)
-              (finalizer (make-regex code (bytestring) options)
-                         (lambda (o) (pcre2_code_free (regex-code o)))))))]))
+              (finalizer (make-regex code (pcre2_match_data_create_from_pattern_16 code 0) (bytestring) options)
+                         (lambda (r)
+                           (pcre2_code_free (regex-code r))
+                           (pcre2_match_data_free_16 (regex-match-data r)))))))]))
 
   (define (bytestring-regex-match regex subject on-match nomatch)
-    (let* ([match-data (pcre2_match_data_create_from_pattern_16 (regex-code regex) 0)]
+    (let* ([match-data (regex-match-data regex)]
            [rc (pcre2_match_16
                  (regex-code regex)
                  (bytestring-&ref subject 0)
@@ -876,7 +878,7 @@
                  match-data
                  0)])
       (if (fx<? rc 0)
-        (begin (pcre2_match_data_free_16 match-data) #f)
+        #f
         (let* ([ovector (pcre2_get_ovector_pointer_16 match-data)]
                [count (pcre2_get_ovector_count_16 match-data)]
                [out (srfi:214:make-flexvector count)])
@@ -895,9 +897,7 @@
                                      sub-len)])
                     (srfi:214:flexvector-set! out i (on-match match-bs))
                     (recur (fx1+ i)))))
-              (begin
-                (pcre2_match_data_free_16 match-data)
-                out)))))))
+              out))))))
 
   (define (bytestring-regex-search regex subject)
     (let* ([match-data (pcre2_match_data_create_from_pattern_16 (regex-code regex) 0)]
@@ -910,10 +910,9 @@
                  match-data
                  0)])
       (if (fx<? rc 0)
-        (begin (pcre2_match_data_free_16 match-data) #f)
+        #f
         (let* ([ovector (pcre2_get_ovector_pointer_16 match-data)]
                [match-index (foreign-ref 'size_t ovector 0)])
-          (pcre2_match_data_free_16 match-data)
           match-index))))
 
 
