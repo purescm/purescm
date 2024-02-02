@@ -4,53 +4,58 @@
   "version": "1.0.0",
   "packages": {
     "arrays": {
-      "git": "https://github.com/purescm/purescript-arrays.git",
-      "ref": "5d6ca235d3c2055443eb736e408ffd8755ef763d"
+      "git": "https://github.com/anttih/purescript-core.git",
+      "ref": "67a140e5e7dd4129c4fc81b08a401fc56e263aa8",
+      "subdir": "arrays"
     },
     "assert": {
-      "git": "https://github.com/purescm/purescript-assert.git",
-      "ref": "bfef782e0e7a3fe041273c61e69c65dc54c1b2bf"
+      "git": "https://github.com/anttih/purescript-core.git",
+      "ref": "67a140e5e7dd4129c4fc81b08a401fc56e263aa8",
+      "subdir": "assert"
     },
     "bifunctors": "6.0.0",
     "catenable-lists": "7.0.0",
     "console": {
-      "git": "https://github.com/purescm/purescript-console.git",
-      "ref": "dc769b2f72215c141b53bfe65fc4c1b3c06d22b6",
-      "dependencies": [
-        "effect",
-        "prelude"
-      ]
+      "git": "https://github.com/anttih/purescript-core.git",
+      "ref": "67a140e5e7dd4129c4fc81b08a401fc56e263aa8",
+      "subdir": "console"
     },
     "const": "6.0.0",
     "contravariant": "6.0.0",
     "control": {
-      "git": "https://github.com/purescm/purescript-control.git",
-      "ref": "e9158b4499252aa976237a75468b876d283182eb"
+      "git": "https://github.com/anttih/purescript-core.git",
+      "ref": "67a140e5e7dd4129c4fc81b08a401fc56e263aa8",
+      "subdir": "control"
     },
     "distributive": "6.0.0",
     "effect": {
-      "git": "https://github.com/purescm/purescript-effect.git",
-      "ref": "a1fa3fd970ec82c05a664a4cae715b684cbe2253"
+      "git": "https://github.com/anttih/purescript-core.git",
+      "ref": "67a140e5e7dd4129c4fc81b08a401fc56e263aa8",
+      "subdir": "effect"
     },
     "either": "6.1.0",
     "enums": {
-      "git": "https://github.com/purescm/purescript-enums.git",
-      "ref": "5da5c4e4075ec64b75a9a3730ef98869d5d1fbba"
+      "git": "https://github.com/anttih/purescript-core.git",
+      "ref": "67a140e5e7dd4129c4fc81b08a401fc56e263aa8",
+      "subdir": "enums"
     },
     "exceptions": {
-      "git": "https://github.com/purescm/purescript-exceptions.git",
-      "ref": "a7c66a2c1b8a7d120efa7e33b9931ea4664b965a"
+      "git": "https://github.com/anttih/purescript-core.git",
+      "ref": "67a140e5e7dd4129c4fc81b08a401fc56e263aa8",
+      "subdir": "exceptions"
     },
     "exists": "6.0.0",
     "filterable": "5.0.0",
     "foldable-traversable": {
-      "git": "https://github.com/purescm/purescript-foldable-traversable.git",
-      "ref": "7d53cd78b7937b5e3830ac414d78338211165cfd"
+      "git": "https://github.com/anttih/purescript-core.git",
+      "ref": "67a140e5e7dd4129c4fc81b08a401fc56e263aa8",
+      "subdir": "foldable-traversable"
     },
     "free": "7.1.0",
     "functions": {
-      "git": "https://github.com/purescm/purescript-functions.git",
-      "ref": "94e0a9a3b7f831abebcb1bf65587fca03f04e034",
+      "git": "https://github.com/anttih/purescript-core.git",
+      "ref": "67a140e5e7dd4129c4fc81b08a401fc56e263aa8",
+      "subdir": "functions",
       "dependencies": [
         "prelude"
       ]
@@ -59,46 +64,54 @@
     "gen": "4.0.0",
     "identity": "6.0.0",
     "integers": {
-      "git": "https://github.com/purescm/purescript-integers.git",
-      "ref": "0a9ef55a25a72a46b3c336b89eab429eee8b1f7b"
+      "git": "https://github.com/anttih/purescript-core.git",
+      "ref": "67a140e5e7dd4129c4fc81b08a401fc56e263aa8",
+      "subdir": "integers"
     },
     "invariant": "6.0.0",
     "lazy": {
-      "git": "https://github.com/purescm/purescript-lazy.git",
-      "ref": "383f0f9dd026b38a8fe4a8a8d8a4ecec543fbb2c"
+      "git": "https://github.com/anttih/purescript-core.git",
+      "ref": "67a140e5e7dd4129c4fc81b08a401fc56e263aa8",
+      "subdir": "lazy"
     },
     "lists": "7.0.0",
     "maybe": "6.0.0",
     "minibench": {
-      "git": "https://github.com/purescm/purescript-minibench.git",
-      "ref": "f411a9023fe3ee685077d48940e59abce031a775"
+      "git": "https://github.com/anttih/purescript-core.git",
+      "ref": "67a140e5e7dd4129c4fc81b08a401fc56e263aa8",
+      "subdir": "minibench"
     },
     "newtype": "5.0.0",
     "nonempty": "7.0.0",
     "numbers": {
-      "git": "https://github.com/purescm/purescript-numbers.git",
-      "ref": "bc6d165addfd08552054a6100088ae13f8c4f47f"
+      "git": "https://github.com/anttih/purescript-core.git",
+      "ref": "67a140e5e7dd4129c4fc81b08a401fc56e263aa8",
+      "subdir": "numbers"
     },
     "ordered-collections": "3.1.1",
     "orders": "6.0.0",
     "parallel": "7.0.0",
     "partial": {
-      "git": "https://github.com/purescm/purescript-partial.git",
-      "ref": "d8b6daf068e4aab0ad85a42d0f890ed37f416923",
+      "git": "https://github.com/anttih/purescript-core.git",
+      "ref": "67a140e5e7dd4129c4fc81b08a401fc56e263aa8",
+      "subdir": "partial",
       "dependencies": []
     },
     "prelude": {
-      "git": "https://github.com/purescm/purescript-prelude.git",
-      "ref": "5db11fe5f91108d933b70354e85cbb138581f75e"
+      "git": "https://github.com/anttih/purescript-core.git",
+      "ref": "67a140e5e7dd4129c4fc81b08a401fc56e263aa8",
+      "subdir": "prelude"
     },
     "profunctor": "6.0.0",
     "record": {
-      "git": "https://github.com/purescm/purescript-record.git",
-      "ref": "107f650716ca4ff633c4abb170df1ccf86ced210"
+      "git": "https://github.com/anttih/purescript-core.git",
+      "ref": "67a140e5e7dd4129c4fc81b08a401fc56e263aa8",
+      "subdir": "record"
     },
     "refs": {
-      "git": "https://github.com/purescm/purescript-refs.git",
-      "ref": "2ac82d3867e8ac02df03b6a04d635e0acd4b95db",
+      "git": "https://github.com/anttih/purescript-core.git",
+      "ref": "67a140e5e7dd4129c4fc81b08a401fc56e263aa8",
+      "subdir": "refs",
       "dependencies": [
         "effect",
         "prelude"
@@ -106,8 +119,9 @@
     },
     "safe-coerce": "2.0.0",
     "st": {
-      "git": "https://github.com/purescm/purescript-st.git",
-      "ref": "eb2f1021e6be089fb8fc0c596f3779f65262e54c"
+      "git": "https://github.com/anttih/purescript-core.git",
+      "ref": "67a140e5e7dd4129c4fc81b08a401fc56e263aa8",
+      "subdir": "st"
     },
     "semirings": "7.0.0",
     "tailrec": "6.1.0",
@@ -115,12 +129,14 @@
     "tuples": "7.0.0",
     "type-equality": "4.0.1",
     "unfoldable": {
-      "git": "https://github.com/purescm/purescript-unfoldable.git",
-      "ref": "1cc7559e3d23537b02199d589c762087e0442f00"
+      "git": "https://github.com/anttih/purescript-core.git",
+      "ref": "67a140e5e7dd4129c4fc81b08a401fc56e263aa8",
+      "subdir": "unfoldable"
     },
     "unsafe-coerce": {
-      "git": "https://github.com/purescm/purescript-unsafe-coerce.git",
-      "ref": "20dbd7797e985b631459b8dbd4072cf3096ee1da",
+      "git": "https://github.com/anttih/purescript-core.git",
+      "ref": "67a140e5e7dd4129c4fc81b08a401fc56e263aa8",
+      "subdir": "unsafe-coerce",
       "dependencies": []
     },
     "validation": "6.0.0"
