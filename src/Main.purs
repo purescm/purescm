@@ -80,7 +80,7 @@ cliArgParser =
     ]
     <* ArgParser.flagHelp
     <* ArgParser.flagInfo [ "--version", "-v" ] "Show the current version of purescm."
-      BuildInfo.buildInfo.packages.purescm
+      BuildInfo.packages.purescm
 
 buildCmdArgParser :: ArgParser BuildArgs
 buildCmdArgParser =
