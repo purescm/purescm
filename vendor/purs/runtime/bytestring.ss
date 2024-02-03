@@ -844,7 +844,7 @@
 
   (define bytestring-make-regex
     (case-lambda
-      [(bs) (bytestring-make-regex bs (make-hashtable symbol-hash eq?))]
+      [(bs) (bytestring-make-regex bs '())]
       [(bs flags)
         (let* ([errorcode (foreign-alloc 4)]
                [erroroffset (foreign-alloc 4)]
@@ -921,19 +921,6 @@
   ;; 
 
   (define (flags->options flags)
-    (define (hashtable-fold proc init hashtable)
-      (let-values ([(keys vals) (hashtable-entries hashtable)])
-        (let ([size (vector-length keys)])
-          (let loop ([i 0] [result init])
-            (if (fx>=? i size)
-                result
-                (loop
-                  (fx+ i 1)
-                  (proc
-                    (vector-ref keys i)
-                    (vector-ref vals i)
-                    result)))))))
-
     (define (flag->bitmask flag)
       (cond
         [(eq? flag 'dotAll) PCRE2_DOTALL]
@@ -942,10 +929,10 @@
         [(eq? flag 'global) PCRE2_SUBSTITUTE_GLOBAL]
         [else #x0]))
 
-    (hashtable-fold
-      (lambda (k v acc)
-        (let ([m (flag->bitmask k)])
-          (if v (fxlogor m acc) acc)))
+    (fold-right
+      (lambda (flag acc)
+        (let ([m (flag->bitmask (car flag))])
+          (if (cdr flag) (fxlogor m acc) acc)))
       DEFAULT_FLAGS
       flags))
 
