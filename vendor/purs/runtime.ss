@@ -19,6 +19,10 @@
     (chezscheme)
     (prefix (purs runtime srfi :214) srfi:214:))
 
+  ;
+  ; Booleans
+  ;
+
   (define boolean->integer
     (lambda (x)
       (if x 1 0)))
@@ -43,15 +47,24 @@
       (lambda (y)
         (fx<? (boolean->integer x) (boolean->integer y)))))
 
+  ;
+  ; Arrays
+  ;
+
   (define make-array srfi:214:flexvector)
 
   (define array-ref srfi:214:flexvector-ref)
 
   (define array-length srfi:214:flexvector-length)
 
+
+  ;
+  ; Records
+  ;
+
   (define (object-has alist k)
     (let ([res (assq k alist)])
-      (if (not res) #f #t)))
+      (not (eq? res #f))))
 
   (define (object-ref alist k)
     (let ([res (assq k alist)])
@@ -71,6 +84,10 @@
 
   (define (object-set alist k v)
     (cons (cons k v) (object-delete alist k)))
+
+  ;
+  ; Lists
+  ;
 
   (define list-cons
     (lambda (x) (lambda (xs) (cons x xs))))
