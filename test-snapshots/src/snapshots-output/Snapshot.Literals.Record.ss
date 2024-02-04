@@ -19,13 +19,12 @@
     (Snapshot.Literals.Record foreign))
 
   (scm:define insert
-    (((Record.insert (rt:make-object (scm:cons (scm:string->symbol "reflectSymbol") (scm:lambda (_)
+    (((Record.insert (scm:list (scm:cons (scm:string->symbol "reflectSymbol") (scm:lambda (_)
       "anotherField")))) (scm:gensym "purs-undefined")) (scm:gensym "purs-undefined")))
 
   (scm:define recordUpdate
     (scm:lambda (v0)
-      (scm:let ([$record (rt:object-copy v0)])
-        (scm:begin (rt:object-set! $record (scm:string->symbol "fooBarBaz") 10) $record))))
+      (scm:cons (scm:cons (scm:string->symbol "fooBarBaz") 10) v0)))
 
   (scm:define recordAddField
     (scm:lambda (_)
@@ -37,10 +36,10 @@
 
   (scm:define main
     (scm:let*
-      ([r0 (rt:make-object (scm:cons (scm:string->symbol "fooBarBaz") 5))]
+      ([r0 (scm:list (scm:cons (scm:string->symbol "fooBarBaz") 5))]
        [s1 (recordUpdate r0)]
        [t2 ((recordAddField (scm:gensym "purs-undefined")) s1)]
-       [u3 (rt:make-object (scm:cons (scm:string->symbol "fooBarBaz") minusTwo))]
+       [u3 (scm:list (scm:cons (scm:string->symbol "fooBarBaz") minusTwo))]
        [_4 (Test.Assert.assert (scm:fx=? (recordAccess t2) 10))])
         (scm:lambda ()
           (scm:let*

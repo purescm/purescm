@@ -4,10 +4,10 @@
   (purs runtime)
   (export
     list-cons
-    object-copy
-    object-set!
+    object-set
     object-ref
-    make-object
+    object-has
+    object-delete
     array-length
     array-ref
     make-array
@@ -49,33 +49,28 @@
 
   (define array-length srfi:214:flexvector-length)
 
-  (define make-object
-    (lambda args
-      (let ([obj (make-hashtable symbol-hash eq?)])
-        (for-each
-          (lambda (pair)
-            (symbol-hashtable-set! obj (car pair) (cdr pair)))
-          args)
-        obj)))
+  (define (object-has alist k)
+    (let ([res (assq k alist)])
+      (if (not res) #f #t)))
 
-  (define nil (cons #f #f))
-  (define (nil? obj) (eq? obj nil))
+  (define (object-ref alist k)
+    (let ([res (assq k alist)])
+      (if (not res)
+        (raise-continuable
+          (condition
+            (make-error)
+            (make-message-condition (format "Object key ~a not defined in ~a" k alist))))
+        (cdr res))))
 
-  (define object-ref
-    (lambda (ht k)
-      (let ([value (symbol-hashtable-ref ht k nil)])
-        (if (nil? value)
-          (raise-continuable
-            (condition
-              (make-error)
-              (make-message-condition (format "Object key ~a not defined" k))))
-          value))))
+  (define (object-delete xs k)
+    (if (null? xs)
+      xs
+      (if (eq? (caar xs) k)
+        (cdr xs)
+        (cons (car xs) (object-delete (cdr xs) k)))))
 
-  (define object-set! symbol-hashtable-set!)
-
-  (define object-copy
-    (lambda (v)
-      (hashtable-copy v #t)))
+  (define (object-set alist k v)
+    (cons (cons k v) (object-delete alist k)))
 
   (define list-cons
     (lambda (x) (lambda (xs) (cons x xs))))

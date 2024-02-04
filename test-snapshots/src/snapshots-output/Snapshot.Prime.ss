@@ -104,7 +104,7 @@
             (scm:string-append ((rt:object-ref dictNormal0 (scm:string->symbol "normal")) a2) ((rt:object-ref dictNormal11 (scm:string->symbol "normal")) b3)))))))
 
   (scm:define instanceName$p
-    (rt:make-object (scm:cons (scm:string->symbol "normal") (scm:lambda (v0)
+    (scm:list (scm:cons (scm:string->symbol "normal") (scm:lambda (v0)
       (scm:cond
         [(F1? v0) "F1"]
         [(F2? v0) "F2"]

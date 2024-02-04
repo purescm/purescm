@@ -3,6 +3,7 @@ module PureScript.Backend.Chez.Syntax where
 import Prelude
 
 import Data.Argonaut as Json
+import Data.Array (foldr)
 import Data.Array as Array
 import Data.Array.NonEmpty (NonEmptyArray)
 import Data.Array.NonEmpty as NonEmptyArray
@@ -136,7 +137,7 @@ record r = do
       , recordLabel k
       , v
       ]
-  List $ [ Identifier $ rtPrefixed "make-object" ] <> (field <$> r)
+  List $ [ Identifier $ scmPrefixed "list" ] <> (field <$> r)
 
 quote :: ChezExpr -> ChezExpr
 quote e = app (Identifier $ scmPrefixed "quote") e
@@ -169,14 +170,9 @@ recordAccessor expr name field =
 recordUpdate :: ChezExpr -> Array (Prop ChezExpr) -> ChezExpr
 recordUpdate h f = do
   let
-    field :: Prop ChezExpr -> ChezExpr
-    field (Prop k v) =
-      List
-        [ Identifier $ rtPrefixed "object-set!"
-        , Identifier "$record"
-        , recordLabel k
-        , v
-        ]
-  Let false
-    (NonEmptyArray.singleton (Tuple "$record" (List [ Identifier $ rtPrefixed "object-copy", h ])))
-    (List $ [ Identifier $ scmPrefixed "begin" ] <> (field <$> f) <> [ Identifier "$record" ])
+    field :: Prop ChezExpr -> ChezExpr -> ChezExpr
+    field (Prop k v) rest =
+      List [ Identifier $ scmPrefixed "cons"
+           , List [ Identifier $ scmPrefixed "cons", recordLabel k, v ]
+           , rest ]
+  foldr field h f
