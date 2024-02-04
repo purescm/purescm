@@ -56,8 +56,3 @@ workspace:
       - build
   package_set:
     path: ../package-sets/1.0.0.json
-  extra_packages:
-    prelude:
-      path: ../../core-mono/prelude
-    record:
-      path: ../../core-mono/record
