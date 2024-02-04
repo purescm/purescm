@@ -4,10 +4,10 @@
   (purs runtime)
   (export
     list-cons
-    object-set
-    object-ref
-    object-has
-    object-delete
+    record-set
+    record-ref
+    record-has
+    record-remove
     array-length
     array-ref
     make-array
@@ -62,28 +62,29 @@
   ; Records
   ;
 
-  (define (object-has alist k)
-    (let ([res (assq k alist)])
+  (define (record-has rec k)
+    (let ([res (assq k rec)])
       (not (eq? res #f))))
 
-  (define (object-ref alist k)
-    (let ([res (assq k alist)])
+  (define (record-ref rec k)
+    (let ([res (assq k rec)])
       (if (not res)
         (raise-continuable
           (condition
             (make-error)
-            (make-message-condition (format "Object key ~a not defined in ~a" k alist))))
+            (make-message-condition (format "Record key ~a not defined in ~a" k rec))))
         (cdr res))))
 
-  (define (object-delete xs k)
-    (if (null? xs)
-      xs
-      (if (eq? (caar xs) k)
-        (cdr xs)
-        (cons (car xs) (object-delete (cdr xs) k)))))
+  (define (record-remove rec k)
+    (if (null? rec)
+      rec
+      (if (eq? (caar rec) k)
+        (cdr rec)
+        (cons (car rec) (record-remove (cdr rec) k)))))
 
-  (define (object-set alist k v)
-    (cons (cons k v) (object-delete alist k)))
+  (define (record-set rec k v)
+    (cons (cons k v) (record-remove rec k)))
+
 
   ;
   ; Lists

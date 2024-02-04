@@ -7,7 +7,7 @@
 
   (define unsafeGetNotFound
     (lambda (r)
-      (rt:object-ref r "not-found")))
+      (rt:record-ref r 'not-found)))
 
 
   )

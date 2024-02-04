@@ -32,7 +32,7 @@
 
   (scm:define recordAccess
     (scm:lambda (v0)
-      (rt:object-ref v0 (scm:string->symbol "fooBarBaz"))))
+      (rt:record-ref v0 (scm:string->symbol "fooBarBaz"))))
 
   (scm:define main
     (scm:let*
@@ -44,7 +44,7 @@
         (scm:lambda ()
           (scm:let*
             ([_ (_4)]
-             [_ ((Test.Assert.assert (scm:fx=? (rt:object-ref t2 (scm:string->symbol "anotherField")) 42)))]
+             [_ ((Test.Assert.assert (scm:fx=? (rt:record-ref t2 (scm:string->symbol "anotherField")) 42)))]
              [_ ((Test.Assert.assert (scm:fx=? (recordAccess s1) 10)))]
              [_ ((Test.Assert.assert (scm:fx=? (recordAccess r0) 5)))]
              [_ ((Test.Assert.assert (scm:fx=? (recordAccess u3) minusTwo)))])

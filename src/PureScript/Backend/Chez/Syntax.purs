@@ -172,7 +172,9 @@ recordUpdate h f = do
   let
     field :: Prop ChezExpr -> ChezExpr -> ChezExpr
     field (Prop k v) rest =
-      List [ Identifier $ scmPrefixed "cons"
-           , List [ Identifier $ scmPrefixed "cons", recordLabel k, v ]
-           , rest ]
+      List
+        [ Identifier $ scmPrefixed "cons"
+        , List [ Identifier $ scmPrefixed "cons", recordLabel k, v ]
+        , rest
+        ]
   foldr field h f
