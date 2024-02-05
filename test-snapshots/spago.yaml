@@ -59,3 +59,9 @@ workspace:
   extra_packages:
     prelude:
       path: ../../core/prelude
+    strings:
+      path: ../../core/strings
+    assert:
+      path: ../../core/assert
+    console:
+      path: ../../core/console

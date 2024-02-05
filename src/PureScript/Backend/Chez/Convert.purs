@@ -175,7 +175,7 @@ codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
 
   Accessor e (GetProp i) ->
     S.runUncurriedFn
-      (S.Identifier $ rtPrefixed "object-ref")
+      (S.Identifier $ rtPrefixed "record-ref")
       [ codegenExpr codegenEnv e
       , S.recordLabel i
       ]

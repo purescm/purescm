@@ -19,6 +19,7 @@ If you would prefer to use different terms, please use the section below instead
 | [@PureFunctor](https://github.com/PureFunctor), [@sjpgarcia](https://github.com/sjpgarcia) | Justin Garcia | [Apache-2.0] |
 | [@turlando](https://github.com/turlando) | Tancredi Orlando | [Apache-2.0] |
 | [@anttih](https://github.com/anttih) | Antti Holvikari | [Apache-2.0] |
+| toastal | toastal | [Apache-2.0] |
 
 ### Contributors using Modified Terms
 

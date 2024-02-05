@@ -19,7 +19,7 @@
     (prefix (Test.Assert lib) Test.Assert.))
 
   (scm:define show
-    (rt:object-ref (Data.List.Types.showList Data.Show.showInt) (scm:string->symbol "show")))
+    (rt:record-ref (Data.List.Types.showList Data.Show.showInt) (scm:string->symbol "show")))
 
   (scm:define xs
     (scm:cons 1 (scm:quote ())))
