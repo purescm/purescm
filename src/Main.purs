@@ -200,7 +200,8 @@ runBundle cliRoot args = do
   mkdirp args.outputDir
   let
     mainContent = Array.fold
-      [ "(import (chezscheme) (only (purs runtime finalizers) run-finalizers) (" <> args.moduleName <> " lib))"
+      [ "(import (only (chezscheme) collect collect-request-handler lambda)"
+      , "        (only (purs runtime finalizers) run-finalizers) (" <> args.moduleName <> " lib))"
       , "(collect-request-handler (lambda () (collect) (run-finalizers)))"
       , "(main)"
       ]
@@ -236,7 +237,10 @@ runRun cliRoot args = do
     arguments = [ "-q", "--libdirs", libDirs ]
   res <- evalScheme arguments $ Array.fold
     [ "(base-exception-handler (lambda (e) (display-condition e (console-error-port)) (newline (console-error-port)) (exit -1)))"
-    , "(top-level-program (import (chezscheme) (only (purs runtime finalizers) run-finalizers) (" <> args.moduleName <> " lib))"
+    , "(top-level-program (import (only (chezscheme) lambda collect collect-request-handler)"
+    , "                           (only (purs runtime finalizers) run-finalizers) ("
+        <> args.moduleName
+        <> " lib))"
     , "  (collect-request-handler (lambda () (collect) (run-finalizers)))"
     , "  (main))"
     ]
