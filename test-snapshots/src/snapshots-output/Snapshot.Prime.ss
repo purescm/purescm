@@ -101,7 +101,7 @@
       (scm:lambda (dictNormal11)
         (scm:lambda (a2)
           (scm:lambda (b3)
-            (scm:string-append ((rt:record-ref dictNormal0 (scm:string->symbol "normal")) a2) ((rt:record-ref dictNormal11 (scm:string->symbol "normal")) b3)))))))
+            (rt:bytestring-concat ((rt:record-ref dictNormal0 (scm:string->symbol "normal")) a2) ((rt:record-ref dictNormal11 (scm:string->symbol "normal")) b3)))))))
 
   (scm:define instanceName$p
     (scm:list (scm:cons (scm:string->symbol "normal") (scm:lambda (v0)

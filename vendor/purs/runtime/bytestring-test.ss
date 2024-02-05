@@ -282,56 +282,56 @@
 
       (assert (bytestring=?
                 (bytestring-regex-replace-by
-                  (bytestring-make-regex (lit "a") (rt:make-object '(global . #f)))
+                  (bytestring-make-regex (lit "a") (list '(global . #f)))
                   (lit "aaa")
                   (lambda (m xs) (lit "b")))
                 (lit "baa")))
 
       (assert (bytestring=?
                 (bytestring-regex-replace-by
-                  (bytestring-make-regex (lit "foo") (rt:make-object '(global . #f)))
+                  (bytestring-make-regex (lit "foo") (list '(global . #f)))
                   (lit "bar")
                   (lambda (m xs) (lit "fail")))
                 (lit "bar")))
 
       (assert (bytestring=?
                 (bytestring-regex-replace-by
-                  (bytestring-make-regex (lit "[a-z]") (rt:make-object '(global . #t)))
+                  (bytestring-make-regex (lit "[a-z]") (list '(global . #t)))
                   (string->bytestring "")
                   (lambda (m xs) (lit "123")))
                 (string->bytestring "")))
 
       (assert (bytestring=?
                 (bytestring-regex-replace-by
-                  (bytestring-make-regex (lit "aa") (rt:make-object '(global . #t)))
+                  (bytestring-make-regex (lit "aa") (list '(global . #t)))
                   (lit "bb")
                   (lambda (m xs) (lit "123")))
                 (lit "bb")))
 
       (assert (bytestring=?
                 (bytestring-regex-replace-by
-                  (bytestring-make-regex (lit "b") (rt:make-object '(global . #t)))
+                  (bytestring-make-regex (lit "b") (list '(global . #t)))
                   (lit "abc")
                   (lambda (m xs) (lit "123")))
                 (lit "a123c")))
 
       (assert (bytestring=?
                 (bytestring-regex-replace-by
-                  (bytestring-make-regex (lit "a") (rt:make-object '(global . #t)))
+                  (bytestring-make-regex (lit "a") (list '(global . #t)))
                   (lit "aaa")
                   (lambda (m xs) (lit "b")))
                 (lit "bbb")))
 
       (assert (bytestring=?
                 (bytestring-regex-replace-by
-                  (bytestring-make-regex (lit "([a-z]{2})") (rt:make-object '(global . #t)))
+                  (bytestring-make-regex (lit "([a-z]{2})") (list '(global . #t)))
                   (lit "aazz")
                   (lambda (m xs) (if (bytestring=? m (lit "aa")) (lit "foo") (lit "bar"))))
                 (lit "foobar")))
 
       (assert (bytestring=?
                 (bytestring-regex-replace-by
-                  (bytestring-make-regex (lit "Hello, ([a-z]+)") (rt:make-object '(global . #t)))
+                  (bytestring-make-regex (lit "Hello, ([a-z]+)") (list '(global . #t)))
                   (lit "Hello, purescript")
                   (lambda (m xs) (srfi:214:flexvector-ref xs 0)))
                 (lit "purescript")))
@@ -339,14 +339,14 @@
       ; replace
       (assert (bytestring=?
                 (bytestring-regex-replace
-                  (bytestring-make-regex (lit "a") (rt:make-object '(global . #f)))
+                  (bytestring-make-regex (lit "a") (list '(global . #f)))
                   (lit "aaa")
                   (lit "b"))
                 (lit "baa")))
 
       (assert (bytestring=?
                 (bytestring-regex-replace
-                  (bytestring-make-regex (lit "a") (rt:make-object '(global . #t)))
+                  (bytestring-make-regex (lit "a") (list '(global . #t)))
                   (lit "aaa")
                   (lit "b"))
                 (lit "bbb")))
@@ -355,29 +355,29 @@
       ; search
       (assert (not
                 (bytestring-regex-search
-                  (bytestring-make-regex (lit "a") (rt:make-object '(global . #f)))
+                  (bytestring-make-regex (lit "a") (list '(global . #f)))
                   (lit "b"))))
 
       (assert (not
                 (bytestring-regex-search
-                  (bytestring-make-regex (lit "a") (rt:make-object '(global . #f)))
+                  (bytestring-make-regex (lit "a") (list '(global . #f)))
                   (lit ""))))
 
       (assert (equal?
                 (bytestring-regex-search
-                  (bytestring-make-regex (lit "a") (rt:make-object '(global . #f)))
+                  (bytestring-make-regex (lit "a") (list '(global . #f)))
                   (lit "abc"))
                 0))
 
       (assert (equal?
                 (bytestring-regex-search
-                  (bytestring-make-regex (lit "b") (rt:make-object '(global . #f)))
+                  (bytestring-make-regex (lit "b") (list '(global . #f)))
                   (lit "abc"))
                 1))
 
       (assert (equal?
                 (bytestring-regex-search
-                  (bytestring-make-regex (lit "c") (rt:make-object '(global . #f)))
+                  (bytestring-make-regex (lit "c") (list '(global . #f)))
                   (lit "abc"))
                 2))
 

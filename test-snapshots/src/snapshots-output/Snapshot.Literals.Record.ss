@@ -20,7 +20,7 @@
 
   (scm:define insert
     (((Record.insert (scm:list (scm:cons (scm:string->symbol "reflectSymbol") (scm:lambda (_)
-      "anotherField")))) (scm:gensym "purs-undefined")) (scm:gensym "purs-undefined")))
+      (rt:string->bytestring "anotherField"))))) (scm:gensym "purs-undefined")) (scm:gensym "purs-undefined")))
 
   (scm:define recordUpdate
     (scm:lambda (v0)

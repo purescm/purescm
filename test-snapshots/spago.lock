@@ -207,6 +207,9 @@ workspace:
         git: https://github.com/purescm/purescript-core.git
         ref: 154d77119aa25b70f07f4b880dcba41ed811a852
         subdir: st
+      strings:
+        git: https://github.com/anttih/purescript-strings.git
+        ref: c67d4d6dfa173564a1b8c96a577f2ae1e5186718
       tailrec: 6.1.0
       transformers: 6.0.0
       tuples: 7.0.0
@@ -221,7 +224,17 @@ workspace:
         subdir: unsafe-coerce
         dependencies: []
       validation: 6.0.0
-  extra_packages: {}
+  extra_packages:
+    assert:
+      path: ../../core-mono/assert
+    console:
+      path: ../../core-mono/console
+    prelude:
+      path: ../../core-mono/prelude
+    record:
+      path: ../../core-mono/record
+    strings:
+      path: ../../core-mono/strings
 packages:
   arrays:
     type: git
@@ -244,10 +257,8 @@ packages:
       - unfoldable
       - unsafe-coerce
   assert:
-    type: git
-    url: https://github.com/purescm/purescript-core.git
-    rev: 154d77119aa25b70f07f4b880dcba41ed811a852
-    subdir: assert
+    type: local
+    path: ../../core-mono/assert
     dependencies:
       - console
       - effect
@@ -275,10 +286,8 @@ packages:
       - tuples
       - unfoldable
   console:
-    type: git
-    url: https://github.com/purescm/purescript-core.git
-    rev: 154d77119aa25b70f07f4b880dcba41ed811a852
-    subdir: console
+    type: local
+    path: ../../core-mono/console
     dependencies:
       - effect
       - prelude
@@ -600,10 +609,8 @@ packages:
     subdir: partial
     dependencies: []
   prelude:
-    type: git
-    url: https://github.com/purescm/purescript-core.git
-    rev: 154d77119aa25b70f07f4b880dcba41ed811a852
-    subdir: prelude
+    type: local
+    path: ../../core-mono/prelude
     dependencies: []
   profunctor:
     type: registry
@@ -619,10 +626,8 @@ packages:
       - prelude
       - tuples
   record:
-    type: git
-    url: https://github.com/purescm/purescript-core.git
-    rev: 154d77119aa25b70f07f4b880dcba41ed811a852
-    subdir: record
+    type: local
+    path: ../../core-mono/record
     dependencies:
       - functions
       - prelude

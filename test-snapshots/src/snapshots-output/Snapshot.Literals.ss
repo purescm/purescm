@@ -21,7 +21,7 @@
     (rt:string->bytestring "string"))
 
   (scm:define record2
-    (scm:list (scm:cons (scm:string->symbol "foo") "bar")))
+    (scm:list (scm:cons (scm:string->symbol "foo") (rt:string->bytestring "bar"))))
 
   (scm:define record
     (scm:list))
