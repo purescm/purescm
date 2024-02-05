@@ -4,10 +4,10 @@
   (purs runtime)
   (export
     list-cons
-    object-copy
-    object-set!
-    object-ref
-    make-object
+    record-set
+    record-ref
+    record-has
+    record-remove
     array-length
     array-ref
     make-array
@@ -18,6 +18,10 @@
   (import
     (chezscheme)
     (prefix (purs runtime srfi :214) srfi:214:))
+
+  ;
+  ; Booleans
+  ;
 
   (define boolean->integer
     (lambda (x)
@@ -43,39 +47,48 @@
       (lambda (y)
         (fx<? (boolean->integer x) (boolean->integer y)))))
 
+  ;
+  ; Arrays
+  ;
+
   (define make-array srfi:214:flexvector)
 
   (define array-ref srfi:214:flexvector-ref)
 
   (define array-length srfi:214:flexvector-length)
 
-  (define make-object
-    (lambda args
-      (let ([obj (make-hashtable symbol-hash eq?)])
-        (for-each
-          (lambda (pair)
-            (symbol-hashtable-set! obj (car pair) (cdr pair)))
-          args)
-        obj)))
 
-  (define nil (cons #f #f))
-  (define (nil? obj) (eq? obj nil))
+  ;
+  ; Records
+  ;
 
-  (define object-ref
-    (lambda (ht k)
-      (let ([value (symbol-hashtable-ref ht k nil)])
-        (if (nil? value)
-          (raise-continuable
-            (condition
-              (make-error)
-              (make-message-condition (format "Object key ~a not defined" k))))
-          value))))
+  (define (record-has rec k)
+    (let ([res (assq k rec)])
+      (not (eq? res #f))))
 
-  (define object-set! symbol-hashtable-set!)
+  (define (record-ref rec k)
+    (let ([res (assq k rec)])
+      (if (not res)
+        (raise-continuable
+          (condition
+            (make-error)
+            (make-message-condition (format "Record key ~a not defined in ~a" k rec))))
+        (cdr res))))
 
-  (define object-copy
-    (lambda (v)
-      (hashtable-copy v #t)))
+  (define (record-remove rec k)
+    (if (null? rec)
+      rec
+      (if (eq? (caar rec) k)
+        (cdr rec)
+        (cons (car rec) (record-remove (cdr rec) k)))))
+
+  (define (record-set rec k v)
+    (cons (cons k v) (record-remove rec k)))
+
+
+  ;
+  ; Lists
+  ;
 
   (define list-cons
     (lambda (x) (lambda (xs) (cons x xs))))
