@@ -31,7 +31,13 @@
       };
 
       devShells = forAllSystems (system:
-        let pkgs = nixpkgsFor.${system}; in {
+        let pkgs = nixpkgsFor.${system};
+            chez = pkgs.chez-racket.overrideAttrs (final: prev: {
+              postFixup = ''
+                patchelf $out/bin/scheme --add-rpath ${pkgs.pcre2.out}/lib
+              '';
+            });
+        in {
           default = pkgs.mkShell {
             name = "purescm";
             packages = with pkgs; [
@@ -41,12 +47,10 @@
               purs-tidy
               spago-unstable
               nodejs-slim
-              chez-racket
               esbuild
-              pcre2
+              chez
               pkg-config
             ];
-            LD_LIBRARY_PATH = "${pkgs.pcre2.out.outPath}/lib";
           };
         });
 
