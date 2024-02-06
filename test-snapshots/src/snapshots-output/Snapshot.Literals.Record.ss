@@ -20,7 +20,7 @@
 
   (scm:define insert
     (((Record.insert (scm:list (scm:cons (scm:string->symbol "reflectSymbol") (scm:lambda (_)
-      (rt:string->bytestring "anotherField"))))) (scm:gensym "purs-undefined")) (scm:gensym "purs-undefined")))
+      (rt:string->pstring "anotherField"))))) (scm:gensym "purs-undefined")) (scm:gensym "purs-undefined")))
 
   (scm:define recordUpdate
     (scm:lambda (v0)
@@ -48,5 +48,5 @@
              [_ ((Test.Assert.assert (scm:fx=? (recordAccess s1) 10)))]
              [_ ((Test.Assert.assert (scm:fx=? (recordAccess r0) 5)))]
              [_ ((Test.Assert.assert (scm:fx=? (recordAccess u3) minusTwo)))])
-              (((Test.Assert.assertThrows$p (rt:string->bytestring "Assertion failed: An error should have been thrown")) (scm:lambda (v10)
+              (((Test.Assert.assertThrows$p (rt:string->pstring "Assertion failed: An error should have been thrown")) (scm:lambda (v10)
                 (unsafeGetNotFound u3)))))))))

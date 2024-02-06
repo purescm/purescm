@@ -259,7 +259,7 @@ codegenLiteral codegenEnv = case _ of
   LitInt i -> S.Integer $ wrap $ show i
   LitNumber n -> S.Float $ wrap $ codegenFloat n
   LitString s -> S.List
-    [ S.Identifier $ rtPrefixed "string->bytestring"
+    [ S.Identifier $ rtPrefixed "string->pstring"
     , S.StringExpr $ jsonToChezString $ Json.stringify $ Json.fromString s
     ]
   LitChar c -> codegenChar c
@@ -486,7 +486,7 @@ codegenPrimOp codegenEnv@{ currentModule } = case _ of
         OpNumberOrd o' ->
           makeComparison "fl" o'
         OpStringAppend ->
-          S.List [ S.Identifier $ rtPrefixed "bytestring-concat", x', y' ]
+          S.List [ S.Identifier $ rtPrefixed "pstring-concat", x', y' ]
         OpStringOrd o' -> do
           let
             makeStringComparison :: BackendOperatorOrd -> ChezExpr
@@ -494,7 +494,7 @@ codegenPrimOp codegenEnv@{ currentModule } = case _ of
               let
                 comparisonExpression :: String -> ChezExpr
                 comparisonExpression opName =
-                  S.List [ S.Identifier $ Array.fold [ rtPrefixed "bytestring", opName ], x', y' ]
+                  S.List [ S.Identifier $ Array.fold [ rtPrefixed "pstring", opName ], x', y' ]
               case _ of
                 OpEq -> comparisonExpression "=?"
                 OpNotEq -> S.List [ S.Identifier $ scmPrefixed "not", comparisonExpression "=?" ]

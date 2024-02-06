@@ -28,7 +28,7 @@
 
   (scm:define test4b
     (scm:lambda ()
-      (test4a (rt:string->bytestring "test4b"))))
+      (test4a (rt:string->pstring "test4b"))))
 
   (scm:define test3a
     (scm:lambda (v0 b1)
@@ -59,6 +59,6 @@
            [_ ((Test.Assert.assert (scm:fx=? test2b 1)))]
            [_ ((Test.Assert.assert (scm:fx=? test3b 2)))]
            [v4 (test4b)]
-           [_ ((Test.Assert.assert (rt:bytestring=? v4 (rt:string->bytestring "test4b"))))]
-           [w6 (test4a (rt:string->bytestring "test4b"))])
-            ((Test.Assert.assert (rt:bytestring=? w6 (rt:string->bytestring "test4b")))))))))
+           [_ ((Test.Assert.assert (rt:pstring=? v4 (rt:string->pstring "test4b"))))]
+           [w6 (test4a (rt:string->pstring "test4b"))])
+            ((Test.Assert.assert (rt:pstring=? w6 (rt:string->pstring "test4b")))))))))

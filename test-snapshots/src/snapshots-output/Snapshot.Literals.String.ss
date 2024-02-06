@@ -28,61 +28,61 @@
     (prefix (purs runtime) rt:))
 
   (scm:define unicode7
-    (rt:string->bytestring "Foo \b\b\b\b Bar"))
+    (rt:string->pstring "Foo \b\b\b\b Bar"))
 
   (scm:define unicode6
-    (rt:string->bytestring "2342✓"))
+    (rt:string->pstring "2342✓"))
 
   (scm:define unicode5
-    (rt:string->bytestring "Foo ✓ Bar ✓ \n Baz ✓"))
+    (rt:string->pstring "Foo ✓ Bar ✓ \n Baz ✓"))
 
   (scm:define unicode4
-    (rt:string->bytestring "✓"))
+    (rt:string->pstring "✓"))
 
   (scm:define unicode3
-    (rt:string->bytestring "✓"))
+    (rt:string->pstring "✓"))
 
   (scm:define unicode2
-    (rt:string->bytestring "􏿿"))
+    (rt:string->pstring "􏿿"))
 
   (scm:define unicode1
-    (rt:string->bytestring "\x0000;"))
+    (rt:string->pstring "\x0000;"))
 
   (scm:define escape8
-    (rt:string->bytestring "'"))
+    (rt:string->pstring "'"))
 
   (scm:define escape7
-    (rt:string->bytestring "\""))
+    (rt:string->pstring "\""))
 
   (scm:define escape6
-    (rt:string->bytestring "\\"))
+    (rt:string->pstring "\\"))
 
   (scm:define escape5
-    (rt:string->bytestring "\r\n"))
+    (rt:string->pstring "\r\n"))
 
   (scm:define escape4
-    (rt:string->bytestring "\r"))
+    (rt:string->pstring "\r"))
 
   (scm:define escape3
-    (rt:string->bytestring "\r"))
+    (rt:string->pstring "\r"))
 
   (scm:define escape2
-    (rt:string->bytestring "\n"))
+    (rt:string->pstring "\n"))
 
   (scm:define escape1
-    (rt:string->bytestring "\t"))
+    (rt:string->pstring "\t"))
 
   (scm:define block5
-    (rt:string->bytestring "foo\nbar\nbaz\n"))
+    (rt:string->pstring "foo\nbar\nbaz\n"))
 
   (scm:define block4
-    (rt:string->bytestring "foo\nbar\nbaz"))
+    (rt:string->pstring "foo\nbar\nbaz"))
 
   (scm:define block3
-    (rt:string->bytestring "foo\nbar"))
+    (rt:string->pstring "foo\nbar"))
 
   (scm:define block2
-    (rt:string->bytestring "\nfoo\nbar\n"))
+    (rt:string->pstring "\nfoo\nbar\n"))
 
   (scm:define block1
-    (rt:string->bytestring "block")))
+    (rt:string->pstring "block")))

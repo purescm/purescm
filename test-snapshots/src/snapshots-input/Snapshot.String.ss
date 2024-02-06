@@ -2,7 +2,7 @@
   (export testStringMain)
   (import
     (chezscheme)
-    (only (purs runtime bytestring-test) main))
+    (only (purs runtime pstring-test) main))
 
   (define testStringMain main)
 

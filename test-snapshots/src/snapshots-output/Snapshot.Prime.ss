@@ -101,17 +101,17 @@
       (scm:lambda (dictNormal11)
         (scm:lambda (a2)
           (scm:lambda (b3)
-            (rt:bytestring-concat ((rt:record-ref dictNormal0 (scm:string->symbol "normal")) a2) ((rt:record-ref dictNormal11 (scm:string->symbol "normal")) b3)))))))
+            (rt:pstring-concat ((rt:record-ref dictNormal0 (scm:string->symbol "normal")) a2) ((rt:record-ref dictNormal11 (scm:string->symbol "normal")) b3)))))))
 
   (scm:define instanceName$p
     (scm:list (scm:cons (scm:string->symbol "normal") (scm:lambda (v0)
       (scm:cond
-        [(F1? v0) (rt:string->bytestring "F1")]
-        [(F2? v0) (rt:string->bytestring "F2")]
+        [(F1? v0) (rt:string->pstring "F1")]
+        [(F2? v0) (rt:string->pstring "F2")]
         [scm:else (scm:raise (scm:condition (scm:make-error) (scm:make-message-condition "Failed pattern match")))])))))
 
   (scm:define useInstance
-    (rt:string->bytestring "F1F2"))
+    (rt:string->pstring "F1F2"))
 
   (scm:define ignore
     (scm:lambda (dict0)
@@ -122,25 +122,25 @@
       (rt:record-ref dictClassName$p0 (scm:string->symbol "ignore"))))
 
   (scm:define foo$poo
-    (rt:string->bytestring "foo'oo"))
+    (rt:string->pstring "foo'oo"))
 
   (scm:define useFooPrime3
-    (rt:string->bytestring "foo'oo"))
+    (rt:string->pstring "foo'oo"))
 
   (scm:define foo$p$p
-    (rt:string->bytestring "foo'"))
+    (rt:string->pstring "foo'"))
 
   (scm:define useFooPrime2
-    (rt:string->bytestring "foo'"))
+    (rt:string->pstring "foo'"))
 
   (scm:define foo$p
-    (rt:string->bytestring "foo'"))
+    (rt:string->pstring "foo'"))
 
   (scm:define useFooPrime1
-    (rt:string->bytestring "foo'"))
+    (rt:string->pstring "foo'"))
 
   (scm:define foo
-    (rt:string->bytestring "foo"))
+    (rt:string->pstring "foo"))
 
   (scm:define classMember$p
     (scm:lambda (dict0)

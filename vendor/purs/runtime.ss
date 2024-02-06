@@ -15,22 +15,22 @@
     boolean<=?
     boolean>=?
     boolean>?
-    string->bytestring
-    bytestring-concat
-    bytestring=?
-    bytestring>?
-    bytestring>=?
-    bytestring<?
-    bytestring<=?)
+    string->pstring
+    pstring-concat
+    pstring=?
+    pstring>?
+    pstring>=?
+    pstring<?
+    pstring<=?)
   (import
     (chezscheme)
-    (only (purs runtime bytestring) string->bytestring
-                                    bytestring-concat
-                                    bytestring=?
-                                    bytestring>?
-                                    bytestring>=?
-                                    bytestring<?
-                                    bytestring<=?)
+    (only (purs runtime pstring) string->pstring
+                                    pstring-concat
+                                    pstring=?
+                                    pstring>?
+                                    pstring>=?
+                                    pstring<?
+                                    pstring<=?)
     (prefix (purs runtime srfi :214) srfi:214:))
 
   ;
