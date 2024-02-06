@@ -9,7 +9,6 @@
           pstring-empty?
           (rename ($pstring? pstring?))
           pstring=?
-          ; pstring-hash
           pstring-slice
           pstring-trim
           pstring-take
@@ -27,12 +26,9 @@
           pstring-concat
           char-flexvector->pstring
           pstring->char-flexvector
-
           pstring-replace
           pstring-replace-all
           pstring-split
-
-          ;; code points
           pstring-ref-code-point
           pstring-length-code-points
           pstring->list
@@ -45,7 +41,6 @@
           pstring-downcase
           pstring-upcase
           pstring-take-code-points
-
           pstring-make-regex
           regex-source
           regex-flags
@@ -112,31 +107,6 @@
         [(pstring-equal-code-units? x y) #t]
         [else #f])
       #f))
-
-  ; ;; Mostly taken from Chez Scheme `newhash.ss` and updated to work with `pstring`
-  ; (define (pstring-hash bs)
-  ;   (define (hcabs hc) (if (fx< hc 0) (fxnot hc) hc))
-  ;   (define (update hc k)
-  ;     (let ([hc2 (fx+/wraparound hc (fxsll/wraparound (fx+/wraparound hc k) 10))])
-  ;       (fxlogxor hc2 (fxsrl hc2 6))))
-  ;   (define (bvupdate hc bv i)
-  ;     (update hc (bytevector-u8-ref bv i)))
-  ;   (let ([n (pstring-length bs)]
-  ;         [offset (pstring-offset bs)]
-  ;         [bv (pstring-buffer bs)])
-  ;     (if (fx<= n 16)
-  ;         (do ([i 0 (fx+ i 1)] [hc 440697712 (bvupdate hc bv (fx+ i offset))])
-  ;           ((fx= i n) (hcabs hc)))
-  ;         (do ([i 0 (fx+ i 1)]
-  ;              [hc 440697712 (bvupdate hc bv (fx+ i offset))])
-  ;             ((fx= i 5)
-  ;              (do ([i (fx- n 5) (fx+ i 1)]
-  ;                   [hc hc (bvupdate hc bv (fx+ i offset))])
-  ;                  ((fx= i n)
-  ;                   (let ([stride (fxsrl n 4)])
-  ;                     (do ([i 5 (fx+ i stride)]
-  ;                          [hc hc (bvupdate hc bv (fx+ i offset))])
-  ;                         ((fx>= i n) (hcabs hc)))))))))))
 
   (define-syntax string->pstring
     (lambda (x)

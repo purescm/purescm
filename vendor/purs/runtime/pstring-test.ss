@@ -58,15 +58,6 @@
       (assert (fx=? 2 (pstring-length-code-points (lit "äが"))))
       (assert (fx=? 2 (pstring-length-code-points (lit "🍔🍔"))))
 
-      ;; ; ;; hash
-      ;; ; (assert (fx=? (pstring-hash (pstring-slice (lit "foo bar") 4 7))
-      ;; ;               (pstring-hash (lit "bar"))))
-      ;; ; (assert (fx=? (pstring-hash (lit ""))
-      ;; ;               (pstring-hash (lit ""))))
-      ;; ; (assert (fx=? (pstring-hash (lit "foo"))
-      ;; ;               (pstring-hash (lit "foo"))))
-      ;; ; (assert (not (fx=? (pstring-hash (lit "foo"))
-      ;; ;                    (pstring-hash (lit "bar")))))
 
       ;; slicing
       (assert (pstring=?
