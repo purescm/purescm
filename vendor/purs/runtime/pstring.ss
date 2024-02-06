@@ -119,10 +119,6 @@
              #'(let ([bv (string->utf16 s (native-endianness))])
                  (make-pstring (bytevector->code-unit-vector bv) 0 (fx/ (bytevector-length bv) 2)))))])))
 
-  ; (define (string->pstring s)
-  ;   (let ([buf (string->code-unit-vector s)])
-  ;     (make-pstring buf 0 (code-unit-vector-length buf))))
-
   (define (pstring->string bs)
     (code-unit-vector->string (pstring-buffer bs) (pstring-offset bs) (pstring-length bs)))
 
