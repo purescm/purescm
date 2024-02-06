@@ -156,10 +156,10 @@
   (define (pstring->string bs)
     (code-unit-vector->string (pstring-buffer bs) (pstring-offset bs) (pstring-length bs)))
 
-  (define (pstring-read-code-unit bs)
+  (define (pstring-ref-first bs)
     (code-unit-vector-ref (pstring-buffer bs) (pstring-offset bs)))
 
-  (define (pstring-read-word-end bs)
+  (define (pstring-ref-last bs)
     (code-unit-vector-ref (pstring-buffer bs) (fx- (fx+ (pstring-offset bs) (pstring-length bs)) 1)))
 
   (define (pstring-forward-code-units bs n)
@@ -168,18 +168,12 @@
       (fx+ (pstring-offset bs) n)
       (fx- (pstring-length bs) n)))
 
-  (define (pstring-drop-code-units bs n)
-    (make-pstring
-      (pstring-buffer bs)
-      (pstring-offset bs)
-      (fx- (pstring-length bs) n)))
-
   (define ($pstring-uncons-code-unit bs)
     (if (pstring-empty? bs)
       (raise-continuable
         (make-message-condition
           (format "$pstring-uncons-code-unit: cannot uncons an empty pstring ~a" bs)))
-      (let ([w1 (pstring-read-code-unit bs)]
+      (let ([w1 (pstring-ref-first bs)]
             [tail (pstring-forward-code-units bs 1)])
         (values w1 tail))))
 
@@ -239,7 +233,7 @@
           (fx=? c #x2028)
           (fx=? c #x2029)))
 
-    (let ([preceding
+    (let ([suffix
             (let loop ([rest bs])
               (if (pstring-empty? rest)
                 rest
@@ -247,11 +241,11 @@
                   (if (whitespace? head)
                     (loop tail)
                     rest))))])
-      (let loop ([rest preceding])
+      (let loop ([rest suffix])
         (if (pstring-empty? rest)
           rest
-          (let ([last (pstring-read-word-end rest)]
-                [prefix (pstring-drop-code-units rest 1)])
+          (let ([last (pstring-ref-last rest)]
+                [prefix (pstring-take rest (fx1- (pstring-length rest)))])
             (if (whitespace? last) (loop prefix) rest))))))
 
   (define (pstring-index-of bs pattern)
