@@ -162,7 +162,8 @@
   (define (pstring-ref-last bs)
     (code-unit-vector-ref (pstring-buffer bs) (fx- (fx+ (pstring-offset bs) (pstring-length bs)) 1)))
 
-  (define (pstring-forward-code-units bs n)
+  ; Like pstring-drop but without bounds checks
+  (define (pstring-unsafe-drop bs n)
     (make-pstring
       (pstring-buffer bs)
       (fx+ (pstring-offset bs) n)
@@ -174,7 +175,7 @@
         (make-message-condition
           (format "$pstring-uncons-code-unit: cannot uncons an empty pstring ~a" bs)))
       (let ([w1 (pstring-ref-first bs)]
-            [tail (pstring-forward-code-units bs 1)])
+            [tail (pstring-unsafe-drop bs 1)])
         (values w1 tail))))
 
   (define (pstring-uncons-code-unit bs)
@@ -527,14 +528,14 @@
                      (fxsll (fx- w1 #xD800) 10)
                      (fx- w2 #xDC00))
                    #x10000)
-                 (pstring-forward-code-units bs 2))
+                 (pstring-unsafe-drop bs 2))
                ;; low surrogate not found, just return the high surrogate
-               (values w1 (pstring-forward-code-units bs 1))))]
+               (values w1 (pstring-unsafe-drop bs 1))))]
           ;; misplaced continuation word?
           [(fx<= #xDC00 w1 #xDFFF)
-           (values w1 (pstring-forward-code-units bs 1))]
+           (values w1 (pstring-unsafe-drop bs 1))]
           ;; one-word encoding
-          [else (values w1 (pstring-forward-code-units bs 1))]))))
+          [else (values w1 (pstring-unsafe-drop bs 1))]))))
 
   (define (pstring-ref-code-point bs n)
     (let loop ([i 0] [cur bs])
