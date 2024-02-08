@@ -7,7 +7,7 @@
           (rename (make-pstring-of-length make-pstring))
           pstring
           pstring-empty?
-          (rename ($pstring? pstring?))
+          pstring?
           pstring=?
           pstring-slice
           pstring-trim
@@ -54,18 +54,7 @@
           (prefix (purs runtime srfi :214) srfi:214:))
 
   (define-structure
-    ($pstring buffer length))
-
-  (define (make-pstring buf offset len)
-    (make-$pstring (cons buf offset) len))
-
-  (define (pstring-buffer bs)
-    (car ($pstring-buffer bs)))
-
-  (define (pstring-offset bs)
-    (cdr ($pstring-buffer bs)))
-
-  (define pstring-length $pstring-length)
+    (pstring buffer offset length))
 
   (define empty-pstring (make-pstring empty-code-unit-vector 0 0))
 
@@ -356,15 +345,7 @@
             (loop (fx1+ i) tail))))))
 
   (define (pstring-&ref bs i)
-    (if (code-unit-vector-pointer? (pstring-buffer bs))
-      (code-unit-vector-&ref (pstring-buffer bs) (fx+ (pstring-offset bs) i))
-      (begin
-        (let ([buffer (code-unit-vector-copy-ftype
-                        (pstring-buffer bs)
-                        (pstring-offset bs)
-                        (pstring-length bs))])
-          (set-$pstring-buffer! bs (cons buffer 0))
-          (code-unit-vector-&ref buffer i)))))
+    (code-unit-vector-&ref (pstring-buffer bs) (fx+ (pstring-offset bs) i)))
 
 
   ;; 
@@ -786,7 +767,7 @@
                 (make-ftype-pointer unsigned-16 0)
                 (ftype-&ref size_t () buf-len))]
            [len (ftype-ref size_t () buf-len 0)]
-           [buf (code-unit-vector-alloc-ftype (ftype-ref size_t () buf-len 0))]
+           [buf (code-unit-vector-alloc (ftype-ref size_t () buf-len 0))]
            ; now do the actual substitution
            [res2 (pcre2_substitute_16
                 (regex-code regex)
