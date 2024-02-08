@@ -1,11 +1,9 @@
 #!chezscheme
-
-; 
-; Code unit vector
-; 
-; Much like bytevector but with manually managed memory to have better interop with
-; native libs like pcre2.
-;
+; A UTF-16 encoded block of bytes that uses a either a bytevector or a manually
+; managed block of memory (ftype-pointer). The bytevector representation is used
+; for allocating string literals (using bytevector literals) while the ftype-pointer
+; representation is needed for interop with native libraries like PCRE2 that work
+; with pointers.
 (library (purs runtime code-unit-vector)
   (export code-unit-length
           empty-code-unit-vector
@@ -29,6 +27,10 @@
   ; ftype-pointer and length in bytes
   (define-structure
     (code-unit-vector bv pointer length))
+
+  ;
+  ; Constructors
+  ; 
 
   (define empty-code-unit-vector
     (make-code-unit-vector #f (make-ftype-pointer unsigned-16 0) 0))
