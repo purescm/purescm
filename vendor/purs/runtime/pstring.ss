@@ -70,23 +70,23 @@
 
   ;; this is our version of `make-string`
   (define (make-pstring-of-length n)
-    (make-pstring (code-unit-vector-alloc n) 0 n))
+    (make-pstring (pstring-buffer-alloc n) 0 n))
 
   ;; NOTE: this only takes in PS chars which are guaranteed to
   ;; be only one word in size (one code unit)
   (define (pstring-singleton c)
-    (let ([bv (code-unit-vector-alloc 1)])
-      (code-unit-vector-set! bv 0 (char->integer c))
+    (let ([bv (pstring-buffer-alloc 1)])
+      (pstring-buffer-set! bv 0 (char->integer c))
       (make-pstring bv 0 1)))
 
   (define (pstring . chars)
     (let* ([len (length chars)]
-           [cv (code-unit-vector-alloc len)])
+           [cv (pstring-buffer-alloc len)])
       (let loop ([i 0] [rest chars])
         (if (null? rest)
           cv
           (begin
-            (code-unit-vector-set! cv i (char->integer (car rest)))
+            (pstring-buffer-set! cv i (char->integer (car rest)))
             (loop (fx1+ i) (cdr rest)))))
       (make-pstring cv 0 len)))
 
@@ -96,9 +96,9 @@
         [(string->pstring s)
          (let ([d (syntax->datum #'s)])
            (if (string? d)
-             (let ([bv (encode-utf16 d)])
+             (let ([bv (string->utf16-immobile d)])
                #`(make-pstring #,bv 0 #,(fx/ (bytevector-length bv) 2)))
-             #'(let ([bv (encode-utf16 s)])
+             #'(let ([bv (string->utf16-immobile s)])
                  (make-pstring bv 0 (fx/ (bytevector-length bv) 2)))))])))
 
   ;; Turns code point scalar values into a pstring.
@@ -113,10 +113,10 @@
 
   (define (char-flexvector->pstring v)
     (let* ([len (srfi:214:flexvector-length v)]
-           [bv (code-unit-vector-alloc len)])
+           [bv (pstring-buffer-alloc len)])
       (srfi:214:flexvector-for-each/index
         (lambda (i c)
-          (code-unit-vector-set! bv i (char->integer c))) 
+          (pstring-buffer-set! bv i (char->integer c))) 
         v)
       (make-pstring bv 0 len)))
 
@@ -231,10 +231,10 @@
   ; 
 
   (define (pstring-ref-first bs)
-    (code-unit-vector-ref (pstring-buffer bs) (pstring-offset bs)))
+    (pstring-buffer-ref (pstring-buffer bs) (pstring-offset bs)))
 
   (define (pstring-ref-last bs)
-    (code-unit-vector-ref (pstring-buffer bs) (fx- (fx+ (pstring-offset bs) (pstring-length bs)) 1)))
+    (pstring-buffer-ref (pstring-buffer bs) (fx- (fx+ (pstring-offset bs) (pstring-length bs)) 1)))
 
   ;; Constant-time ref, like string-ref.
   ;; Returns a scheme `char`.
@@ -242,7 +242,7 @@
     (define (pstring-ref-code-unit bs n)
       (let ([bv (pstring-buffer bs)])
         (if (fx<? n (pstring-length bs))
-          (code-unit-vector-ref bv (fx+ n (pstring-offset bs)))
+          (pstring-buffer-ref bv (fx+ n (pstring-offset bs)))
           ;; not enough bytes to read a full code unit
           (raise-continuable
             (make-message-condition
@@ -251,7 +251,7 @@
 
   ; Returns the address to the beginning of the slice
   (define (pstring-&ref bs)
-    (code-unit-vector-&ref (pstring-buffer bs) (pstring-offset bs)))
+    (pstring-buffer-&ref (pstring-buffer bs) (pstring-offset bs)))
 
   (define (pstring-ref-code-point bs n)
     (let loop ([i 0] [cur bs])
@@ -327,7 +327,7 @@
   ; 
 
   (define (pstring->string bs)
-    (decode-utf16 (pstring-buffer bs) (pstring-offset bs) (pstring-length bs)))
+    (utf16-immobile->string (pstring-buffer bs) (pstring-offset bs) (pstring-length bs)))
 
   (define pstring->number
     (case-lambda
@@ -362,12 +362,12 @@
 
   (define (pstring-concat . xs)
     (let* ([len (fold-right (lambda (s a) (fx+ (pstring-length s) a)) 0 xs)]
-           [buf (code-unit-vector-alloc len)])
+           [buf (pstring-buffer-alloc len)])
       (let loop ([i 0] [ls xs])
         (if (pair? ls)
           (let* ([bs (car ls)]
                  [slen (pstring-length bs)])
-            (code-unit-vector-copy! (pstring-buffer bs) (pstring-offset bs) buf i slen)
+            (pstring-buffer-copy! (pstring-buffer bs) (pstring-offset bs) buf i slen)
             (loop (fx+ i slen) (cdr ls)))
           (make-pstring buf 0 len)))))
 
@@ -377,7 +377,7 @@
            [separator-count (if (fx=? xs-count 0) 0 (fx1- xs-count))]
            [separator-len (pstring-length separator)]
            [bv-len (fx+ len (fx* separator-count separator-len))]
-           [bv (code-unit-vector-alloc bv-len)])
+           [bv (pstring-buffer-alloc bv-len)])
       (let loop ([i 0]
                  [bi 0])
         (if (fx<? i xs-count)
@@ -385,13 +385,13 @@
                  [len (pstring-length s)])
             (if (fx>? i 0)
               (begin
-                (code-unit-vector-copy!
+                (pstring-buffer-copy!
                   (pstring-buffer separator)
                   (pstring-offset separator)
                   bv
                   (fx+ bi)
                   separator-len)
-                (code-unit-vector-copy!
+                (pstring-buffer-copy!
                   (pstring-buffer s)
                   (pstring-offset s)
                   bv
@@ -399,7 +399,7 @@
                   len)
                 (loop (fx1+ i) (fx+ bi len separator-len)))
               (begin
-                (code-unit-vector-copy! (pstring-buffer s) (pstring-offset s) bv bi len)
+                (pstring-buffer-copy! (pstring-buffer s) (pstring-offset s) bv bi len)
                 (loop (fx1+ i) (fx+ bi len)))))
           (make-pstring bv 0 bv-len)))))
 
@@ -492,11 +492,11 @@
         (make-message-condition "pstring-uncons-code-point: pstring is empty"))
       (let* ([buf (pstring-buffer bs)]
              [offset (pstring-offset bs)]
-             [w1 (code-unit-vector-ref buf offset)])
+             [w1 (pstring-buffer-ref buf offset)])
         (cond
           ;; Two-word encoding? Check for high surrogate
           [(and (fx<= #xD800 w1 #xDBFF) (fx>=? (pstring-length bs) 2))
-           (let ([w2 (code-unit-vector-ref buf (fx1+ offset))])
+           (let ([w2 (pstring-buffer-ref buf (fx1+ offset))])
              ;; low surrogate?
              (if (fx<= #xDC00 w2 #xDFFF)
                (values
@@ -565,14 +565,14 @@
           bs
           (let* ([len (fx+ (fx- (pstring-length bs) (pstring-length pattern))
                            (pstring-length replacement))]
-                 [bv (code-unit-vector-alloc len)])
-            (code-unit-vector-copy! (pstring-buffer bs) (pstring-offset bs) bv 0 i)
-            (code-unit-vector-copy! (pstring-buffer replacement)
+                 [bv (pstring-buffer-alloc len)])
+            (pstring-buffer-copy! (pstring-buffer bs) (pstring-offset bs) bv 0 i)
+            (pstring-buffer-copy! (pstring-buffer replacement)
                               (pstring-offset replacement)
                               bv
                               i
                               (pstring-length replacement))
-            (code-unit-vector-copy! (pstring-buffer bs)
+            (pstring-buffer-copy! (pstring-buffer bs)
                               (fx+ (pstring-offset bs) i (pstring-length pattern))
                               bv
                               (fx+ i (pstring-length replacement))
@@ -599,26 +599,26 @@
                                       (fx- (pstring-length pattern)
                                            (pstring-length replacement)))]
              [len (fx- (pstring-length bs) replacements-delta)]
-             [bv (code-unit-vector-alloc len)])
+             [bv (pstring-buffer-alloc len)])
         (let loop ([bsi 0] ; where we are at bs
                    [bvi 0] ; where we are at bv
                    [rest is])
           (if (null? rest)
             ; copy the left-overs into place
-            (code-unit-vector-copy! (pstring-buffer bs)
+            (pstring-buffer-copy! (pstring-buffer bs)
                                     (fx+ (pstring-offset bs) bsi)
                                     bv
                                     bvi
                                     (fx- (pstring-length bs) bsi))
             (let* ([i (car rest)] [before-len (fx- i bsi)])
               ;; copy stuff before the match
-              (code-unit-vector-copy! (pstring-buffer bs)
+              (pstring-buffer-copy! (pstring-buffer bs)
                                 (fx+ (pstring-offset bs) bsi)
                                 bv
                                 bvi
                                 before-len)
               ;; the replacement itself
-              (code-unit-vector-copy! (pstring-buffer replacement)
+              (pstring-buffer-copy! (pstring-buffer replacement)
                                 (pstring-offset replacement)
                                 bv
                                 (fx+ bvi before-len)
@@ -670,11 +670,11 @@
                               (cons (cons match replacement) all-matches-reverse)))
                           (values delta (reverse all-matches-reverse)))))]
                   [(len) (fx+ (pstring-length bs) delta)]
-                  [(bv) (code-unit-vector-alloc len)])
+                  [(bv) (pstring-buffer-alloc len)])
       (let loop ([bsi (pstring-offset bs)] [bvi 0] [rest all-matches])
         (if (null? rest)
           ; copy the left-overs into place
-          (code-unit-vector-copy!
+          (pstring-buffer-copy!
             (pstring-buffer bs)
             bsi
             bv
@@ -685,9 +685,9 @@
                  [i (pstring-offset match)]
                  [before-len (fx- i bsi)])
             ;; copy stuff before the match
-            (code-unit-vector-copy! (pstring-buffer bs) bsi bv bvi before-len)
+            (pstring-buffer-copy! (pstring-buffer bs) bsi bv bvi before-len)
             ;; the replacement itself
-            (code-unit-vector-copy!
+            (pstring-buffer-copy!
               (pstring-buffer replacement)
               (pstring-offset replacement)
               bv
@@ -708,24 +708,24 @@
                [replacement (f match matches)]
                [delta (fx- (pstring-length replacement) (pstring-length match))]
                [len (fx+ (pstring-length bs) delta)]
-               [buf (code-unit-vector-alloc len)])
+               [buf (pstring-buffer-alloc len)])
           (let* ([before-len (fx- (pstring-offset match) (pstring-offset bs))])
             ;; copy stuff before the match
-            (code-unit-vector-copy!
+            (pstring-buffer-copy!
               (pstring-buffer bs)
               (pstring-offset bs)
               buf
               0
               before-len)
             ;; the replacement itself
-            (code-unit-vector-copy!
+            (pstring-buffer-copy!
               (pstring-buffer replacement)
               (pstring-offset replacement)
               buf
               before-len
               (pstring-length replacement))
             ; copy the stuff after the match
-            (code-unit-vector-copy!
+            (pstring-buffer-copy!
               (pstring-buffer bs)
               (fx+ (pstring-offset match) (pstring-length match))
               buf
@@ -762,7 +762,7 @@
                 (make-ftype-pointer unsigned-16 0)
                 (ftype-&ref size_t () buf-len))]
            [len (ftype-ref size_t () buf-len 0)]
-           [buf (code-unit-vector-alloc (ftype-ref size_t () buf-len 0))]
+           [buf (pstring-buffer-alloc (ftype-ref size_t () buf-len 0))]
            ; now do the actual substitution
            [res2 (pcre2_substitute_16
                 (regex-code regex)
@@ -774,7 +774,7 @@
                 match-context
                 replacement-addr
                 replacement-len
-                (code-unit-vector-&ref buf 0)
+                (pstring-buffer-&ref buf 0)
                 (ftype-&ref size_t () buf-len))])
       (foreign-free (ftype-pointer-address buf-len))
       (make-pstring buf 0 (fx1- len))))

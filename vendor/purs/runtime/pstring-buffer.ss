@@ -1,28 +1,30 @@
 #!chezscheme
+; An immobile UTF-16 encoded bytevector used for the pstring buffer.
+; Offsets are handled as code units unlike with a raw bytevector.
 (library (purs runtime pstring-buffer)
   (export code-unit-length
-          code-unit-vector-alloc
-          code-unit-vector-ref
-          code-unit-vector-set!
-          code-unit-vector-&ref
-          code-unit-vector-copy!
-          encode-utf16
-          decode-utf16)
+          pstring-buffer-alloc
+          pstring-buffer-ref
+          pstring-buffer-set!
+          pstring-buffer-&ref
+          pstring-buffer-copy!
+          string->utf16-immobile
+          utf16-immobile->string)
   (import (chezscheme))
 
   (define code-unit-length 2)
 
-  (define (code-unit-vector-alloc n)
+  (define (pstring-buffer-alloc n)
     (make-immobile-bytevector (fx* n code-unit-length)))
 
   ; Access the nth code unit of the buffer
-  (define (code-unit-vector-ref bv n)
+  (define (pstring-buffer-ref bv n)
     (bytevector-u16-native-ref bv (fx* n code-unit-length)))
 
-  (define (code-unit-vector-set! bv i val)
+  (define (pstring-buffer-set! bv i val)
     (bytevector-u16-native-set! bv (fx* i code-unit-length) val))
 
-  (define (code-unit-vector-&ref bv i)
+  (define (pstring-buffer-&ref bv i)
     (ftype-&ref
       unsigned-16
       ()
@@ -30,18 +32,18 @@
       i))
 
   ; Copies `n` code units to dst
-  (define (code-unit-vector-copy! src-buf src-offset dst dst-offset n)
+  (define (pstring-buffer-copy! src-buf src-offset dst dst-offset n)
     (let loop ([i 0])
       (when (fx<? i n)
         (begin
-          (code-unit-vector-set!
+          (pstring-buffer-set!
             dst
             (fx+ dst-offset i)
-            (code-unit-vector-ref src-buf (fx+ src-offset i)))
+            (pstring-buffer-ref src-buf (fx+ src-offset i)))
           (loop (fx1+ i))))))
 
   ; Encode a scheme string as an immobile UTF-16 bytevector
-  (define (encode-utf16 s)
+  (define (string->utf16-immobile s)
     (let* ([sn (string-length s)]
            [buf-size (do ([si 0 (fx+ si 1)]
                           [n 0 (+ n (if (char<=? (string-ref s si) #\xffff) 1 2))])
@@ -66,17 +68,17 @@
                 (loop (fx1+ ci) (fx1+ i)))))))
       buf))
 
-  (define (decode-utf16 vec offset len)
+  (define (utf16-immobile->string vec offset len)
     ; First allocate a string based on the code unit size
     ; and then truncate at the end.
     (let* ([out (make-string len)])
       (let loop ([i 0] [char-i 0])
         (if (fx<? i len)
-          (let* ([w1 (code-unit-vector-ref vec (fx+ offset i))])
+          (let* ([w1 (pstring-buffer-ref vec (fx+ offset i))])
             (cond
               ;; Two-word encoding? Check for high surrogate
               [(and (fx<= #xD800 w1 #xDBFF) (fx>=? (fx- len i) 2))
-               (let ([w2 (code-unit-vector-ref vec (fx+ offset i 1))])
+               (let ([w2 (pstring-buffer-ref vec (fx+ offset i 1))])
                  (if (fx<= #xDC00 w2 #xDFFF)
                    (begin
                      (string-set! out
