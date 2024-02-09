@@ -36,7 +36,6 @@
           pstring>?
           pstring<=?
           pstring>=?
-          pstring-foldcase
           pstring-downcase
           pstring-upcase
           pstring-take-code-points
@@ -583,9 +582,6 @@
                     [c2 (integer->char hy)])
                 (or (char>? c1 c2)
                     (and (char=? c1 c2) (loop tx ty))))))))))
-
-  (define (pstring-foldcase bs)
-    (string->pstring (string-foldcase (pstring->string bs))))
 
   (define (pstring-downcase bs)
     (string->pstring (string-downcase (pstring->string bs))))
