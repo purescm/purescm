@@ -221,7 +221,7 @@
                 pstring=?
                 (regex-match (lit "foo") (lit "foo"))
                 (srfi:214:flexvector (lit "foo"))))
-      ; (assert (not (regex-match (lit "foo") (lit "bar"))))
+      (assert (not (regex-match (lit "foo") (lit "bar"))))
       (assert (srfi:214:flexvector=?
                 pstring=?
                 (regex-match (lit "(a)(b)(c)") (lit "abc"))
