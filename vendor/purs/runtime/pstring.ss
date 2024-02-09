@@ -623,7 +623,7 @@
       (make-ftype-pointer unsigned-16 (object->reference-address bv))
       i))
 
-  ; copies n bytes to dst
+  ; Copies `n` code units to dst
   (define (code-unit-vector-copy! src-buf src-offset dst dst-offset n)
     (let loop ([i 0])
       (when (fx<? i n)
@@ -707,11 +707,12 @@
       (let loop ([bsi (pstring-offset bs)] [bvi 0] [rest all-matches])
         (if (null? rest)
           ; copy the left-overs into place
-          (code-unit-vector-copy! (pstring-buffer bs)
-                                bsi
-                                bv
-                                bvi
-                                (fx- (pstring-length bs) (fx- bsi (pstring-offset bs))))
+          (code-unit-vector-copy!
+            (pstring-buffer bs)
+            bsi
+            bv
+            bvi
+            (fx- (pstring-length bs) (fx- bsi (pstring-offset bs))))
           (let* ([match (caar rest)]
                  [replacement (cdr (car rest))]
                  [i (pstring-offset match)]
@@ -719,11 +720,12 @@
             ;; copy stuff before the match
             (code-unit-vector-copy! (pstring-buffer bs) bsi bv bvi before-len)
             ;; the replacement itself
-            (code-unit-vector-copy! (pstring-buffer replacement)
-                              (pstring-offset replacement)
-                              bv
-                              (fx+ bvi before-len)
-                              (pstring-length replacement))
+            (code-unit-vector-copy!
+              (pstring-buffer replacement)
+              (pstring-offset replacement)
+              bv
+              (fx+ bvi before-len)
+              (pstring-length replacement))
             (loop
               (fx+ (pstring-offset match) (pstring-length match))
               (fx+ (fx+ bvi before-len) (pstring-length replacement))
