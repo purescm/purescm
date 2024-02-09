@@ -86,15 +86,13 @@
           (let-values ([(hx tx) ($pstring-uncons-code-unit tailx)]
                        [(hy ty) ($pstring-uncons-code-unit taily)])
             (and (fx=? hx hy) (loop (fx1+ n) tx ty))))))
-
-    (if (fx=? (pstring-length x) (pstring-length y))
-      (cond
+    (and
+      (fx=? (pstring-length x) (pstring-length y))
+      (or
         ;; Do they point to the same object in memory?
-        [(and (fx=? (pstring-offset x) (pstring-offset y))
-              (eq? (pstring-buffer x) (pstring-buffer y))) #t]
-        [(pstring-equal-code-units? x y) #t]
-        [else #f])
-      #f))
+        (and (fx=? (pstring-offset x) (pstring-offset y))
+              (eq? (pstring-buffer x) (pstring-buffer y)))
+        (pstring-equal-code-units? x y))))
 
   (define-syntax string->pstring
     (lambda (x)
