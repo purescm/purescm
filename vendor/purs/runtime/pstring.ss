@@ -57,6 +57,7 @@
           (only (purs runtime finalizers) finalizer)
           (prefix (purs runtime srfi :214) srfi:214:))
 
+  ; pstring is a slice of an immobile bytevector
   (define-structure
     (pstring buffer offset length))
 
