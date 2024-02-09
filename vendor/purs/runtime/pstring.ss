@@ -247,8 +247,9 @@
               (format "pstring-ref-code-unit ~d is not a valid index" n))))))
     (integer->char (pstring-ref-code-unit bs n)))
 
-  (define (pstring-&ref bs i)
-    (code-unit-vector-&ref (pstring-buffer bs) (fx+ (pstring-offset bs) i)))
+  ; Returns the address to the beginning of the slice
+  (define (pstring-&ref bs)
+    (code-unit-vector-&ref (pstring-buffer bs) (pstring-offset bs)))
 
   (define (pstring-ref-code-point bs n)
     (let loop ([i 0] [cur bs])
@@ -799,9 +800,9 @@
   (define (pstring-regex-replace regex subject replacement)
     (let* ([match-data (pcre2_match_data_create_from_pattern_16 (regex-code regex) 0)]
            [buf-len (make-ftype-pointer size_t (foreign-alloc (foreign-sizeof 'size_t)))]
-           [subject-addr (pstring-&ref subject 0)]
+           [subject-addr (pstring-&ref subject)]
            [subject-len (pstring-length subject)]
-           [replacement-addr (pstring-&ref replacement 0)]
+           [replacement-addr (pstring-&ref replacement)]
            [replacement-len (pstring-length replacement)]
            [start-offset 0]
            [match-context 0]
@@ -848,7 +849,7 @@
                [erroroffset (foreign-alloc 4)]
                [options (flags->options flags)]
                [code (pcre2_compile_16
-                       (pstring-&ref bs 0)
+                       (pstring-&ref bs)
                        (pstring-length bs)
                        options
                        errorcode
@@ -869,7 +870,7 @@
     (let* ([match-data (regex-match-data regex)]
            [rc (pcre2_match_16
                  (regex-code regex)
-                 (pstring-&ref subject 0)
+                 (pstring-&ref subject)
                  (pstring-length subject)
                  0
                  0
@@ -901,7 +902,7 @@
     (let* ([match-data (pcre2_match_data_create_from_pattern_16 (regex-code regex) 0)]
            [rc (pcre2_match_16
                  (regex-code regex)
-                 (pstring-&ref subject 0)
+                 (pstring-&ref subject)
                  (pstring-length subject)
                  0
                  0
