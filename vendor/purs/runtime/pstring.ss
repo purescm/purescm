@@ -836,7 +836,7 @@
               (pcre2_jit_compile_16 code PCRE2_JIT_COMPLETE)
               (finalizer (make-regex code (pcre2_match_data_create_from_pattern_16 code 0) (pstring) options)
                          (lambda (r)
-                           (pcre2_code_free (regex-code r))
+                           (pcre2_code_free_16 (regex-code r))
                            (pcre2_match_data_free_16 (regex-match-data r)))))))]))
 
   (define (pstring-regex-match regex subject on-match nomatch)
@@ -961,16 +961,13 @@
     (foreign-procedure "pcre2_match_data_free_16" (uptr)
                        void))
   
-  (define pcre2_code_free
+  (define pcre2_code_free_16
     (foreign-procedure "pcre2_code_free_16" (uptr)
                        void))
 
-
-  ; int pcre2_jit_compile(pcre2_code *code, uint32_t options);
   (define pcre2_jit_compile_16
     (foreign-procedure "pcre2_jit_compile_16" (uptr unsigned-32)
                        void))
-
 
 
   )
