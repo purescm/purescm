@@ -609,10 +609,6 @@
   (define (code-unit-vector-alloc n)
     (make-immobile-bytevector (fx* n code-unit-length)))
 
-  ; TODO remove this, it might be incorrect if there is a trailing NULL
-  (define (code-unit-vector-length bv)
-    (fx/ (bytevector-length bv) code-unit-length))
-
   ; Access the nth code unit of the buffer
   (define (code-unit-vector-ref bv n)
     (bytevector-u16-native-ref bv (fx* n code-unit-length)))
