@@ -899,7 +899,7 @@
         [(eq? flag 'ignoreCase) PCRE2_CASELESS]
         [(eq? flag 'multiline) PCRE2_MULTILINE]
         [(eq? flag 'global) PCRE2_SUBSTITUTE_GLOBAL]
-        [else #x0]))
+        [else 0]))
 
     (fold-right
       (lambda (flag acc)
