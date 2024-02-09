@@ -50,13 +50,13 @@
           pstring-regex-replace-by)
   (import (chezscheme)
           (only (purs runtime finalizers) finalizer)
-          (purs runtime code-unit-vector)
+          (only (purs runtime utf16-encode) encode-utf16)
           (prefix (purs runtime srfi :214) srfi:214:))
 
   (define-structure
     (pstring buffer offset length))
 
-  (define empty-pstring (make-pstring empty-code-unit-vector 0 0))
+  (define empty-pstring (make-pstring (make-immobile-bytevector 0) 0 0))
 
   (define (pstring-empty? bs)
     (fx=? (pstring-length bs) 0))
@@ -103,13 +103,13 @@
         [(string->pstring s)
          (let ([d (syntax->datum #'s)])
            (if (string? d)
-             (let ([bv (string->utf16 d (native-endianness))])
-               #`(make-pstring (bytevector->code-unit-vector #,bv) 0 #,(fx/ (bytevector-length bv) 2)))
-             #'(let ([bv (string->utf16 s (native-endianness))])
-                 (make-pstring (bytevector->code-unit-vector bv) 0 (fx/ (bytevector-length bv) 2)))))])))
+             (let ([bv (encode-utf16 d)])
+               #`(make-pstring #,bv 0 #,(fx/ (bytevector-length bv) 2)))
+             #'(let ([bv (encode-utf16 s)])
+                 (make-pstring bv 0 (fx/ (bytevector-length bv) 2)))))])))
 
   (define (pstring->string bs)
-    (code-unit-vector->string (pstring-buffer bs) (pstring-offset bs) (pstring-length bs)))
+    (decode-utf16 (pstring-buffer bs) (pstring-offset bs) (pstring-length bs)))
 
   (define (pstring-ref-first bs)
     (code-unit-vector-ref (pstring-buffer bs) (pstring-offset bs)))
@@ -620,6 +620,78 @@
           [else
             (let-values ([(_ t) (pstring-uncons-code-point tail)])
               (loop (fx1- i) t))]))))
+
+  ;;
+  ;; Low level bytevector utils
+  ;;
+
+  (define code-unit-length 2)
+
+  (define (code-unit-vector-alloc n)
+    (make-immobile-bytevector (fx* n code-unit-length)))
+
+  ; TODO remove this, it might be incorrect if there is a trailing NULL
+  (define (code-unit-vector-length bv)
+    (fx/ (bytevector-length bv) code-unit-length))
+
+  ; Access the nth code unit of the buffer
+  (define (code-unit-vector-ref bv n)
+    (bytevector-u16-native-ref bv (fx* n code-unit-length)))
+
+  (define (code-unit-vector-set! bv i val)
+    (bytevector-u16-native-set! bv (fx* i code-unit-length) val))
+
+  (define (code-unit-vector-&ref bv i)
+    (ftype-&ref
+      unsigned-16
+      ()
+      (make-ftype-pointer unsigned-16 (object->reference-address bv))
+      i))
+
+  ; copies n bytes to dst
+  (define (code-unit-vector-copy! src-buf src-offset dst dst-offset n)
+    (let loop ([i 0])
+      (when (fx<? i n)
+        (begin
+          (code-unit-vector-set!
+            dst
+            (fx+ dst-offset i)
+            (code-unit-vector-ref src-buf (fx+ src-offset i)))
+          (loop (fx1+ i))))))
+
+  (define (decode-utf16 vec offset len)
+    ; First allocate a string based on the code unit size
+    ; and then truncate at the end.
+    (let* ([out (make-string len)])
+      (let loop ([i 0] [char-i 0])
+        (if (fx<? i len)
+          (let* ([w1 (code-unit-vector-ref vec (fx+ offset i))])
+            (cond
+              ;; Two-word encoding? Check for high surrogate
+              [(and (fx<= #xD800 w1 #xDBFF) (fx>=? (fx- len i) 2))
+               (let ([w2 (code-unit-vector-ref vec (fx+ offset i 1))])
+                 (if (fx<= #xDC00 w2 #xDFFF)
+                   (begin
+                     (string-set! out
+                                  char-i
+                                  (integer->char
+                                    (fx+
+                                      (fxlogor
+                                        (fxsll (fx- w1 #xD800) 10)
+                                        (fx- w2 #xDC00))
+                                      #x10000)))
+                     (loop (fx+ i 2) (fx1+ char-i)))
+                   (begin
+                     (string-set! out char-i #\xfffd)
+                     (loop (fx+ i 1) (fx1+ char-i)))))]
+              ;; misplaced continuation word?
+              [(fx<= #xDC00 w1 #xDFFF)
+               (begin
+                 (string-set! out char-i #\xfffd)
+                 (loop (fx+ i 1) (fx1+ char-i)))]
+              ;; one-word encoding
+              [else (begin (string-set! out char-i (integer->char w1)) (loop (fx+ i 1) (fx1+ char-i)))]))
+          (begin (string-truncate! out char-i) out)))))
 
   ;;
   ;; Low level codec
