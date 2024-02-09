@@ -18,6 +18,7 @@
           pstring-singleton
           pstring-join-with
           pstring->string
+          code-points->pstring
           pstring->number
           number->pstring
           pstring->symbol
@@ -32,7 +33,6 @@
           pstring-ref-code-point
           pstring-length-code-points
           pstring->list
-          code-points->pstring
           pstring<?
           pstring>?
           pstring<=?
@@ -50,7 +50,6 @@
           pstring-regex-replace-by)
   (import (chezscheme)
           (only (purs runtime finalizers) finalizer)
-          (only (purs runtime utf16-encode) encode-utf16)
           (prefix (purs runtime srfi :214) srfi:214:))
 
   (define-structure
@@ -103,13 +102,18 @@
         [(string->pstring s)
          (let ([d (syntax->datum #'s)])
            (if (string? d)
-             (let ([bv (encode-utf16 d)])
+             (let ([bv (string->utf16 d (native-endianness))])
                #`(make-pstring #,bv 0 #,(fx/ (bytevector-length bv) 2)))
-             #'(let ([bv (encode-utf16 s)])
+             #'(let ([bv (string->utf16 s (native-endianness))])
                  (make-pstring bv 0 (fx/ (bytevector-length bv) 2)))))])))
 
   (define (pstring->string bs)
     (decode-utf16 (pstring-buffer bs) (pstring-offset bs) (pstring-length bs)))
+
+  ;; Turns code point scalar values into a pstring.
+  (define (code-points->pstring . xs)
+    (let ([bv (string->utf16 (apply string (map integer->char xs)) (native-endianness))])
+      (make-pstring bv 0 (fx/ (bytevector-length bv) code-unit-length))))
 
   (define (pstring-ref-first bs)
     (code-unit-vector-ref (pstring-buffer bs) (pstring-offset bs)))
@@ -512,20 +516,6 @@
         (let-values ([(head tail) (pstring-uncons-code-point rest)])
           (loop tail (cons (integer->char head) ls))))))
 
-  ;; Turns raw code point scalar values into a UTF-16 encoded pstring.
-  ;; Let's you generate a pstring with invalid unicode.
-  (define (code-points->pstring . xs)
-    (let* ([bvs (map utf16-encode xs)]
-           [len (fold-left (lambda (total bv) (fx+ total (code-unit-vector-length bv))) 0 bvs)]
-           [res (code-unit-vector-alloc len)])
-      (let loop ([resi 0] [rest bvs])
-        (if (null? rest)
-          res
-          (begin
-            (code-unit-vector-copy! (car rest) 0 res resi (code-unit-vector-length (car rest)))
-            (loop (fx+ resi (code-unit-vector-length (car rest))) (cdr rest)))))
-      (make-pstring res 0 len)))
-
   (define (pstring<? x y)
     (and
       (not (pstring-eq? x y))
@@ -692,27 +682,6 @@
               ;; one-word encoding
               [else (begin (string-set! out char-i (integer->char w1)) (loop (fx+ i 1) (fx1+ char-i)))]))
           (begin (string-truncate! out char-i) out)))))
-
-  ;;
-  ;; Low level codec
-  ;;
-
-  (define (utf16-encode point)
-    (if (fx>? point #x10FFFF)
-      (raise-continuable
-        (make-message-condition
-          (format "Value ~d is too large to encode as UTF-16 code point" point))))
-    (if (fx<=? #x10000 point)
-      (let* ([bv (code-unit-vector-alloc 2)]
-             [code (fx- point #x10000)]
-             [w1 (fxlogor #xD800 (fxsrl code 10))]
-             [w2 (fxlogor #xDC00 (fxlogand code #x3FF))])
-        (code-unit-vector-set! bv 0 w1)
-        (code-unit-vector-set! bv 1 w2)
-        bv)
-      (let ([bv (code-unit-vector-alloc 1)])
-        (code-unit-vector-set! bv 0 point)
-        bv)))
 
 
   ;; 

@@ -204,33 +204,8 @@
 
       ; Code points
 
-      ; (assert (pstring->string
-      ;                   (code-points->pstring #x61 #xDC00 #xD800)))
-
-      ; (assert (fx=? 7 (pstring-length-code-points
-      ;                   (code-points->pstring #x61 #xDC00 #xD800 #xD800 #x16805 #x16A06 #x7A))))
-      ; (assert (fx=? #x61
-      ;               (pstring-ref-code-point
-      ;                 (code-points->pstring #x61 #xDC00 #xD800 #xD800 #x16805 #x16A06 #x7A) 0)))
-      ; (assert (fx=? #xDC00
-      ;               (pstring-ref-code-point
-      ;                 (code-points->pstring #x61 #xDC00 #xD800 #xD800 #x16805 #x16A06 #x7A) 1)))
-      ; (assert (fx=? #xD800
-      ;               (pstring-ref-code-point
-      ;                 (code-points->pstring #x61 #xDC00 #xD800 #xD800 #x16805 #x16A06 #x7A) 2)))
-      ; (assert (fx=? #xD800
-      ;               (pstring-ref-code-point
-      ;                 (code-points->pstring #x61 #xDC00 #xD800 #xD800 #x16805 #x16A06 #x7A) 3)))
-      ; (assert (fx=? #x16805
-      ;               (pstring-ref-code-point
-      ;                 (code-points->pstring #x61 #xDC00 #xD800 #xD800 #x16805 #x16A06 #x7A) 4)))
-      ; (assert (fx=? #x16A06
-      ;               (pstring-ref-code-point
-      ;                 (code-points->pstring #x61 #xDC00 #xD800 #xD800 #x16805 #x16A06 #x7A) 5)))
-      ; (assert (fx=? #x7A
-      ;               (pstring-ref-code-point
-      ;                 (code-points->pstring #x61 #xDC00 #xD800 #xD800 #x16805 #x16A06 #x7A) 6)))
-
+      (assert (fx=? 4 (pstring-length-code-points
+                        (code-points->pstring #x61 #x16805 #x16A06 #x7A))))
 
       (assert (pstring=? (pstring-take-code-points (lit "foo") 0) (lit "")))
       (assert (pstring=? (pstring-take-code-points (lit "foo") -1) (lit "")))
