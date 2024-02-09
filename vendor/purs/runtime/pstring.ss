@@ -2,7 +2,7 @@
 (library (purs runtime pstring)
   (export pstring-ref
           pstring-length
-          pstring-uncons-code-unit
+          pstring-uncons-char
           pstring-uncons-code-point
           (rename (make-pstring-of-length make-pstring))
           pstring
@@ -138,8 +138,8 @@
       (let loop ([n 0] [tailx x] [taily y])
         (or
           (or (pstring-empty? tailx) (pstring-empty? taily))
-          (let-values ([(hx tx) ($pstring-uncons-code-unit tailx)]
-                       [(hy ty) ($pstring-uncons-code-unit taily)])
+          (let-values ([(hx tx) (pstring-uncons-code-unit tailx)]
+                       [(hy ty) (pstring-uncons-code-unit taily)])
             (and (fx=? hx hy) (loop (fx1+ n) tx ty))))))
     (and
       (fx=? (pstring-length x) (pstring-length y))
@@ -283,8 +283,8 @@
           ;; In the middle of matching but we have no more input. No match found.
           [(pstring-empty? hs) #f]
           [else
-            (let-values ([(pc demand-rest) ($pstring-uncons-code-unit demand)]
-                         [(ic hs-rest) ($pstring-uncons-code-unit hs)])
+            (let-values ([(pc demand-rest) (pstring-uncons-code-unit demand)]
+                         [(ic hs-rest) (pstring-uncons-code-unit hs)])
               (if (fx=? pc ic)
                 ;; Found a match for char, advance to next char
                 (loop (fx1+ i) (or candidate i) hs-rest demand-rest)
@@ -310,8 +310,8 @@
           ;; In the middle of matching but we have no more input.
           [(and (pstring-empty? hs) (not (pstring-empty? demand))) last-match-candidate]
           [else
-            (let-values ([(pc demand-rest) ($pstring-uncons-code-unit demand)]
-                         [(ic hs-rest) ($pstring-uncons-code-unit hs)])
+            (let-values ([(pc demand-rest) (pstring-uncons-code-unit demand)]
+                         [(ic hs-rest) (pstring-uncons-code-unit hs)])
               (if (fx=? pc ic)
                 ;; Found a match for char, advance to next char
                 (loop (fx1+ i) last-match-candidate (or candidate i) hs-rest demand-rest)
@@ -342,7 +342,7 @@
       (let loop ([i 0] [rest bs])
         (if (pstring-empty? rest)
           fv
-          (let-values ([(c tail) (pstring-uncons-code-unit rest)])
+          (let-values ([(c tail) (pstring-uncons-char rest)])
             (srfi:214:flexvector-set! fv i c)
             (loop (fx1+ i) tail))))))
 
@@ -411,7 +411,7 @@
           (let loop ([i 0] [rest bs])
             (if (pstring-empty? rest)
               fv
-              (let-values ([(c tail) (pstring-uncons-code-unit rest)])
+              (let-values ([(c tail) (pstring-uncons-char rest)])
                 (srfi:214:flexvector-set! fv i (pstring-singleton c))
                 (loop (fx1+ i) tail)))))]
       [else
@@ -472,19 +472,18 @@
       (fx+ (pstring-offset bs) n)
       (fx- (pstring-length bs) n)))
 
-  (define ($pstring-uncons-code-unit bs)
+  (define (pstring-uncons-char bs)
+    (let-values ([(head tail) (pstring-uncons-code-unit bs)])
+      (values (integer->char head) tail)))
+
+  (define (pstring-uncons-code-unit bs)
     (if (pstring-empty? bs)
       (raise-continuable
         (make-message-condition
-          (format "$pstring-uncons-code-unit: cannot uncons an empty pstring ~a" bs)))
+          (format "pstring-uncons-code-unit: cannot uncons an empty pstring ~a" bs)))
       (let ([w1 (pstring-ref-first bs)]
             [tail (pstring-unsafe-drop bs 1)])
         (values w1 tail))))
-
-  ; TODO Rename to uncons-char
-  (define (pstring-uncons-code-unit bs)
-    (let-values ([(head tail) ($pstring-uncons-code-unit bs)])
-      (values (integer->char head) tail)))
 
   (define (pstring-uncons-code-point bs)
     (if (pstring-empty? bs)
@@ -546,7 +545,7 @@
             (let loop ([rest bs])
               (if (pstring-empty? rest)
                 rest
-                (let-values ([(head tail) ($pstring-uncons-code-unit rest)])
+                (let-values ([(head tail) (pstring-uncons-code-unit rest)])
                   (if (whitespace? head)
                     (loop tail)
                     rest))))])
