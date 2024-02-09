@@ -9,36 +9,43 @@
           pstring-empty?
           pstring?
           pstring=?
+          pstring<?
+          pstring>?
+          pstring<=?
+          pstring>=?
+
+          pstring-singleton
+
           pstring-slice
           pstring-trim
           pstring-take
           pstring-drop
+          pstring-downcase
+          pstring-upcase
+          pstring-replace
+          pstring-replace-all
+
           pstring-index-of
           pstring-last-index-of
-          pstring-singleton
-          pstring-join-with
+          pstring-ref-code-point
+
           pstring->string
           code-points->pstring
           pstring->number
           number->pstring
           pstring->symbol
           string->pstring
-          pstring-concat
           char-flexvector->pstring
           pstring->char-flexvector
-          pstring-replace
-          pstring-replace-all
-          pstring-split
-          pstring-ref-code-point
-          pstring-length-code-points
           pstring->list
-          pstring<?
-          pstring>?
-          pstring<=?
-          pstring>=?
-          pstring-downcase
-          pstring-upcase
+
+          pstring-join-with
+          pstring-concat
+          pstring-split
+
+          pstring-length-code-points
           pstring-take-code-points
+
           pstring-make-regex
           regex-source
           regex-flags
@@ -53,16 +60,11 @@
   (define-structure
     (pstring buffer offset length))
 
+  ;
+  ; Constructors
+  ; 
+
   (define empty-pstring (make-pstring (make-immobile-bytevector 0) 0 0))
-
-  (define (pstring-empty? bs)
-    (fx=? (pstring-length bs) 0))
-
-  ;; Do x and y point to the same object in memory?
-  (define (pstring-eq? x y)
-    (and (fx=? (pstring-length x) (pstring-length y))
-               (fx=? (pstring-offset x) (pstring-offset y))
-               (eq? (pstring-buffer x) (pstring-buffer y))))
 
   ;; this is our version of `make-string`
   (define (make-pstring-of-length n)
@@ -74,6 +76,60 @@
     (let ([bv (code-unit-vector-alloc 1)])
       (code-unit-vector-set! bv 0 (char->integer c))
       (make-pstring bv 0 1)))
+
+  (define (pstring . chars)
+    (let* ([len (length chars)]
+           [cv (code-unit-vector-alloc len)])
+      (let loop ([i 0] [rest chars])
+        (if (null? rest)
+          cv
+          (begin
+            (code-unit-vector-set! cv i (char->integer (car rest)))
+            (loop (fx1+ i) (cdr rest)))))
+      (make-pstring cv 0 len)))
+
+  (define-syntax string->pstring
+    (lambda (x)
+      (syntax-case x ()
+        [(string->pstring s)
+         (let ([d (syntax->datum #'s)])
+           (if (string? d)
+             (let ([bv (string->utf16 d (native-endianness))])
+               #`(make-pstring #,bv 0 #,(fx/ (bytevector-length bv) 2)))
+             #'(let ([bv (string->utf16 s (native-endianness))])
+                 (make-pstring bv 0 (fx/ (bytevector-length bv) 2)))))])))
+
+  ;; Turns code point scalar values into a pstring.
+  (define (code-points->pstring . xs)
+    (let ([bv (string->utf16 (apply string (map integer->char xs)) (native-endianness))])
+      (make-pstring bv 0 (fx/ (bytevector-length bv) code-unit-length))))
+
+  (define number->pstring
+    (case-lambda
+      [(n) (string->pstring (number->string n))]
+      [(n radix) (string->pstring (number->string n radix))]))
+
+  (define (char-flexvector->pstring v)
+    (let* ([len (srfi:214:flexvector-length v)]
+           [bv (code-unit-vector-alloc len)])
+      (srfi:214:flexvector-for-each/index
+        (lambda (i c)
+          (code-unit-vector-set! bv i (char->integer c))) 
+        v)
+      (make-pstring bv 0 len)))
+
+  ;
+  ; Comparisons
+  ;
+
+  (define (pstring-empty? bs)
+    (fx=? (pstring-length bs) 0))
+
+  ;; Do x and y point to the same object in memory?
+  (define (pstring-eq? x y)
+    (and (fx=? (pstring-length x) (pstring-length y))
+               (fx=? (pstring-offset x) (pstring-offset y))
+               (eq? (pstring-buffer x) (pstring-buffer y))))
 
   (define (pstring=? x y)
     ;; Assumes the buffers have the same length
@@ -91,422 +147,6 @@
         (and (fx=? (pstring-offset x) (pstring-offset y))
               (eq? (pstring-buffer x) (pstring-buffer y)))
         (pstring-equal-code-units? x y))))
-
-  (define-syntax string->pstring
-    (lambda (x)
-      (syntax-case x ()
-        [(string->pstring s)
-         (let ([d (syntax->datum #'s)])
-           (if (string? d)
-             (let ([bv (string->utf16 d (native-endianness))])
-               #`(make-pstring #,bv 0 #,(fx/ (bytevector-length bv) 2)))
-             #'(let ([bv (string->utf16 s (native-endianness))])
-                 (make-pstring bv 0 (fx/ (bytevector-length bv) 2)))))])))
-
-  (define (pstring->string bs)
-    (decode-utf16 (pstring-buffer bs) (pstring-offset bs) (pstring-length bs)))
-
-  ;; Turns code point scalar values into a pstring.
-  (define (code-points->pstring . xs)
-    (let ([bv (string->utf16 (apply string (map integer->char xs)) (native-endianness))])
-      (make-pstring bv 0 (fx/ (bytevector-length bv) code-unit-length))))
-
-  (define (pstring-ref-first bs)
-    (code-unit-vector-ref (pstring-buffer bs) (pstring-offset bs)))
-
-  (define (pstring-ref-last bs)
-    (code-unit-vector-ref (pstring-buffer bs) (fx- (fx+ (pstring-offset bs) (pstring-length bs)) 1)))
-
-  ; Like pstring-drop but without bounds checks
-  (define (pstring-unsafe-drop bs n)
-    (make-pstring
-      (pstring-buffer bs)
-      (fx+ (pstring-offset bs) n)
-      (fx- (pstring-length bs) n)))
-
-  (define ($pstring-uncons-code-unit bs)
-    (if (pstring-empty? bs)
-      (raise-continuable
-        (make-message-condition
-          (format "$pstring-uncons-code-unit: cannot uncons an empty pstring ~a" bs)))
-      (let ([w1 (pstring-ref-first bs)]
-            [tail (pstring-unsafe-drop bs 1)])
-        (values w1 tail))))
-
-  (define (pstring-uncons-code-unit bs)
-    (let-values ([(head tail) ($pstring-uncons-code-unit bs)])
-      (values (integer->char head) tail)))
-
-  ;; Constant-time ref, like string-ref.
-  ;; Returns a scheme `char`.
-  (define (pstring-ref bs n)
-    (define (pstring-ref-code-unit bs n)
-      (let ([bv (pstring-buffer bs)])
-        (if (fx<? n (pstring-length bs))
-          (code-unit-vector-ref bv (fx+ n (pstring-offset bs)))
-          ;; not enough bytes to read a full code unit
-          (raise-continuable
-            (make-message-condition
-              (format "pstring-ref-code-unit ~d is not a valid index" n))))))
-
-    (integer->char (pstring-ref-code-unit bs n)))
-
-  (define pstring-slice
-    (case-lambda
-      [(bs start)
-       (pstring-slice bs start (pstring-length bs))]
-      [(bs start end)
-        (let* ([start-index (fxmin (fxmax 0 start) (pstring-length bs))]
-               [end-index (fxmin (fxmax 0 end) (pstring-length bs))]
-               [len (fx- end-index start-index)])
-          (if (fx<? len 0)
-            empty-pstring
-            (make-pstring
-              (pstring-buffer bs)
-              (fx+ (pstring-offset bs) start-index)
-              len)))]))
-
-  (define (pstring-take bs n)
-    (pstring-slice bs 0 n))
-
-  (define (pstring-drop bs n)
-    (pstring-slice bs n))
-
-  (define (pstring-trim bs)
-    (define (whitespace? c)
-      (or
-          ; Whitespace characters
-          (fx=? c #x0009)
-          (fx=? c #x000B)
-          (fx=? c #x000C)
-          (fx=? c #x0020)
-          (fx=? c #x00A0)
-          (fx=? c #xFEFF)
-
-          ; Line terminators
-          (fx=? c #x000A)
-          (fx=? c #x000D)
-          (fx=? c #x2028)
-          (fx=? c #x2029)))
-
-    (let ([suffix
-            (let loop ([rest bs])
-              (if (pstring-empty? rest)
-                rest
-                (let-values ([(head tail) ($pstring-uncons-code-unit rest)])
-                  (if (whitespace? head)
-                    (loop tail)
-                    rest))))])
-      (let loop ([rest suffix])
-        (if (pstring-empty? rest)
-          rest
-          (let ([last (pstring-ref-last rest)]
-                [prefix (pstring-take rest (fx1- (pstring-length rest)))])
-            (if (whitespace? last) (loop prefix) rest))))))
-
-  (define (pstring-index-of bs pattern)
-    (if (pstring-empty? pattern)
-      0
-      (let loop ([i 0]
-                 [candidate #f]    ; the index of the first matching char
-                 [hs bs]           ; haystack
-                 [demand pattern]) ; chars left to be found
-        (cond
-          ;; Nothing is demanded, so we are done
-          [(pstring-empty? demand) candidate]
-          ;; In the middle of matching but we have no more input. No match found.
-          [(pstring-empty? hs) #f]
-          [else
-            (let-values ([(pc demand-rest) ($pstring-uncons-code-unit demand)]
-                         [(ic hs-rest) ($pstring-uncons-code-unit hs)])
-              (if (fx=? pc ic)
-                ;; Found a match for char, advance to next char
-                (loop (fx1+ i) (or candidate i) hs-rest demand-rest)
-                (if candidate
-                  ;; No match, rewind demand and start over at the same spot
-                  (loop i #f hs pattern)
-                  (loop (fx1+ i) #f hs-rest pattern))))]))))
-
-  (define (pstring-last-index-of bs pattern)
-    (if (pstring-empty? pattern)
-      (pstring-length bs)
-      (let loop ([i 0]
-                 [last-match-candidate #f]
-                 [candidate #f]    ; the index of the first matching char
-                 [hs bs]           ; haystack
-                 [demand pattern]) ; chars left to be found
-        (cond
-          [(and (not (pstring-empty? hs)) (pstring-empty? demand))
-           ;; found a match but haystack not consumed, continue searching
-           (loop i candidate #f hs pattern)]
-          ;; Nothing is demanded, so we are done
-          [(pstring-empty? demand) candidate]
-          ;; In the middle of matching but we have no more input.
-          [(and (pstring-empty? hs) (not (pstring-empty? demand))) last-match-candidate]
-          [else
-            (let-values ([(pc demand-rest) ($pstring-uncons-code-unit demand)]
-                         [(ic hs-rest) ($pstring-uncons-code-unit hs)])
-              (if (fx=? pc ic)
-                ;; Found a match for char, advance to next char
-                (loop (fx1+ i) last-match-candidate (or candidate i) hs-rest demand-rest)
-                (if candidate
-                  ;; No match, rewind demand and start over at the same spot
-                  (loop i last-match-candidate #f hs pattern)
-                  (loop (fx1+ i) last-match-candidate #f hs-rest pattern))))]))))
-
-  (define (pstring-concat . xs)
-    (let* ([len (fold-right (lambda (s a) (fx+ (pstring-length s) a)) 0 xs)]
-           [buf (code-unit-vector-alloc len)])
-      (let loop ([i 0] [ls xs])
-        (if (pair? ls)
-          (let* ([bs (car ls)]
-                 [slen (pstring-length bs)])
-            (code-unit-vector-copy! (pstring-buffer bs) (pstring-offset bs) buf i slen)
-            (loop (fx+ i slen) (cdr ls)))
-          (make-pstring buf 0 len)))))
-
-  (define (pstring-join-with xs separator)
-    (let* ([len (srfi:214:flexvector-fold (lambda (len s) (fx+ len (pstring-length s))) 0 xs)]
-           [xs-count (srfi:214:flexvector-length xs)]
-           [separator-count (if (fx=? xs-count 0) 0 (fx1- xs-count))]
-           [separator-len (pstring-length separator)]
-           [bv-len (fx+ len (fx* separator-count separator-len))]
-           [bv (code-unit-vector-alloc bv-len)])
-      (let loop ([i 0]
-                 [bi 0])
-        (if (fx<? i xs-count)
-          (let* ([s (srfi:214:flexvector-ref xs i)]
-                 [len (pstring-length s)])
-            (if (fx>? i 0)
-              (begin
-                (code-unit-vector-copy!
-                  (pstring-buffer separator)
-                  (pstring-offset separator)
-                  bv
-                  (fx+ bi)
-                  separator-len)
-                (code-unit-vector-copy!
-                  (pstring-buffer s)
-                  (pstring-offset s)
-                  bv
-                  (fx+ bi separator-len)
-                  len)
-                (loop (fx1+ i) (fx+ bi len separator-len)))
-              (begin
-                (code-unit-vector-copy! (pstring-buffer s) (pstring-offset s) bv bi len)
-                (loop (fx1+ i) (fx+ bi len)))))
-          (make-pstring bv 0 bv-len)))))
-
-  (define pstring->number
-    (case-lambda
-      [(bs) (string->number (pstring->string bs))]
-      [(bs radix) (string->number (pstring->string bs) radix)]))
-
-  (define number->pstring
-    (case-lambda
-      [(n) (string->pstring (number->string n))]
-      [(n radix) (string->pstring (number->string n radix))]))
-
-  (define (pstring->symbol bs)
-    (string->symbol (pstring->string bs)))
-
-  (define (pstring . chars)
-    (let* ([len (length chars)]
-           [cv (code-unit-vector-alloc len)])
-      (let loop ([i 0] [rest chars])
-        (if (null? rest)
-          cv
-          (begin
-            (code-unit-vector-set! cv i (char->integer (car rest)))
-            (loop (fx1+ i) (cdr rest)))))
-      (make-pstring cv 0 len)))
-
-  (define (char-flexvector->pstring v)
-    (let* ([len (srfi:214:flexvector-length v)]
-           [bv (code-unit-vector-alloc len)])
-      (srfi:214:flexvector-for-each/index
-        (lambda (i c)
-          (code-unit-vector-set! bv i (char->integer c))) 
-        v)
-      (make-pstring bv 0 len)))
-
-  (define (pstring->char-flexvector bs)
-    (let* ([len (pstring-length bs)]
-           [fv (srfi:214:make-flexvector len)])
-      (let loop ([i 0] [rest bs])
-        (if (pstring-empty? rest)
-          fv
-          (let-values ([(c tail) (pstring-uncons-code-unit rest)])
-            (srfi:214:flexvector-set! fv i c)
-            (loop (fx1+ i) tail))))))
-
-  (define (pstring-&ref bs i)
-    (code-unit-vector-&ref (pstring-buffer bs) (fx+ (pstring-offset bs) i)))
-
-
-  ;; 
-  ;; Modifications
-  ;;
-
-  (define (pstring-replace bs pattern replacement)
-    (if (pstring-empty? pattern)
-      bs
-      (let ([i (pstring-index-of bs pattern)])
-        (if (not i)
-          bs
-          (let* ([len (fx+ (fx- (pstring-length bs) (pstring-length pattern))
-                           (pstring-length replacement))]
-                 [bv (code-unit-vector-alloc len)])
-            (code-unit-vector-copy! (pstring-buffer bs) (pstring-offset bs) bv 0 i)
-            (code-unit-vector-copy! (pstring-buffer replacement)
-                              (pstring-offset replacement)
-                              bv
-                              i
-                              (pstring-length replacement))
-            (code-unit-vector-copy! (pstring-buffer bs)
-                              (fx+ (pstring-offset bs) i (pstring-length pattern))
-                              bv
-                              (fx+ i (pstring-length replacement))
-                              (fx- (pstring-length bs) i (pstring-length pattern)))
-            (make-pstring bv 0 len))))))
-
-  ; Find all occurences and return their indices as a list
-  (define (all-index-of bs pattern)
-    (let go ([start 0])
-      (let ([slice (pstring-drop bs start)])
-        (if (or (pstring-empty? bs) (pstring-empty? pattern))
-          '()
-          (let ([i (pstring-index-of slice pattern)])
-            (if i
-              (cons (fx+ start i)
-                    (go (fx+ start i (pstring-length pattern))))
-              '()))))))
-
-  (define (pstring-replace-all bs pattern replacement)
-    (if (pstring-empty? pattern)
-      bs
-      (let* ([is (all-index-of bs pattern)]
-             [replacements-delta (fx* (length is)
-                                      (fx- (pstring-length pattern)
-                                           (pstring-length replacement)))]
-             [len (fx- (pstring-length bs) replacements-delta)]
-             [bv (code-unit-vector-alloc len)])
-        (let loop ([bsi 0] ; where we are at bs
-                   [bvi 0] ; where we are at bv
-                   [rest is])
-          (if (null? rest)
-            ; copy the left-overs into place
-            (code-unit-vector-copy! (pstring-buffer bs)
-                                    (fx+ (pstring-offset bs) bsi)
-                                    bv
-                                    bvi
-                                    (fx- (pstring-length bs) bsi))
-            (let* ([i (car rest)] [before-len (fx- i bsi)])
-              ;; copy stuff before the match
-              (code-unit-vector-copy! (pstring-buffer bs)
-                                (fx+ (pstring-offset bs) bsi)
-                                bv
-                                bvi
-                                before-len)
-              ;; the replacement itself
-              (code-unit-vector-copy! (pstring-buffer replacement)
-                                (pstring-offset replacement)
-                                bv
-                                (fx+ bvi before-len)
-                                (pstring-length replacement))
-              (loop
-                (fx+ i (pstring-length pattern))
-                (fx+ (fx+ bvi before-len) (pstring-length replacement))
-                (cdr rest)))))
-        (make-pstring bv 0 len))))
-
-  (define (pstring-split bs pattern)
-    (cond
-      [(pstring-empty? bs) (srfi:214:flexvector)]
-      [(pstring-empty? pattern)
-        (let* ([len (pstring-length bs)]
-               [fv (srfi:214:make-flexvector len)])
-          (let loop ([i 0] [rest bs])
-            (if (pstring-empty? rest)
-              fv
-              (let-values ([(c tail) (pstring-uncons-code-unit rest)])
-                (srfi:214:flexvector-set! fv i (pstring-singleton c))
-                (loop (fx1+ i) tail)))))]
-      [else
-        (let* ([all-indices (all-index-of bs pattern)]
-               [vec (srfi:214:make-flexvector (fx1+ (length all-indices)))])
-          (let loop ([indices all-indices]
-                     [i 0]
-                     [pi 0])
-            (if (null? indices)
-              (begin
-                (srfi:214:flexvector-set! vec i (pstring-slice bs pi))
-                vec)
-              (let ([index (car indices)])
-                (srfi:214:flexvector-set! vec i (pstring-slice bs pi index))
-                (loop (cdr indices) (fx1+ i) (fx+ index (pstring-length pattern)))))))]))
-
-
-  ;;
-  ;; Code points
-  ;;
-
-  ;; Low-level unconsing
-  (define (pstring-uncons-code-point bs)
-    (if (pstring-empty? bs)
-      (raise-continuable
-        (make-message-condition "pstring-uncons-code-point: pstring is empty"))
-      (let* ([buf (pstring-buffer bs)]
-             [offset (pstring-offset bs)]
-             [w1 (code-unit-vector-ref buf offset)])
-        (cond
-          ;; Two-word encoding? Check for high surrogate
-          [(and (fx<= #xD800 w1 #xDBFF) (fx>=? (pstring-length bs) 2))
-           (let ([w2 (code-unit-vector-ref buf (fx1+ offset))])
-             ;; low surrogate?
-             (if (fx<= #xDC00 w2 #xDFFF)
-               (values
-                 (fx+
-                   (fxlogor
-                     (fxsll (fx- w1 #xD800) 10)
-                     (fx- w2 #xDC00))
-                   #x10000)
-                 (pstring-unsafe-drop bs 2))
-               ;; low surrogate not found, just return the high surrogate
-               (values w1 (pstring-unsafe-drop bs 1))))]
-          ;; misplaced continuation word?
-          [(fx<= #xDC00 w1 #xDFFF)
-           (values w1 (pstring-unsafe-drop bs 1))]
-          ;; one-word encoding
-          [else (values w1 (pstring-unsafe-drop bs 1))]))))
-
-  (define (pstring-ref-code-point bs n)
-    (let loop ([i 0] [cur bs])
-      (if (pstring-empty? cur)
-        (raise-continuable
-          (make-message-condition
-            (format "pstring-ref-code-point: ~d is not a valid index" n))))
-      (let-values ([(head tail) (pstring-uncons-code-point cur)])
-        (if (fx=? i n)
-          head
-          (loop (fx1+ i) tail)))))
-
-  ;; Length in code points
-  (define pstring-length-code-points
-    (lambda (s)
-      (let loop ([i 0] [cur s])
-        (if (pstring-empty? cur)
-          i
-          (let-values ([(_ tail) (pstring-uncons-code-point cur)])
-            (loop (fx1+ i) tail))))))
-
-  ;; linear-time, returns a list of `char`s
-  (define (pstring->list bs)
-    (let loop ([rest bs] [ls '()])
-      (if (pstring-empty? rest)
-        (reverse ls)
-        (let-values ([(head tail) (pstring-uncons-code-point rest)])
-          (loop tail (cons (integer->char head) ls))))))
 
   (define (pstring<? x y)
     (and
@@ -583,11 +223,234 @@
                 (or (char>? c1 c2)
                     (and (char=? c1 c2) (loop tx ty))))))))))
 
-  (define (pstring-downcase bs)
-    (string->pstring (string-downcase (pstring->string bs))))
 
-  (define (pstring-upcase bs)
-    (string->pstring (string-upcase (pstring->string bs))))
+  ;
+  ; Accessors
+  ; 
+
+  (define (pstring-ref-first bs)
+    (code-unit-vector-ref (pstring-buffer bs) (pstring-offset bs)))
+
+  (define (pstring-ref-last bs)
+    (code-unit-vector-ref (pstring-buffer bs) (fx- (fx+ (pstring-offset bs) (pstring-length bs)) 1)))
+
+  ;; Constant-time ref, like string-ref.
+  ;; Returns a scheme `char`.
+  (define (pstring-ref bs n)
+    (define (pstring-ref-code-unit bs n)
+      (let ([bv (pstring-buffer bs)])
+        (if (fx<? n (pstring-length bs))
+          (code-unit-vector-ref bv (fx+ n (pstring-offset bs)))
+          ;; not enough bytes to read a full code unit
+          (raise-continuable
+            (make-message-condition
+              (format "pstring-ref-code-unit ~d is not a valid index" n))))))
+    (integer->char (pstring-ref-code-unit bs n)))
+
+  (define (pstring-&ref bs i)
+    (code-unit-vector-&ref (pstring-buffer bs) (fx+ (pstring-offset bs) i)))
+
+  (define (pstring-ref-code-point bs n)
+    (let loop ([i 0] [cur bs])
+      (if (pstring-empty? cur)
+        (raise-continuable
+          (make-message-condition
+            (format "pstring-ref-code-point: ~d is not a valid index" n))))
+      (let-values ([(head tail) (pstring-uncons-code-point cur)])
+        (if (fx=? i n)
+          head
+          (loop (fx1+ i) tail)))))
+
+  (define (pstring-length-code-points s)
+      (let loop ([i 0] [cur s])
+        (if (pstring-empty? cur)
+          i
+          (let-values ([(_ tail) (pstring-uncons-code-point cur)])
+            (loop (fx1+ i) tail)))))
+
+  (define (pstring-index-of bs pattern)
+    (if (pstring-empty? pattern)
+      0
+      (let loop ([i 0]
+                 [candidate #f]    ; the index of the first matching char
+                 [hs bs]           ; haystack
+                 [demand pattern]) ; chars left to be found
+        (cond
+          ;; Nothing is demanded, so we are done
+          [(pstring-empty? demand) candidate]
+          ;; In the middle of matching but we have no more input. No match found.
+          [(pstring-empty? hs) #f]
+          [else
+            (let-values ([(pc demand-rest) ($pstring-uncons-code-unit demand)]
+                         [(ic hs-rest) ($pstring-uncons-code-unit hs)])
+              (if (fx=? pc ic)
+                ;; Found a match for char, advance to next char
+                (loop (fx1+ i) (or candidate i) hs-rest demand-rest)
+                (if candidate
+                  ;; No match, rewind demand and start over at the same spot
+                  (loop i #f hs pattern)
+                  (loop (fx1+ i) #f hs-rest pattern))))]))))
+
+  (define (pstring-last-index-of bs pattern)
+    (if (pstring-empty? pattern)
+      (pstring-length bs)
+      (let loop ([i 0]
+                 [last-match-candidate #f]
+                 [candidate #f]    ; the index of the first matching char
+                 [hs bs]           ; haystack
+                 [demand pattern]) ; chars left to be found
+        (cond
+          [(and (not (pstring-empty? hs)) (pstring-empty? demand))
+           ;; found a match but haystack not consumed, continue searching
+           (loop i candidate #f hs pattern)]
+          ;; Nothing is demanded, so we are done
+          [(pstring-empty? demand) candidate]
+          ;; In the middle of matching but we have no more input.
+          [(and (pstring-empty? hs) (not (pstring-empty? demand))) last-match-candidate]
+          [else
+            (let-values ([(pc demand-rest) ($pstring-uncons-code-unit demand)]
+                         [(ic hs-rest) ($pstring-uncons-code-unit hs)])
+              (if (fx=? pc ic)
+                ;; Found a match for char, advance to next char
+                (loop (fx1+ i) last-match-candidate (or candidate i) hs-rest demand-rest)
+                (if candidate
+                  ;; No match, rewind demand and start over at the same spot
+                  (loop i last-match-candidate #f hs pattern)
+                  (loop (fx1+ i) last-match-candidate #f hs-rest pattern))))]))))
+
+
+  ;
+  ; Conversions
+  ; 
+
+  (define (pstring->string bs)
+    (decode-utf16 (pstring-buffer bs) (pstring-offset bs) (pstring-length bs)))
+
+  (define pstring->number
+    (case-lambda
+      [(bs) (string->number (pstring->string bs))]
+      [(bs radix) (string->number (pstring->string bs) radix)]))
+
+  (define (pstring->symbol bs)
+    (string->symbol (pstring->string bs)))
+
+  (define (pstring->char-flexvector bs)
+    (let* ([len (pstring-length bs)]
+           [fv (srfi:214:make-flexvector len)])
+      (let loop ([i 0] [rest bs])
+        (if (pstring-empty? rest)
+          fv
+          (let-values ([(c tail) (pstring-uncons-code-unit rest)])
+            (srfi:214:flexvector-set! fv i c)
+            (loop (fx1+ i) tail))))))
+
+  ;; linear-time, returns a list of `char`s
+  (define (pstring->list bs)
+    (let loop ([rest bs] [ls '()])
+      (if (pstring-empty? rest)
+        (reverse ls)
+        (let-values ([(head tail) (pstring-uncons-code-point rest)])
+          (loop tail (cons (integer->char head) ls))))))
+
+
+  ;
+  ; Joining & splitting
+  ; 
+
+  (define (pstring-concat . xs)
+    (let* ([len (fold-right (lambda (s a) (fx+ (pstring-length s) a)) 0 xs)]
+           [buf (code-unit-vector-alloc len)])
+      (let loop ([i 0] [ls xs])
+        (if (pair? ls)
+          (let* ([bs (car ls)]
+                 [slen (pstring-length bs)])
+            (code-unit-vector-copy! (pstring-buffer bs) (pstring-offset bs) buf i slen)
+            (loop (fx+ i slen) (cdr ls)))
+          (make-pstring buf 0 len)))))
+
+  (define (pstring-join-with xs separator)
+    (let* ([len (srfi:214:flexvector-fold (lambda (len s) (fx+ len (pstring-length s))) 0 xs)]
+           [xs-count (srfi:214:flexvector-length xs)]
+           [separator-count (if (fx=? xs-count 0) 0 (fx1- xs-count))]
+           [separator-len (pstring-length separator)]
+           [bv-len (fx+ len (fx* separator-count separator-len))]
+           [bv (code-unit-vector-alloc bv-len)])
+      (let loop ([i 0]
+                 [bi 0])
+        (if (fx<? i xs-count)
+          (let* ([s (srfi:214:flexvector-ref xs i)]
+                 [len (pstring-length s)])
+            (if (fx>? i 0)
+              (begin
+                (code-unit-vector-copy!
+                  (pstring-buffer separator)
+                  (pstring-offset separator)
+                  bv
+                  (fx+ bi)
+                  separator-len)
+                (code-unit-vector-copy!
+                  (pstring-buffer s)
+                  (pstring-offset s)
+                  bv
+                  (fx+ bi separator-len)
+                  len)
+                (loop (fx1+ i) (fx+ bi len separator-len)))
+              (begin
+                (code-unit-vector-copy! (pstring-buffer s) (pstring-offset s) bv bi len)
+                (loop (fx1+ i) (fx+ bi len)))))
+          (make-pstring bv 0 bv-len)))))
+
+  (define (pstring-split bs pattern)
+    (cond
+      [(pstring-empty? bs) (srfi:214:flexvector)]
+      [(pstring-empty? pattern)
+        (let* ([len (pstring-length bs)]
+               [fv (srfi:214:make-flexvector len)])
+          (let loop ([i 0] [rest bs])
+            (if (pstring-empty? rest)
+              fv
+              (let-values ([(c tail) (pstring-uncons-code-unit rest)])
+                (srfi:214:flexvector-set! fv i (pstring-singleton c))
+                (loop (fx1+ i) tail)))))]
+      [else
+        (let* ([all-indices (all-index-of bs pattern)]
+               [vec (srfi:214:make-flexvector (fx1+ (length all-indices)))])
+          (let loop ([indices all-indices]
+                     [i 0]
+                     [pi 0])
+            (if (null? indices)
+              (begin
+                (srfi:214:flexvector-set! vec i (pstring-slice bs pi))
+                vec)
+              (let ([index (car indices)])
+                (srfi:214:flexvector-set! vec i (pstring-slice bs pi index))
+                (loop (cdr indices) (fx1+ i) (fx+ index (pstring-length pattern)))))))]))
+
+
+  ;; 
+  ;; Slicing
+  ;;
+
+  (define pstring-slice
+    (case-lambda
+      [(bs start)
+       (pstring-slice bs start (pstring-length bs))]
+      [(bs start end)
+        (let* ([start-index (fxmin (fxmax 0 start) (pstring-length bs))]
+               [end-index (fxmin (fxmax 0 end) (pstring-length bs))]
+               [len (fx- end-index start-index)])
+          (if (fx<? len 0)
+            empty-pstring
+            (make-pstring
+              (pstring-buffer bs)
+              (fx+ (pstring-offset bs) start-index)
+              len)))]))
+
+  (define (pstring-take bs n)
+    (pstring-slice bs 0 n))
+
+  (define (pstring-drop bs n)
+    (pstring-slice bs n))
 
   (define (pstring-take-code-points bs n)
     (if (fx<? n 1)
@@ -599,6 +462,171 @@
           [else
             (let-values ([(_ t) (pstring-uncons-code-point tail)])
               (loop (fx1- i) t))]))))
+
+  ; Like pstring-drop but without bounds checks
+  (define (pstring-unsafe-drop bs n)
+    (make-pstring
+      (pstring-buffer bs)
+      (fx+ (pstring-offset bs) n)
+      (fx- (pstring-length bs) n)))
+
+  (define ($pstring-uncons-code-unit bs)
+    (if (pstring-empty? bs)
+      (raise-continuable
+        (make-message-condition
+          (format "$pstring-uncons-code-unit: cannot uncons an empty pstring ~a" bs)))
+      (let ([w1 (pstring-ref-first bs)]
+            [tail (pstring-unsafe-drop bs 1)])
+        (values w1 tail))))
+
+  ; TODO Rename to uncons-char
+  (define (pstring-uncons-code-unit bs)
+    (let-values ([(head tail) ($pstring-uncons-code-unit bs)])
+      (values (integer->char head) tail)))
+
+  (define (pstring-uncons-code-point bs)
+    (if (pstring-empty? bs)
+      (raise-continuable
+        (make-message-condition "pstring-uncons-code-point: pstring is empty"))
+      (let* ([buf (pstring-buffer bs)]
+             [offset (pstring-offset bs)]
+             [w1 (code-unit-vector-ref buf offset)])
+        (cond
+          ;; Two-word encoding? Check for high surrogate
+          [(and (fx<= #xD800 w1 #xDBFF) (fx>=? (pstring-length bs) 2))
+           (let ([w2 (code-unit-vector-ref buf (fx1+ offset))])
+             ;; low surrogate?
+             (if (fx<= #xDC00 w2 #xDFFF)
+               (values
+                 (fx+
+                   (fxlogor
+                     (fxsll (fx- w1 #xD800) 10)
+                     (fx- w2 #xDC00))
+                   #x10000)
+                 (pstring-unsafe-drop bs 2))
+               ;; low surrogate not found, just return the high surrogate
+               (values w1 (pstring-unsafe-drop bs 1))))]
+          ;; misplaced continuation word?
+          [(fx<= #xDC00 w1 #xDFFF)
+           (values w1 (pstring-unsafe-drop bs 1))]
+          ;; one-word encoding
+          [else (values w1 (pstring-unsafe-drop bs 1))]))))
+
+
+  ;; 
+  ;; Modifications
+  ;;
+
+  (define (pstring-downcase bs)
+    (string->pstring (string-downcase (pstring->string bs))))
+
+  (define (pstring-upcase bs)
+    (string->pstring (string-upcase (pstring->string bs))))
+
+  (define (pstring-trim bs)
+    (define (whitespace? c)
+      (or
+          ; Whitespace characters
+          (fx=? c #x0009)
+          (fx=? c #x000B)
+          (fx=? c #x000C)
+          (fx=? c #x0020)
+          (fx=? c #x00A0)
+          (fx=? c #xFEFF)
+
+          ; Line terminators
+          (fx=? c #x000A)
+          (fx=? c #x000D)
+          (fx=? c #x2028)
+          (fx=? c #x2029)))
+
+    (let ([suffix
+            (let loop ([rest bs])
+              (if (pstring-empty? rest)
+                rest
+                (let-values ([(head tail) ($pstring-uncons-code-unit rest)])
+                  (if (whitespace? head)
+                    (loop tail)
+                    rest))))])
+      (let loop ([rest suffix])
+        (if (pstring-empty? rest)
+          rest
+          (let ([last (pstring-ref-last rest)]
+                [prefix (pstring-take rest (fx1- (pstring-length rest)))])
+            (if (whitespace? last) (loop prefix) rest))))))
+
+  (define (pstring-replace bs pattern replacement)
+    (if (pstring-empty? pattern)
+      bs
+      (let ([i (pstring-index-of bs pattern)])
+        (if (not i)
+          bs
+          (let* ([len (fx+ (fx- (pstring-length bs) (pstring-length pattern))
+                           (pstring-length replacement))]
+                 [bv (code-unit-vector-alloc len)])
+            (code-unit-vector-copy! (pstring-buffer bs) (pstring-offset bs) bv 0 i)
+            (code-unit-vector-copy! (pstring-buffer replacement)
+                              (pstring-offset replacement)
+                              bv
+                              i
+                              (pstring-length replacement))
+            (code-unit-vector-copy! (pstring-buffer bs)
+                              (fx+ (pstring-offset bs) i (pstring-length pattern))
+                              bv
+                              (fx+ i (pstring-length replacement))
+                              (fx- (pstring-length bs) i (pstring-length pattern)))
+            (make-pstring bv 0 len))))))
+
+  ; Find all occurences and return their indices as a list
+  (define (all-index-of bs pattern)
+    (let go ([start 0])
+      (let ([slice (pstring-drop bs start)])
+        (if (or (pstring-empty? bs) (pstring-empty? pattern))
+          '()
+          (let ([i (pstring-index-of slice pattern)])
+            (if i
+              (cons (fx+ start i)
+                    (go (fx+ start i (pstring-length pattern))))
+              '()))))))
+
+  (define (pstring-replace-all bs pattern replacement)
+    (if (pstring-empty? pattern)
+      bs
+      (let* ([is (all-index-of bs pattern)]
+             [replacements-delta (fx* (length is)
+                                      (fx- (pstring-length pattern)
+                                           (pstring-length replacement)))]
+             [len (fx- (pstring-length bs) replacements-delta)]
+             [bv (code-unit-vector-alloc len)])
+        (let loop ([bsi 0] ; where we are at bs
+                   [bvi 0] ; where we are at bv
+                   [rest is])
+          (if (null? rest)
+            ; copy the left-overs into place
+            (code-unit-vector-copy! (pstring-buffer bs)
+                                    (fx+ (pstring-offset bs) bsi)
+                                    bv
+                                    bvi
+                                    (fx- (pstring-length bs) bsi))
+            (let* ([i (car rest)] [before-len (fx- i bsi)])
+              ;; copy stuff before the match
+              (code-unit-vector-copy! (pstring-buffer bs)
+                                (fx+ (pstring-offset bs) bsi)
+                                bv
+                                bvi
+                                before-len)
+              ;; the replacement itself
+              (code-unit-vector-copy! (pstring-buffer replacement)
+                                (pstring-offset replacement)
+                                bv
+                                (fx+ bvi before-len)
+                                (pstring-length replacement))
+              (loop
+                (fx+ i (pstring-length pattern))
+                (fx+ (fx+ bvi before-len) (pstring-length replacement))
+                (cdr rest)))))
+        (make-pstring bv 0 len))))
+
 
   ;;
   ;; Low level bytevector utils
