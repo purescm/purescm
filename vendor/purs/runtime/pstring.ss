@@ -23,7 +23,6 @@
           number->pstring
           pstring->symbol
           string->pstring
-          pstring-ci=?
           pstring-concat
           char-flexvector->pstring
           pstring->char-flexvector
@@ -322,10 +321,6 @@
             (code-unit-vector-set! cv i (char->integer (car rest)))
             (loop (fx1+ i) (cdr rest)))))
       (make-pstring cv 0 len)))
-
-  ;; TODO add a proper implementation
-  (define (pstring-ci=? x y)
-    (string-ci=? (pstring->string x) (pstring->string y)))
 
   (define (char-flexvector->pstring v)
     (let* ([len (srfi:214:flexvector-length v)]
