@@ -785,6 +785,9 @@
                 (make-ftype-pointer unsigned-16 0)
                 (ftype-&ref size_t () buf-len))]
            [len (ftype-ref size_t () buf-len 0)]
+           ; NOTE we allocate space for the trailing NULL code unit,
+           ; but this should be fine because `pstring` has it's own `length`
+           ; so it won't ever read that NULL code unit.
            [buf (pstring-buffer-alloc (ftype-ref size_t () buf-len 0))]
            ; now do the actual substitution
            [res2 (pcre2_substitute_16
@@ -800,6 +803,7 @@
                 (pstring-buffer-&ref buf 0)
                 (ftype-&ref size_t () buf-len))])
       (foreign-free (ftype-pointer-address buf-len))
+      ; Subtract NULL code unit from length
       (make-pstring buf 0 (fx1- len))))
 
   ; Compiles a regex pattern to a regex.
