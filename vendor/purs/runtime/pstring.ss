@@ -366,7 +366,7 @@
         (let-values ([(head tail) (pstring-uncons-code-point rest)])
           (loop tail (cons (integer->char head) ls))))))
 
-  ; Turns a pstring to a flexvector of chars
+  ; Turns a pstring to a flexvector of code points
   (define (pstring->code-point-flexvector str)
     (define (reverse-list->flexvector xs len)
       (let ([fv (srfi:214:make-flexvector len)])
