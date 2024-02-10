@@ -61,17 +61,22 @@
 
   (define empty-pstring (make-pstring (make-immobile-bytevector 0) 0 0))
 
-  ;; this is our version of `make-string`
+  ; Make a string of length `n` in code units
   (define (make-pstring-of-length n)
     (make-pstring (pstring-buffer-alloc n) 0 n))
 
-  ;; NOTE: this only takes in PS chars which are guaranteed to
-  ;; be only one word in size (one code unit)
+  ; Makes a string of one scheme char
+  ;
+  ; NOTE: this only takes in PS a char which are guaranteed to
+  ; be only one code unit in size
   (define (pstring-singleton c)
     (let ([bv (pstring-buffer-alloc 1)])
       (pstring-buffer-set! bv 0 (char->integer c))
       (make-pstring bv 0 1)))
 
+  ; Makes a string from a list of chars
+  ; NOTE: this only takes in PS chars which are guaranteed to
+  ; be only one code unit in size
   (define (pstring . chars)
     (let* ([len (length chars)]
            [cv (pstring-buffer-alloc len)])
@@ -83,6 +88,8 @@
             (loop (fx1+ i) (cdr rest)))))
       (make-pstring cv 0 len)))
 
+  ; Macro that encodes literal scheme strings to `pstrings`
+  ; at compile time.
   (define-syntax string->pstring
     (lambda (x)
       (syntax-case x ()
@@ -94,16 +101,18 @@
              #'(let ([bv (string->utf16-immobile s)])
                  (make-pstring bv 0 (fx/ (bytevector-length bv) 2)))))])))
 
-  ;; Turns code point scalar values into a pstring.
+  ; Makes a pstring from a list of code point scalar values.
   (define (code-points->pstring . xs)
     (let ([bv (string->utf16 (apply string (map integer->char xs)) (native-endianness))])
       (make-pstring bv 0 (fx/ (bytevector-length bv) code-unit-length))))
 
+  ; Makes a pstring from a number
   (define number->pstring
     (case-lambda
       [(n) (string->pstring (number->string n))]
       [(n radix) (string->pstring (number->string n radix))]))
 
+  ; Makes a pstring from a flexvector of scheme chars
   (define (char-flexvector->pstring v)
     (let* ([len (srfi:214:flexvector-length v)]
            [bv (pstring-buffer-alloc len)])
@@ -120,14 +129,14 @@
   (define (pstring-empty? bs)
     (fx=? (pstring-length bs) 0))
 
-  ;; Do x and y point to the same object in memory?
+  ; Fast equality check based on object reference.
   (define (pstring-eq? x y)
     (and (fx=? (pstring-length x) (pstring-length y))
                (fx=? (pstring-offset x) (pstring-offset y))
                (eq? (pstring-buffer x) (pstring-buffer y))))
 
   (define (pstring=? x y)
-    ;; Assumes the buffers have the same length
+    ; Assumes the buffers have the same length
     (define (pstring-equal-code-units? x y)
       (let loop ([n 0] [tailx x] [taily y])
         (or
@@ -138,7 +147,7 @@
     (and
       (fx=? (pstring-length x) (pstring-length y))
       (or
-        ;; Do they point to the same object in memory?
+        ; Do they point to the same object in memory?
         (and (fx=? (pstring-offset x) (pstring-offset y))
               (eq? (pstring-buffer x) (pstring-buffer y)))
         (pstring-equal-code-units? x y))))
@@ -223,20 +232,23 @@
   ; Accessors
   ; 
 
+  ; Gets first code unit scalar value
   (define (pstring-ref-first bs)
     (pstring-buffer-ref (pstring-buffer bs) (pstring-offset bs)))
 
+  ; Get last code unit scalar value
   (define (pstring-ref-last bs)
     (pstring-buffer-ref (pstring-buffer bs) (fx- (fx+ (pstring-offset bs) (pstring-length bs)) 1)))
 
-  ;; Constant-time ref, like string-ref.
-  ;; Returns a scheme `char`.
+  ; Gets the char at index `n`.
+  ;
+  ; Constant-time ref, like string-ref.
   (define (pstring-ref bs n)
     (define (pstring-ref-code-unit bs n)
       (let ([bv (pstring-buffer bs)])
         (if (fx<? n (pstring-length bs))
           (pstring-buffer-ref bv (fx+ n (pstring-offset bs)))
-          ;; not enough bytes to read a full code unit
+          ; not enough bytes to read a full code unit
           (raise-continuable
             (make-message-condition
               (format "pstring-ref-code-unit ~d is not a valid index" n))))))
@@ -246,6 +258,7 @@
   (define (pstring-&ref bs)
     (pstring-buffer-&ref (pstring-buffer bs) (pstring-offset bs)))
 
+  ; Gets the code point scalar value at index `n`
   (define (pstring-ref-code-point bs n)
     (let loop ([i 0] [cur bs])
       (if (pstring-empty? cur)
@@ -257,13 +270,15 @@
           head
           (loop (fx1+ i) tail)))))
 
+  ; Length in code points
   (define (pstring-length-code-points s)
-      (let loop ([i 0] [cur s])
-        (if (pstring-empty? cur)
-          i
-          (let-values ([(_ tail) (pstring-uncons-code-point cur)])
-            (loop (fx1+ i) tail)))))
+    (let loop ([i 0] [cur s])
+      (if (pstring-empty? cur)
+        i
+        (let-values ([(_ tail) (pstring-uncons-code-point cur)])
+          (loop (fx1+ i) tail)))))
 
+  ; Finds the starting index of first found `pattern`
   (define (pstring-index-of bs pattern)
     (if (pstring-empty? pattern)
       0
@@ -272,21 +287,22 @@
                  [hs bs]           ; haystack
                  [demand pattern]) ; chars left to be found
         (cond
-          ;; Nothing is demanded, so we are done
+          ; Nothing is demanded, so we are done
           [(pstring-empty? demand) candidate]
-          ;; In the middle of matching but we have no more input. No match found.
+          ; In the middle of matching but we have no more input. No match found.
           [(pstring-empty? hs) #f]
           [else
             (let-values ([(pc demand-rest) (pstring-uncons-code-unit demand)]
                          [(ic hs-rest) (pstring-uncons-code-unit hs)])
               (if (fx=? pc ic)
-                ;; Found a match for char, advance to next char
+                ; Found a match for char, advance to next char
                 (loop (fx1+ i) (or candidate i) hs-rest demand-rest)
                 (if candidate
-                  ;; No match, rewind demand and start over at the same spot
+                  ; No match, rewind demand and start over at the same spot
                   (loop i #f hs pattern)
                   (loop (fx1+ i) #f hs-rest pattern))))]))))
 
+  ; Finds the index of last occurence of `pattern`.
   (define (pstring-last-index-of bs pattern)
     (if (pstring-empty? pattern)
       (pstring-length bs)
@@ -297,20 +313,20 @@
                  [demand pattern]) ; chars left to be found
         (cond
           [(and (not (pstring-empty? hs)) (pstring-empty? demand))
-           ;; found a match but haystack not consumed, continue searching
+           ; found a match but haystack not consumed, continue searching
            (loop i candidate #f hs pattern)]
-          ;; Nothing is demanded, so we are done
+          ; Nothing is demanded, so we are done
           [(pstring-empty? demand) candidate]
-          ;; In the middle of matching but we have no more input.
+          ; In the middle of matching but we have no more input.
           [(and (pstring-empty? hs) (not (pstring-empty? demand))) last-match-candidate]
           [else
             (let-values ([(pc demand-rest) (pstring-uncons-code-unit demand)]
                          [(ic hs-rest) (pstring-uncons-code-unit hs)])
               (if (fx=? pc ic)
-                ;; Found a match for char, advance to next char
+                ; Found a match for char, advance to next char
                 (loop (fx1+ i) last-match-candidate (or candidate i) hs-rest demand-rest)
                 (if candidate
-                  ;; No match, rewind demand and start over at the same spot
+                  ; No match, rewind demand and start over at the same spot
                   (loop i last-match-candidate #f hs pattern)
                   (loop (fx1+ i) last-match-candidate #f hs-rest pattern))))]))))
 
@@ -330,6 +346,7 @@
   (define (pstring->symbol bs)
     (string->symbol (pstring->string bs)))
 
+  ; Turns a pstring to a flexvector of chars
   (define (pstring->char-flexvector bs)
     (let* ([len (pstring-length bs)]
            [fv (srfi:214:make-flexvector len)])
@@ -340,7 +357,7 @@
             (srfi:214:flexvector-set! fv i c)
             (loop (fx1+ i) tail))))))
 
-  ;; linear-time, returns a list of `char`s
+  ; Turns a pstring to a list of chars
   (define (pstring->list bs)
     (let loop ([rest bs] [ls '()])
       (if (pstring-empty? rest)
@@ -353,6 +370,8 @@
   ; Joining & splitting
   ; 
 
+  ; A linear-time string builder that builds a new pstring from a list
+  ; of pstrings.
   (define (pstring-concat . xs)
     (let* ([len (fold-right (lambda (s a) (fx+ (pstring-length s) a)) 0 xs)]
            [buf (pstring-buffer-alloc len)])
@@ -364,6 +383,7 @@
             (loop (fx+ i slen) (cdr ls)))
           (make-pstring buf 0 len)))))
 
+  ; Create a new pstring by joining a flexvector of pstrings using a separator
   (define (pstring-join-with xs separator)
     (let* ([len (srfi:214:flexvector-fold (lambda (len s) (fx+ len (pstring-length s))) 0 xs)]
            [xs-count (srfi:214:flexvector-length xs)]
@@ -396,6 +416,7 @@
                 (loop (fx1+ i) (fx+ bi len)))))
           (make-pstring bv 0 bv-len)))))
 
+  ; Splits a pstring into a flexvector of pstrings using a pattern
   (define (pstring-split bs pattern)
     (cond
       [(pstring-empty? bs) (srfi:214:flexvector)]
@@ -423,10 +444,12 @@
                 (loop (cdr indices) (fx1+ i) (fx+ index (pstring-length pattern)))))))]))
 
 
-  ;; 
-  ;; Slicing
-  ;;
+  ; 
+  ; Slicing
+  ;
 
+  ; The primitive constant-time slice operation.
+  ; Takes in a` start` index and optionally an `end` index.
   (define pstring-slice
     (case-lambda
       [(bs start)
@@ -448,6 +471,7 @@
   (define (pstring-drop bs n)
     (pstring-slice bs n))
 
+  ; Linear-time `take` on code points.
   (define (pstring-take-code-points bs n)
     (if (fx<? n 1)
       empty-pstring
@@ -466,10 +490,12 @@
       (fx+ (pstring-offset bs) n)
       (fx- (pstring-length bs) n)))
 
+  ; Returns the first char and the rest of the pstring
   (define (pstring-uncons-char bs)
     (let-values ([(head tail) (pstring-uncons-code-unit bs)])
       (values (integer->char head) tail)))
 
+  ; Returns the first code unit scalar and the rest of the pstring
   (define (pstring-uncons-code-unit bs)
     (if (pstring-empty? bs)
       (raise-continuable
@@ -479,6 +505,7 @@
             [tail (pstring-unsafe-drop bs 1)])
         (values w1 tail))))
 
+  ; Returns the first code point scalar and the rest of the pstring
   (define (pstring-uncons-code-point bs)
     (if (pstring-empty? bs)
       (raise-continuable
@@ -487,10 +514,10 @@
              [offset (pstring-offset bs)]
              [w1 (pstring-buffer-ref buf offset)])
         (cond
-          ;; Two-word encoding? Check for high surrogate
+          ; Two-word encoding? Check for high surrogate
           [(and (fx<= #xD800 w1 #xDBFF) (fx>=? (pstring-length bs) 2))
            (let ([w2 (pstring-buffer-ref buf (fx1+ offset))])
-             ;; low surrogate?
+             ; low surrogate?
              (if (fx<= #xDC00 w2 #xDFFF)
                (values
                  (fx+
@@ -499,25 +526,28 @@
                      (fx- w2 #xDC00))
                    #x10000)
                  (pstring-unsafe-drop bs 2))
-               ;; low surrogate not found, just return the high surrogate
+               ; low surrogate not found, just return the high surrogate
                (values w1 (pstring-unsafe-drop bs 1))))]
-          ;; misplaced continuation word?
+          ; misplaced continuation word?
           [(fx<= #xDC00 w1 #xDFFF)
            (values w1 (pstring-unsafe-drop bs 1))]
-          ;; one-word encoding
+          ; one-word encoding
           [else (values w1 (pstring-unsafe-drop bs 1))]))))
 
 
-  ;; 
-  ;; Modifications
-  ;;
+  ; 
+  ; Modifications
+  ;
 
+  ; Slow downcasing that does an extra allocation to a scheme string
   (define (pstring-downcase bs)
     (string->pstring (string-downcase (pstring->string bs))))
 
+  ; Slow upcasing that does an extra allocation to a scheme string
   (define (pstring-upcase bs)
     (string->pstring (string-upcase (pstring->string bs))))
 
+  ; Trim whitespace around the pstring
   (define (pstring-trim bs)
     (define (whitespace? c)
       (or
@@ -550,6 +580,7 @@
                 [prefix (pstring-take rest (fx1- (pstring-length rest)))])
             (if (whitespace? last) (loop prefix) rest))))))
 
+  ; Replace the first occurence of `pattern` with `replacement`
   (define (pstring-replace bs pattern replacement)
     (if (pstring-empty? pattern)
       bs
@@ -584,6 +615,7 @@
                     (go (fx+ start i (pstring-length pattern))))
               '()))))))
 
+  ; Replace all occurences of `pattern` with `replacement`
   (define (pstring-replace-all bs pattern replacement)
     (if (pstring-empty? pattern)
       bs
@@ -604,13 +636,13 @@
                                     bvi
                                     (fx- (pstring-length bs) bsi))
             (let* ([i (car rest)] [before-len (fx- i bsi)])
-              ;; copy stuff before the match
+              ; copy stuff before the match
               (pstring-buffer-copy! (pstring-buffer bs)
                                 (fx+ (pstring-offset bs) bsi)
                                 bv
                                 bvi
                                 before-len)
-              ;; the replacement itself
+              ; the replacement itself
               (pstring-buffer-copy! (pstring-buffer replacement)
                                 (pstring-offset replacement)
                                 bv
@@ -623,19 +655,14 @@
         (make-pstring bv 0 len))))
 
 
-  ;;
-  ;; Low level bytevector utils
-  ;;
-
-
-
-  ;; 
-  ;; Regex
-  ;;
+  ; 
+  ; Regex
+  ;
 
   (define-structure
     (regex code match-data source flags))
 
+  ; Replace match(es) using the replacement returned by calling `f` with the match.
   (define (pstring-regex-replace-by regex subject f)
     (if (regex-has-flag regex PCRE2_SUBSTITUTE_GLOBAL)
       (pstring-regex-replace-all regex subject f)
@@ -643,6 +670,7 @@
 
   (define identity (lambda (x) x))
 
+  ; Replace all matches using the replacement returned by calling `f` with the match.
   (define (pstring-regex-replace-all regex bs f)
     (let*-values ([(delta all-matches)
                     (let match-next ([sub-bs bs] [delta 0] [all-matches-reverse '()])
@@ -677,9 +705,9 @@
                  [replacement (cdr (car rest))]
                  [i (pstring-offset match)]
                  [before-len (fx- i bsi)])
-            ;; copy stuff before the match
+            ; copy stuff before the match
             (pstring-buffer-copy! (pstring-buffer bs) bsi bv bvi before-len)
-            ;; the replacement itself
+            ; the replacement itself
             (pstring-buffer-copy!
               (pstring-buffer replacement)
               (pstring-offset replacement)
@@ -693,6 +721,7 @@
 
           (make-pstring bv 0 len)))
 
+  ; Replace the first match using the replacement returned by calling `f` with the match.
   (define (pstring-regex-replace-single regex bs f)
     (let ([matches (pstring-regex-match regex bs identity #f)])
       (if (and matches (fx>? (srfi:214:flexvector-length matches) 0))
@@ -703,14 +732,14 @@
                [len (fx+ (pstring-length bs) delta)]
                [buf (pstring-buffer-alloc len)])
           (let* ([before-len (fx- (pstring-offset match) (pstring-offset bs))])
-            ;; copy stuff before the match
+            ; copy stuff before the match
             (pstring-buffer-copy!
               (pstring-buffer bs)
               (pstring-offset bs)
               buf
               0
               before-len)
-            ;; the replacement itself
+            ; the replacement itself
             (pstring-buffer-copy!
               (pstring-buffer replacement)
               (pstring-offset replacement)
@@ -728,6 +757,7 @@
             (make-pstring buf 0 len)))
         bs)))
 
+  ; Replace a match with `replacement`
   (define (pstring-regex-replace regex subject replacement)
     (let* ([match-data (pcre2_match_data_create_from_pattern_16 (regex-code regex) 0)]
            [buf-len (make-ftype-pointer size_t (foreign-alloc (foreign-sizeof 'size_t)))]
@@ -772,6 +802,7 @@
       (foreign-free (ftype-pointer-address buf-len))
       (make-pstring buf 0 (fx1- len))))
 
+  ; Compiles a regex pattern to a regex.
   (define pstring-make-regex
     (case-lambda
       [(bs) (pstring-make-regex bs '())]
@@ -797,6 +828,8 @@
                            (pcre2_code_free_16 (regex-code r))
                            (pcre2_match_data_free_16 (regex-match-data r)))))))]))
 
+  ; Performs a regex match and then calls `on-match` for a successful match
+  ; and `nomatch` for a non-match.
   (define (pstring-regex-match regex subject on-match nomatch)
     (let* ([match-data (regex-match-data regex)]
            [rc (pcre2_match_16
@@ -829,6 +862,7 @@
                     (recur (fx1+ i)))))
               out))))))
 
+  ; Finds the index of the first match using a regex
   (define (pstring-regex-search regex subject)
     (let* ([match-data (pcre2_match_data_create_from_pattern_16 (regex-code regex) 0)]
            [rc (pcre2_match_16
@@ -846,9 +880,9 @@
           match-index))))
 
 
-  ;;
-  ;; Regex flags
-  ;; 
+  ;
+  ; Regex flags
+  ; 
 
   (define (flags->options flags)
     (define (flag->bitmask flag)
@@ -866,10 +900,14 @@
       DEFAULT_FLAGS
       flags))
 
-  ;;
-  ;; PCRE bindings
-  ;;
+  ;
+  ; PCRE bindings
+  ;
 
+  ; The used PCRE flags.
+  ; 
+  ; See full list of flags here:
+  ; <https://github.com/PCRE2Project/pcre2/blob/7b649dce27f1adf67c4d266f3a051941dcf38cb3/src/pcre2.h.in>
   (define PCRE2_ALT_BSUX #x00000002)
   (define PCRE2_EXTRA_ALT_BSUX #x00000020)
   (define PCRE2_SUBSTITUTE_GLOBAL #x00000100)
