@@ -11,6 +11,7 @@
           pstring>?
           pstring?
           pstring->char-flexvector
+          pstring->code-point-flexvector
           pstring-concat
           pstring-downcase
           pstring-drop
@@ -364,6 +365,22 @@
         (reverse ls)
         (let-values ([(head tail) (pstring-uncons-code-point rest)])
           (loop tail (cons (integer->char head) ls))))))
+
+  ; Turns a pstring to a flexvector of chars
+  (define (pstring->code-point-flexvector str)
+    (define (reverse-list->flexvector xs len)
+      (let ([fv (srfi:214:make-flexvector len)])
+        (let loop ([rest xs] [i (fx1- len)])
+          (when (not (null? rest))
+            (srfi:214:flexvector-set! fv i (car rest))
+            (loop (cdr rest) (fx1- i))))
+        fv))
+
+    (let loop ([rest str] [ls '()] [len 0])
+      (if (pstring-empty? rest)
+        (reverse-list->flexvector ls len)
+        (let-values ([(head tail) (pstring-uncons-code-point rest)])
+          (loop tail (cons head ls) (fx1+ len))))))
 
 
   ;

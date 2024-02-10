@@ -162,6 +162,15 @@
                 (pstring->char-flexvector (lit "foo"))
                 (srfi:214:flexvector #\f #\o #\o)))
 
+      (assert (srfi:214:flexvector=?
+                equal?
+                (pstring->code-point-flexvector (lit ""))
+                (srfi:214:flexvector)))
+      (assert (srfi:214:flexvector=?
+                equal?
+                (pstring->code-point-flexvector (lit "b 𝐀𝐀"))
+                (srfi:214:flexvector #x62 #x20 #x1D400 #x1D400)))
+
       (assert (pstring=? (replace "" "bar" "foo") (lit "")))
       (assert (pstring=? (replace "foo" "foo" "bar") (lit "bar")))
       (assert (pstring=? (replace "foo" "" "bar") (lit "foo")))
