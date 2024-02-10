@@ -1,58 +1,51 @@
 #!chezscheme
 (library (purs runtime pstring)
-  (export pstring-ref
-          pstring-length
-          pstring-uncons-char
-          pstring-uncons-code-point
-          (rename (make-pstring-of-length make-pstring))
+  (export char-flexvector->pstring
+          code-points->pstring
+          number->pstring
           pstring
-          pstring-empty?
-          pstring?
-          pstring=?
-          pstring<?
-          pstring>?
           pstring<=?
+          pstring<?
+          pstring=?
           pstring>=?
-
-          pstring-singleton
-
-          pstring-slice
-          pstring-trim
-          pstring-take
-          pstring-drop
+          pstring>?
+          pstring?
+          pstring->char-flexvector
+          pstring-concat
           pstring-downcase
-          pstring-upcase
+          pstring-drop
+          pstring-empty?
+          pstring-index-of
+          pstring-join-with
+          pstring-last-index-of
+          pstring-length
+          pstring-length-code-points
+          pstring->list
+          pstring-make-regex
+          pstring->number
+          pstring-ref
+          pstring-ref-code-point
+          pstring-regex-match
+          pstring-regex-replace
+          pstring-regex-replace-by
+          pstring-regex-search
           pstring-replace
           pstring-replace-all
-
-          pstring-index-of
-          pstring-last-index-of
-          pstring-ref-code-point
-
-          pstring->string
-          code-points->pstring
-          pstring->number
-          number->pstring
-          pstring->symbol
-          string->pstring
-          char-flexvector->pstring
-          pstring->char-flexvector
-          pstring->list
-
-          pstring-join-with
-          pstring-concat
+          pstring-singleton
+          pstring-slice
           pstring-split
-
-          pstring-length-code-points
+          pstring->string
+          pstring->symbol
+          pstring-take
           pstring-take-code-points
-
-          pstring-make-regex
-          regex-source
+          pstring-trim
+          pstring-uncons-char
+          pstring-uncons-code-point
+          pstring-upcase
           regex-flags
-          pstring-regex-match
-          pstring-regex-search
-          pstring-regex-replace
-          pstring-regex-replace-by)
+          regex-source
+          (rename (make-pstring-of-length make-pstring))
+          string->pstring)
   (import (chezscheme)
           (prefix (purs runtime srfi :214) srfi:214:)
           (only (purs runtime finalizers) finalizer)
