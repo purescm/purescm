@@ -719,7 +719,7 @@
             bvi
             (fx- (pstring-length str) (fx- stri (pstring-offset str))))
           (let* ([match (caar rest)]
-                 [replacement (cdr (car rest))]
+                 [replacement (cdar rest)]
                  [i (pstring-offset match)]
                  [before-len (fx- i stri)])
             ; copy stuff before the match
