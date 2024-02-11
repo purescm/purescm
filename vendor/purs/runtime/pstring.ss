@@ -788,19 +788,19 @@
            ; and using PCRE2_SUBSTITUTE_OVERFLOW_LENGTH
            [_ (ftype-set! size_t () buf-len 0 0)]
            [res (pcre2_substitute_16
-                (regex-code regex)
-                subject-addr
-                subject-len
-                start-offset
-                (fxlogor (fxlogand (regex-flags regex) PCRE2_SUBSTITUTE_GLOBAL)
-                         PCRE2_SUBSTITUTE_OVERFLOW_LENGTH)
-                match-data
-                match-context
-                replacement-addr
-                replacement-len
-                ; basically a null pointer
-                (make-ftype-pointer unsigned-16 0)
-                (ftype-&ref size_t () buf-len))]
+                  (regex-code regex)
+                  subject-addr
+                  subject-len
+                  start-offset
+                  (fxlogor (fxlogand (regex-flags regex) PCRE2_SUBSTITUTE_GLOBAL)
+                           PCRE2_SUBSTITUTE_OVERFLOW_LENGTH)
+                  match-data
+                  match-context
+                  replacement-addr
+                  replacement-len
+                  ; basically a null pointer
+                  (make-ftype-pointer unsigned-16 0)
+                  (ftype-&ref size_t () buf-len))]
            [len (ftype-ref size_t () buf-len 0)]
            ; NOTE we allocate space for the trailing NULL code unit,
            ; but this should be fine because `pstring` has it's own `length`
@@ -808,17 +808,17 @@
            [buf (pstring-buffer-alloc (ftype-ref size_t () buf-len 0))]
            ; now do the actual substitution
            [res2 (pcre2_substitute_16
-                (regex-code regex)
-                subject-addr
-                subject-len
-                start-offset
-                (fxlogand (regex-flags regex) PCRE2_SUBSTITUTE_GLOBAL)
-                match-data
-                match-context
-                replacement-addr
-                replacement-len
-                (pstring-buffer-&ref buf 0)
-                (ftype-&ref size_t () buf-len))])
+                   (regex-code regex)
+                   subject-addr
+                   subject-len
+                   start-offset
+                   (fxlogand (regex-flags regex) PCRE2_SUBSTITUTE_GLOBAL)
+                   match-data
+                   match-context
+                   replacement-addr
+                   replacement-len
+                   (pstring-buffer-&ref buf 0)
+                   (ftype-&ref size_t () buf-len))])
       (foreign-free (ftype-pointer-address buf-len))
       ; Subtract NULL code unit from length
       (make-pstring buf 0 (fx1- len))))
