@@ -11,11 +11,11 @@ import Data.Array.NonEmpty as NonEmptyArray
 import Data.Bifunctor (lmap)
 import Data.Compactable (separate)
 import Data.Either (Either(..))
-import Data.Foldable (foldl, for_)
+import Data.Foldable (foldl, for_, notElem)
 import Data.Lazy as Lazy
 import Data.List (List)
 import Data.Map as Map
-import Data.Maybe (Maybe, fromMaybe, maybe)
+import Data.Maybe (Maybe(..), fromMaybe, maybe)
 import Data.Set as Set
 import Data.Set.NonEmpty as NonEmptySet
 import Data.Traversable (traverse)
@@ -30,7 +30,7 @@ import Node.Path (FilePath)
 import Node.Process as Process
 import PureScript.Backend.Optimizer.Builder (BuildEnv, buildModules)
 import PureScript.Backend.Optimizer.Convert (BackendModule, OptimizationSteps)
-import PureScript.Backend.Optimizer.CoreFn (Ann, Module, ModuleName(..))
+import PureScript.Backend.Optimizer.CoreFn (Ann, Module, ModuleName(..), Qualified(..))
 import PureScript.Backend.Optimizer.CoreFn.Json (decodeModule)
 import PureScript.Backend.Optimizer.CoreFn.Sort (emptyPull, pullResult, resumePull, sortModules)
 import PureScript.Backend.Optimizer.Directives (parseDirectiveFile)
@@ -58,7 +58,12 @@ basicBuildMain options = do
         options.externalDirectivesFile
       coreFnModules # buildModules
         { directives: Map.union externalDirectives (parseDirectiveFile defaultDirectives).directives
-        , foreignSemantics: coreForeignSemantics
+        , foreignSemantics: coreForeignSemantics # Map.filterKeys \(Qualified mod _) -> mod
+            `notElem`
+              -- Filter out the PrimEffect
+              [ Just (ModuleName "Effect.Ref")
+              , Just (ModuleName "Control.Monad.ST.Internal")
+              ]
         , onCodegenModule: options.onCodegenModule
         , onPrepareModule: options.onPrepareModule
         , traceIdents: Set.empty

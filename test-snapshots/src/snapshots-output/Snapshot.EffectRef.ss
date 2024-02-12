@@ -16,50 +16,51 @@
     (prefix (Data.Show lib) Data.Show.)
     (prefix (Data.Unit lib) Data.Unit.)
     (prefix (Effect.Console lib) Effect.Console.)
+    (prefix (Effect.Ref lib) Effect.Ref.)
     (prefix (Test.Assert lib) Test.Assert.))
 
   (scm:define primEffectAtTheEnd
-    (scm:lambda ()
-      (scm:let ([n0 (scm:box 1)])
-        (scm:unbox n0))))
+    (scm:let ([_0 (Effect.Ref._new 1)])
+      (scm:lambda ()
+        (scm:let ([n1 (_0)])
+          ((Effect.Ref.read n1))))))
 
   (scm:define positionZero
-    (scm:lambda ()
-      (scm:box 0)))
+    (Effect.Ref._new 0))
 
   (scm:define onLet
     (scm:lambda (x0)
-      (scm:let*
-        ([a1 (scm:fx+ x0 x0)]
-         [_2 (scm:fx+ (scm:fx+ a1 a1) x0)])
-          (scm:lambda ()
-            (scm:box _2)))))
+      (scm:let ([a1 (scm:fx+ x0 x0)])
+        (Effect.Ref._new (scm:fx+ (scm:fx+ a1 a1) x0)))))
 
   (scm:define onLetTest
     (scm:let ([_0 (onLet 1)])
       (scm:lambda ()
         (scm:let*
           ([n1 (_0)]
-           [v2 (scm:unbox n1)])
+           [v2 ((Effect.Ref.read n1))])
             ((Test.Assert.assert (scm:fx=? v2 5)))))))
 
   (scm:define newCase
-    (scm:lambda ()
-      (scm:let*
-        ([counter0 (scm:box 0)]
-         [_1 (scm:unbox counter0)]
-         [newCounter2 (scm:begin (scm:set-box! counter0 (scm:fx+ _1 1)) (scm:unbox counter0))]
-         [_ ((Effect.Console.log (scm:string-append "New counter is " (Data.Show.showIntImpl newCounter2))))])
-          ((Test.Assert.assert (scm:fx=? newCounter2 1))))))
+    (scm:let ([_0 (Effect.Ref._new 0)])
+      (scm:lambda ()
+        (scm:let*
+          ([counter1 (_0)]
+           [newCounter2 (((Effect.Ref.modifyImpl (scm:lambda (s2)
+            (scm:let ([s$p3 (scm:fx+ s2 1)])
+              (scm:list (scm:cons (scm:string->symbol "state") s$p3) (scm:cons (scm:string->symbol "value") s$p3))))) counter1))]
+           [_ ((Effect.Console.log (scm:string-append "New counter is " (Data.Show.showIntImpl newCounter2))))])
+            ((Test.Assert.assert (scm:fx=? newCounter2 1)))))))
 
   (scm:define basicTest
-    (scm:lambda ()
-      (scm:let*
-        ([n0 (scm:box 0)]
-         [_1 (scm:unbox n0)]
-         [a$p2 (scm:begin (scm:set-box! n0 (scm:fx+ _1 1)) (scm:unbox n0))]
-         [v3 (scm:unbox n0)])
-          ((Test.Assert.assert (scm:fx=? v3 1))))))
+    (scm:let ([_0 (Effect.Ref._new 0)])
+      (scm:lambda ()
+        (scm:let*
+          ([n1 (_0)]
+           [_ (((Effect.Ref.modify_ (scm:lambda (v2)
+            (scm:fx+ v2 1))) n1))]
+           [v3 ((Effect.Ref.read n1))])
+            ((Test.Assert.assert (scm:fx=? v3 1)))))))
 
   (scm:define main
     (scm:lambda ()
