@@ -388,6 +388,11 @@
                 (pstring-regex-split (pstring-make-regex (lit "[,.]")) (lit "a,b,c.de"))
                 (srfi:214:flexvector (lit "a") (lit "b") (lit "c") (lit "de"))))
 
+      (assert (srfi:214:flexvector=?
+                pstring=?
+                (pstring-regex-split (pstring-make-regex (lit "🍔")) (lit "𝕒🍔𝕓🍔𝕔🍔de"))
+                (srfi:214:flexvector (lit "𝕒") (lit "𝕓") (lit "𝕔") (lit "de"))))
+
       (display "All good!\n")
       ))
   )
