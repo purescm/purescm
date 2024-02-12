@@ -30,6 +30,7 @@
           pstring-regex-replace
           pstring-regex-replace-by
           pstring-regex-search
+          pstring-regex-split
           pstring-replace
           pstring-replace-all
           pstring-singleton
@@ -823,6 +824,40 @@
       ; Subtract NULL code unit from length
       (make-pstring buf 0 (fx1- len))))
 
+  (define (pstring-regex-split regex str)
+    (cond
+      [(pstring=? (regex-source regex) empty-pstring)
+        (srfi:214:flexvector-map pstring-singleton (pstring->char-flexvector str))]
+      [else
+        (let* ([all-matches
+                (let match-next ([sub-str str] [all-matches-reverse '()])
+                  (let ([matches (pstring-regex-match regex sub-str identity #f)])
+                    (if (and matches (fx>? (srfi:214:flexvector-length matches) 0))
+                      (let* ([match (srfi:214:flexvector-ref matches 0)])
+                        (match-next
+                          ; Should slice be used here?
+                          (make-pstring
+                            (pstring-buffer sub-str)
+                            (fx+ (pstring-offset match) (pstring-length match))
+                            (fx- (pstring-length sub-str)
+                                 (fx- (fx+ (pstring-offset match) (pstring-length match))
+                                      (pstring-offset sub-str))))
+                          (cons match all-matches-reverse)))
+                      (reverse all-matches-reverse))))])
+          (let* ([match-count (length all-matches)]
+                 [fv (srfi:214:make-flexvector (fx1+ match-count))])
+            (let loop ([stri (pstring-offset str)] [rest all-matches] [match-idx 0])
+              (if (null? rest)
+                ; copy rest of the string as the last element
+                (begin
+                  (srfi:214:flexvector-set! fv match-idx (pstring-drop str (fx- stri (pstring-offset str))))
+                  fv)
+                (let* ([prefix-len (fx- (pstring-offset (car rest)) stri)]
+                       [start-idx (fx- stri (pstring-offset str))]
+                       [end-idx (fx+ start-idx prefix-len)])
+                  (srfi:214:flexvector-set! fv match-idx (pstring-slice str start-idx end-idx))
+                  (loop (fx+ stri prefix-len (pstring-length (car rest))) (cdr rest) (fx1+ match-idx)))))))]))
+
   ; Compiles a regex pattern to a regex.
   (define pstring-make-regex
     (case-lambda
@@ -844,7 +879,7 @@
             #f
             (begin
               (pcre2_jit_compile_16 code PCRE2_JIT_COMPLETE)
-              (finalizer (make-regex code (pcre2_match_data_create_from_pattern_16 code 0) (pstring) options)
+              (finalizer (make-regex code (pcre2_match_data_create_from_pattern_16 code 0) str options)
                          (lambda (r)
                            (pcre2_code_free_16 (regex-code r))
                            (pcre2_match_data_free_16 (regex-match-data r)))))))]))

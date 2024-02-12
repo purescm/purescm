@@ -356,6 +356,38 @@
                   (lit "abc"))
                 2))
 
+      ; regex-split
+
+      (assert (srfi:214:flexvector=?
+                pstring=?
+                (pstring-regex-split (pstring-make-regex (lit "")) (lit ""))
+                (srfi:214:flexvector)))
+
+      (assert (srfi:214:flexvector=?
+                pstring=?
+                (pstring-regex-split (pstring-make-regex (lit "")) (lit "abc"))
+                (srfi:214:flexvector (lit "a") (lit "b") (lit "c"))))
+
+      (assert (srfi:214:flexvector=?
+                pstring=?
+                (pstring-regex-split (pstring-make-regex (lit ",")) (lit ""))
+                (srfi:214:flexvector (lit ""))))
+
+      (assert (srfi:214:flexvector=?
+                pstring=?
+                (pstring-regex-split (pstring-make-regex (lit ",")) (lit "a,b,"))
+                (srfi:214:flexvector (lit "a") (lit "b") (lit ""))))
+
+      (assert (srfi:214:flexvector=?
+                pstring=?
+                (pstring-regex-split (pstring-make-regex (lit ",")) (lit "a,b,c"))
+                (srfi:214:flexvector (lit "a") (lit "b") (lit "c"))))
+
+      (assert (srfi:214:flexvector=?
+                pstring=?
+                (pstring-regex-split (pstring-make-regex (lit "[,.]")) (lit "a,b,c.de"))
+                (srfi:214:flexvector (lit "a") (lit "b") (lit "c") (lit "de"))))
+
       (display "All good!\n")
       ))
   )
