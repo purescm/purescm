@@ -28,7 +28,7 @@ import PureScript.Backend.Chez.Syntax as S
 import PureScript.Backend.Optimizer.Convert (BackendModule, BackendBindingGroup)
 import PureScript.Backend.Optimizer.CoreFn (Ident(..), Literal(..), ModuleName(..), Qualified(..))
 import PureScript.Backend.Optimizer.Semantics (NeutralExpr)
-import PureScript.Backend.Optimizer.Syntax (BackendAccessor(..), BackendEffect(..), BackendOperator(..), BackendOperator1(..), BackendOperator2(..), BackendOperatorNum(..), BackendOperatorOrd(..), BackendSyntax(..), Level(..), Pair(..))
+import PureScript.Backend.Optimizer.Syntax (BackendAccessor(..), BackendOperator(..), BackendOperator1(..), BackendOperator2(..), BackendOperatorNum(..), BackendOperatorOrd(..), BackendSyntax(..), Level(..), Pair(..))
 import Safe.Coerce (coerce)
 
 type CodegenEnv =
@@ -344,8 +344,6 @@ codegenChain chainMode codegenEnv = collect []
   -- `expression` has type `Effect ..`, so we can confidently unthunk here
   codegenEffectBind :: NeutralExpr -> ChezExpr
   codegenEffectBind expression = case unwrap expression of
-    PrimEffect e' ->
-      codegenPrimEffect codegenEnv e'
     UncurriedEffectApp f p ->
       S.runUncurriedFn (codegenExpr codegenEnv f) (codegenExpr codegenEnv <$> p)
     _ ->
@@ -366,8 +364,6 @@ codegenChain chainMode codegenEnv = collect []
       collect (Array.snoc bindings $ Tuple (toChezIdent i l) (codegenExpr codegenEnv v)) e'
     EffectPure e' | chainMode.effect ->
       finish false bindings (codegenExpr codegenEnv e')
-    PrimEffect e' | chainMode.effect ->
-      finish false bindings (codegenPrimEffect codegenEnv e')
     EffectBind i l v e' | chainMode.effect ->
       collect
         (Array.snoc bindings $ Tuple (toChezIdent i l) (codegenEffectBind v))
@@ -503,20 +499,3 @@ codegenPrimOp codegenEnv@{ currentModule } = case _ of
                 OpLt -> comparisonExpression "<?"
                 OpLte -> comparisonExpression "<=?"
           makeStringComparison o'
-
-codegenPrimEffect :: CodegenEnv -> BackendEffect NeutralExpr -> ChezExpr
-codegenPrimEffect codegenEnv = case _ of
-  EffectRefNew v ->
-    S.app (S.Identifier $ scmPrefixed "box") (codegenExpr codegenEnv v)
-  EffectRefRead r ->
-    S.app (S.Identifier $ scmPrefixed "unbox") (codegenExpr codegenEnv r)
-  EffectRefWrite r v ->
-    S.List
-      [ S.Identifier $ scmPrefixed "begin"
-      , S.List
-          [ S.Identifier $ scmPrefixed "set-box!"
-          , codegenExpr codegenEnv r
-          , codegenExpr codegenEnv v
-          ]
-      , S.List [ S.Identifier $ scmPrefixed "unbox", codegenExpr codegenEnv r ]
-      ]

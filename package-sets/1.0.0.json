@@ -110,7 +110,7 @@
     },
     "refs": {
       "git": "https://github.com/purescm/purescript-core.git",
-      "ref": "44f2a0d6f3f5d8e36577540dd0eed85abc89b2b8",
+      "ref": "993758300e3f613da792b498120bd51aaa11544f",
       "subdir": "refs",
       "dependencies": [
         "effect",
