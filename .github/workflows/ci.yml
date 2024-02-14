@@ -8,9 +8,18 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+          - os: macos-latest
     steps:
       - uses: actions/checkout@v2
+
+      - name: Install current Bash on macOS
+        if: runner.os == 'macOS'
+        run: brew install bash
 
       - name: Cache PureScript dependencies
         uses: actions/cache@v2
@@ -30,12 +39,12 @@ jobs:
 
       - name: Build the project
         run: |
-          nix-shell --command "spago build"
+          nix-shell --run "spago build"
 
       - name: Run tests
         run: |
-          nix-shell --command "spago test"
+          nix-shell --run "spago test"
 
       - name: Check Formatting
         run: |
-          nix-shell --command "purs-tidy check src test"
+          nix-shell --run "purs-tidy check src test"

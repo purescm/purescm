@@ -28,7 +28,7 @@ import PureScript.Backend.Chez.Syntax as S
 import PureScript.Backend.Optimizer.Convert (BackendModule, BackendBindingGroup)
 import PureScript.Backend.Optimizer.CoreFn (Ident(..), Literal(..), ModuleName(..), Qualified(..))
 import PureScript.Backend.Optimizer.Semantics (NeutralExpr)
-import PureScript.Backend.Optimizer.Syntax (BackendAccessor(..), BackendEffect(..), BackendOperator(..), BackendOperator1(..), BackendOperator2(..), BackendOperatorNum(..), BackendOperatorOrd(..), BackendSyntax(..), Level(..), Pair(..))
+import PureScript.Backend.Optimizer.Syntax (BackendAccessor(..), BackendOperator(..), BackendOperator1(..), BackendOperator2(..), BackendOperatorNum(..), BackendOperatorOrd(..), BackendSyntax(..), Level(..), Pair(..))
 import Safe.Coerce (coerce)
 
 type CodegenEnv =
@@ -258,7 +258,10 @@ codegenLiteral :: CodegenEnv -> Literal NeutralExpr -> ChezExpr
 codegenLiteral codegenEnv = case _ of
   LitInt i -> S.Integer $ wrap $ show i
   LitNumber n -> S.Float $ wrap $ codegenFloat n
-  LitString s -> S.StringExpr $ jsonToChezString $ Json.stringify $ Json.fromString s
+  LitString s -> S.List
+    [ S.Identifier $ rtPrefixed "string->pstring"
+    , S.StringExpr $ jsonToChezString $ Json.stringify $ Json.fromString s
+    ]
   LitChar c -> codegenChar c
   LitBoolean b -> S.Identifier $ if b then "#t" else "#f"
   LitArray a -> S.vector $ codegenExpr codegenEnv <$> a
@@ -424,6 +427,7 @@ codegenPrimOp codegenEnv@{ currentModule } = case _ of
           OpGte -> comparisonExpression ">=?"
           OpLt -> comparisonExpression "<?"
           OpLte -> comparisonExpression "<=?"
+
     in
       case o of
         OpArrayIndex ->
@@ -478,6 +482,20 @@ codegenPrimOp codegenEnv@{ currentModule } = case _ of
         OpNumberOrd o' ->
           makeComparison "fl" o'
         OpStringAppend ->
-          S.List [ S.Identifier $ scmPrefixed "string-append", x', y' ]
-        OpStringOrd o' ->
-          makeComparison "string" o'
+          S.List [ S.Identifier $ rtPrefixed "pstring-concat", x', y' ]
+        OpStringOrd o' -> do
+          let
+            makeStringComparison :: BackendOperatorOrd -> ChezExpr
+            makeStringComparison = do
+              let
+                comparisonExpression :: String -> ChezExpr
+                comparisonExpression opName =
+                  S.List [ S.Identifier $ Array.fold [ rtPrefixed "pstring", opName ], x', y' ]
+              case _ of
+                OpEq -> comparisonExpression "=?"
+                OpNotEq -> S.List [ S.Identifier $ scmPrefixed "not", comparisonExpression "=?" ]
+                OpGt -> comparisonExpression ">?"
+                OpGte -> comparisonExpression ">=?"
+                OpLt -> comparisonExpression "<?"
+                OpLte -> comparisonExpression "<=?"
+          makeStringComparison o'

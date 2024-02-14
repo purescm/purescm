@@ -14,9 +14,23 @@
     boolean<?
     boolean<=?
     boolean>=?
-    boolean>?)
+    boolean>?
+    string->pstring
+    pstring-concat
+    pstring=?
+    pstring>?
+    pstring>=?
+    pstring<?
+    pstring<=?)
   (import
     (chezscheme)
+    (only (purs runtime pstring) string->pstring
+                                    pstring-concat
+                                    pstring=?
+                                    pstring>?
+                                    pstring>=?
+                                    pstring<?
+                                    pstring<=?)
     (prefix (purs runtime srfi :214) srfi:214:))
 
   ;

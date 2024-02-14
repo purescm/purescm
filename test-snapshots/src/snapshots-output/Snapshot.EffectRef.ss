@@ -49,7 +49,7 @@
            [newCounter2 (((Effect.Ref.modifyImpl (scm:lambda (s2)
             (scm:let ([s$p3 (scm:fx+ s2 1)])
               (scm:list (scm:cons (scm:string->symbol "state") s$p3) (scm:cons (scm:string->symbol "value") s$p3))))) counter1))]
-           [_ ((Effect.Console.log (scm:string-append "New counter is " (Data.Show.showIntImpl newCounter2))))])
+           [_ ((Effect.Console.log (rt:pstring-concat (rt:string->pstring "New counter is ") (Data.Show.showIntImpl newCounter2))))])
             ((Test.Assert.assert (scm:fx=? newCounter2 1)))))))
 
   (scm:define basicTest

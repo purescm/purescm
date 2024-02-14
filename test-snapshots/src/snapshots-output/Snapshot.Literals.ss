@@ -18,10 +18,10 @@
     (prefix (purs runtime) rt:))
 
   (scm:define string
-    "string")
+    (rt:string->pstring "string"))
 
   (scm:define record2
-    (scm:list (scm:cons (scm:string->symbol "foo") "bar")))
+    (scm:list (scm:cons (scm:string->symbol "foo") (rt:string->pstring "bar"))))
 
   (scm:define record
     (scm:list))
