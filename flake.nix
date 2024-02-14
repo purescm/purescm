@@ -33,7 +33,10 @@
       devShells = forAllSystems (system:
         let pkgs = nixpkgsFor.${system};
             chez = pkgs.chez-racket.overrideAttrs (final: prev: {
-              postFixup = ''
+              postFixup = if pkgs.stdenv.isDarwin then ''
+                install_name_tool -add_rpath ${pkgs.pcre2.out}/lib $out/bin/scheme
+              ''
+              else ''
                 patchelf $out/bin/scheme --add-rpath ${pkgs.pcre2.out}/lib
               '';
             });
