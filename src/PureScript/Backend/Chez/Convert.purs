@@ -341,8 +341,6 @@ codegenChain chainMode codegenEnv = collect []
   -- `expression` has type `Effect ..`, so we can confidently unthunk here
   codegenEffectBind :: NeutralExpr -> ChezExpr
   codegenEffectBind expression = case unwrap expression of
-    PrimEffect e' ->
-      codegenPrimEffect codegenEnv e'
     UncurriedEffectApp f p ->
       S.runUncurriedFn (codegenExpr codegenEnv f) (codegenExpr codegenEnv <$> p)
     _ ->
@@ -363,8 +361,6 @@ codegenChain chainMode codegenEnv = collect []
       collect (Array.snoc bindings $ Tuple (toChezIdent i l) (codegenExpr codegenEnv v)) e'
     EffectPure e' | chainMode.effect ->
       finish false bindings (codegenExpr codegenEnv e')
-    PrimEffect e' | chainMode.effect ->
-      finish false bindings (codegenPrimEffect codegenEnv e')
     EffectBind i l v e' | chainMode.effect ->
       collect
         (Array.snoc bindings $ Tuple (toChezIdent i l) (codegenEffectBind v))
@@ -485,20 +481,3 @@ codegenPrimOp codegenEnv@{ currentModule } = case _ of
           S.List [ S.Identifier $ scmPrefixed "string-append", x', y' ]
         OpStringOrd o' ->
           makeComparison "string" o'
-
-codegenPrimEffect :: CodegenEnv -> BackendEffect NeutralExpr -> ChezExpr
-codegenPrimEffect codegenEnv = case _ of
-  EffectRefNew v ->
-    S.app (S.Identifier $ scmPrefixed "box") (codegenExpr codegenEnv v)
-  EffectRefRead r ->
-    S.app (S.Identifier $ scmPrefixed "unbox") (codegenExpr codegenEnv r)
-  EffectRefWrite r v ->
-    S.List
-      [ S.Identifier $ scmPrefixed "begin"
-      , S.List
-          [ S.Identifier $ scmPrefixed "set-box!"
-          , codegenExpr codegenEnv r
-          , codegenExpr codegenEnv v
-          ]
-      , S.List [ S.Identifier $ scmPrefixed "unbox", codegenExpr codegenEnv r ]
-      ]
