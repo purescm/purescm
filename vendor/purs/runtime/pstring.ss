@@ -982,8 +982,13 @@
     (fx>? (fxlogand (regex-flags regex) flag) 0))
 
   (define pcre-init
-    (begin
-      (load-shared-object "libpcre2-16.so")))
+    (case (machine-type)
+      ; Not tested at all with Windows
+      ; [(i3nt ti3nt a6nt ta6nt) (load-shared-object "libpcre2-16.dll")]
+      [(i3osx ti3osx a6osx ta6osx arm64osx tarm64osx) (load-shared-object "libpcre2-16.dylib")]
+      [(i3le ti3le a6le ta6le arm64le tarm64le) (load-shared-object "libpcre2-16.so")]
+      [else (error "purescm"
+                   (format "Failed to load libpcre2: machine-type ~s not supported." (machine-type)))]))
 
   (define pcre2_compile_16
     (foreign-procedure "pcre2_compile_16" ((* unsigned-16) size_t unsigned-32 uptr uptr uptr)
