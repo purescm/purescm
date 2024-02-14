@@ -2,8 +2,9 @@
   description = "Chez Scheme backend for PureScript";
 
   inputs = {
-    # see flake.lock for pinned versions
-    nixpkgs.url = "github:nixos/nixpkgs/release-23.11";
+    # we are stuck on 23.05 because clang is broken on macos-x86 until macos 15:
+    # https://github.com/NixOS/nixpkgs/issues/234710
+    nixpkgs.url = "github:nixos/nixpkgs/release-23.05";
 
     flake-compat = {
       url = "github:edolstra/flake-compat";
