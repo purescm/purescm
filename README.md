@@ -2,11 +2,16 @@
 
 ## Installation
 
+Install requisites:
+
+* [`chezscheme`](https://cisco.github.io/ChezScheme/) - you should have the `scheme` command available in your `$PATH`.
+* [`libpcre2`](https://pcre2project.github.io/pcre2/) - `purescm` has a runtime dependency on the 16-bit variant of pcre2. Check your package manager for `pcre2` or `pcre2-16` or similar.
+
+You can install purescm with npm:
+
 ```
 npm i --global purescm@next
 ```
-
-You also need to install `chezscheme` and have the `scheme` or `chez` binary available in your `$PATH`.
 
 ## Usage
 
