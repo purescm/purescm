@@ -204,10 +204,6 @@ runBundle cliRoot args = do
       , "(import (chezscheme)"
       , "        (only (purs runtime finalizers) run-finalizers)"
       , "        (only (" <> args.moduleName <> " lib) main))"
-      , "(base-exception-handler (lambda (e)"
-      , "  (display-condition e (console-error-port))"
-      , "  (newline (console-error-port))"
-      , "  (exit -1)))"
       , "(collect-request-handler (lambda () (collect) (run-finalizers)))"
       , "(main)"
       ]
@@ -220,13 +216,16 @@ runBundle cliRoot args = do
     arguments = [ "-q", "--libdirs", libDirs ]
   res <- evalScheme arguments $ Array.fold
     [ "(top-level-program (import (chezscheme))"
-    , "  (compile-profile #f)"
-    , "  (optimize-level 3)"
-    , "  (compile-file-message #f)"
-    , "  (compile-imported-libraries #t)"
-    , "  (generate-wpo-files #t)"
-    , "  (compile-program \"" <> mainPath <> "\")"
-    , "  (compile-whole-program \"" <> mainWpoPath <> "\" \"" <> outPath <> "\"))"
+    -- Catch compilation errors so that we exit with an error code
+    , "  (with-exception-handler (lambda (e) (display-condition e (console-error-port)) (newline (console-error-port)) (exit -1))"
+    , "    (lambda ()"
+    , "      (compile-profile #f)"
+    , "      (optimize-level 3)"
+    , "      (compile-file-message #f)"
+    , "      (compile-imported-libraries #t)"
+    , "      (generate-wpo-files #t)"
+    , "      (compile-program \"" <> mainPath <> "\")"
+    , "      (compile-whole-program \"" <> mainWpoPath <> "\" \"" <> outPath <> "\"))))"
     ]
   case res.exitCode of
     Just 0 -> Console.log $ "Created " <> outPath
@@ -239,13 +238,14 @@ runRun cliRoot args = do
     libDirs = runtimePath <> ":" <> args.libDir <> ":"
     arguments = [ "-q", "--libdirs", libDirs ]
   res <- evalScheme arguments $ Array.fold
-    [ "(top-level-program (import (chezscheme)"
+    -- Catch errors so that we exit with an error code
+    [ "(base-exception-handler (lambda (e)"
+    , "  (display-condition e (console-error-port))"
+    , "  (newline (console-error-port))"
+    , "  (exit -1)))"
+    , "(top-level-program (import (chezscheme)"
     , "                           (only (purs runtime finalizers) run-finalizers)"
     , "                           (only (" <> args.moduleName <> " lib) main))"
-    , "  (base-exception-handler (lambda (e)"
-    , "    (display-condition e (console-error-port))"
-    , "    (newline (console-error-port))"
-    , "    (exit -1)))"
     , "  (collect-request-handler (lambda () (collect) (run-finalizers)))"
     , "  (main))"
     ]
