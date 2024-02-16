@@ -216,6 +216,7 @@ runBundle cliRoot args = do
     arguments = [ "-q", "--libdirs", libDirs ]
   res <- evalScheme arguments $ Array.fold
     [ "(top-level-program (import (chezscheme))"
+    -- Catch compilation errors so that we exit with an error code
     , "  (with-exception-handler (lambda (e) (display-condition e (console-error-port)) (newline (console-error-port)) (exit -1))"
     , "    (lambda ()"
     , "      (compile-profile #f)"
@@ -237,6 +238,7 @@ runRun cliRoot args = do
     libDirs = runtimePath <> ":" <> args.libDir <> ":"
     arguments = [ "-q", "--libdirs", libDirs ]
   res <- evalScheme arguments $ Array.fold
+    -- Catch errors so that we exit with an error code
     [ "(base-exception-handler (lambda (e)"
     , "  (display-condition e (console-error-port))"
     , "  (newline (console-error-port))"
