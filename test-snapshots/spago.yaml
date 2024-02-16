@@ -42,6 +42,7 @@ package:
     - safe-coerce
     - semirings
     - st
+    - strings
     - tailrec
     - transformers
     - tuples
