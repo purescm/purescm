@@ -60,10 +60,10 @@ basicBuildMain options = do
         { directives: Map.union externalDirectives (parseDirectiveFile defaultDirectives).directives
         , foreignSemantics: coreForeignSemantics # Map.filterKeys \(Qualified mod _) -> mod
             `notElem`
-              -- Filter out the PrimEffect
-              [ Just (ModuleName "Effect.Ref")
-              , Just (ModuleName "Control.Monad.ST.Internal")
-              ]
+              -- `Effect.Ref.modify` is implemented as a thread-safe operation
+              -- in the `refs` package. Note that `Control.Monad.ST.Internal`
+              -- will still be inlined.
+              [ Just (ModuleName "Effect.Ref") ]
         , onCodegenModule: options.onCodegenModule
         , onPrepareModule: options.onPrepareModule
         , traceIdents: Set.empty
