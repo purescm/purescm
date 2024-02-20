@@ -10,7 +10,7 @@ Install requisites:
 You can install purescm with npm:
 
 ```
-npm i --global purescm@latest
+npm i --global purescm
 ```
 
 ## Usage
