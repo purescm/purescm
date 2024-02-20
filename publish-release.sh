@@ -26,9 +26,10 @@ git pull
 # bump npm version
 npm version $1 --no-git-tag-version
 
+# `npm version` also updates spago.yaml, so we grap the new
+# tag name from there
 NEW_TAG=$(grep -Po "(?<=version: )([\d.]+)" spago.yaml)
 
-# bump also in spago
 git add package.json package-lock.json spago.yaml
 git commit -m "$NEW_TAG"
 git tag "v$NEW_TAG"
