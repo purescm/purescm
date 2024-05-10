@@ -103,12 +103,14 @@
       (assert (fx=? 1 (pstring-index-of (lit "zza") (lit "za"))))
       (assert (fx=? 0 (pstring-index-of (lit "𝕒𝕓𝕔") (lit "𝕒"))))
       (assert (fx=? 2 (pstring-index-of (lit "𝕒𝕓𝕔") (lit "𝕓"))))
+      (assert (fx=? 1 (pstring-index-of (lit "11112") (lit "1112"))))
 
       ;; last-index-of
       (assert (fx=? 7 (pstring-last-index-of (lit "foo bar") (lit ""))))
       (assert (fx=? 0 (pstring-last-index-of (lit "") (lit ""))))
       (assert (not (pstring-index-of (lit "foo bar") (lit "baz"))))
       (assert (fx=? 8 (pstring-last-index-of (lit "foo bar foo") (lit "foo"))))
+      (assert (fx=? 6 (pstring-last-index-of (lit "1112 1112") (lit "112"))))
 
       ;; comparisons
       (assert (pstring=? (lit "abc") (lit "abc")))
@@ -392,6 +394,16 @@
                 pstring=?
                 (pstring-regex-split (pstring-make-regex (lit "🍔")) (lit "𝕒🍔𝕓🍔𝕔🍔de"))
                 (srfi:214:flexvector (lit "𝕒") (lit "𝕓") (lit "𝕔") (lit "de"))))
+
+
+      (assert (eqv? (eof-object) (pstring-cursor-peek-char (pstring->cursor (lit "")))))
+      (assert (eqv? #\f (pstring-cursor-peek-char (pstring->cursor (lit "foo")))))
+
+      (let ([cur (pstring->cursor (lit "foo"))])
+        (assert (eqv? #\f (pstring-cursor-read-char cur)))
+        (assert (eqv? #\o (pstring-cursor-read-char cur)))
+        (assert (eqv? #\o (pstring-cursor-read-char cur)))
+        (assert (eqv? (eof-object) (pstring-cursor-read-char cur))))
 
       (display "All good!\n")
       ))
