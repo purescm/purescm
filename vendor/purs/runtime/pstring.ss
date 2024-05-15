@@ -42,12 +42,19 @@
           pstring-take-code-points
           pstring-trim
           pstring-uncons-char
-          pstring-uncons-code-point
           pstring-upcase
           regex-flags
           regex-source
           (rename (make-pstring-of-length make-pstring))
-          string->pstring)
+          string->pstring
+          pstring->cursor
+          cursor->pstring
+          pstring-cursor-read-char
+          pstring-cursor-peek-char
+          pstring-cursor-read-code-unit
+          pstring-cursor-peek-code-unit
+          pstring-cursor-read-code-point
+          pstring-cursor-peek-code-point)
   (import (chezscheme)
           (prefix (purs runtime srfi :214) srfi:214:)
           (only (purs runtime finalizers) finalizer)
@@ -140,12 +147,17 @@
   (define (pstring=? x y)
     ; Assumes the buffers have the same length
     (define (pstring-equal-code-units? x y)
-      (let loop ([n 0] [tailx x] [taily y])
-        (or
-          (or (pstring-empty? tailx) (pstring-empty? taily))
-          (let-values ([(hx tx) (pstring-uncons-code-unit tailx)]
-                       [(hy ty) (pstring-uncons-code-unit taily)])
-            (and (fx=? hx hy) (loop (fx1+ n) tx ty))))))
+      (let ([cursor-x (pstring->cursor x)]
+            [cursor-y (pstring->cursor y)])
+        (let loop ([n 0]
+                   [ch-x (pstring-cursor-read-code-unit cursor-x)]
+                   [ch-y (pstring-cursor-read-code-unit cursor-y)])
+          (or
+            (or (eof-object? ch-x) (eof-object? ch-y))
+            (and (fx=? ch-x ch-y)
+                 (loop (fx1+ n)
+                       (pstring-cursor-read-code-unit cursor-x)
+                       (pstring-cursor-read-code-unit cursor-y)))))))
     (and
       (fx=? (pstring-length x) (pstring-length y))
       (or
@@ -157,77 +169,80 @@
   (define (pstring<? x y)
     (and
       (not (pstring-eq? x y))
-      (let loop ([tailx x] [taily y])
-        (or
-          (and (pstring-empty? tailx)
-               (not (pstring-empty? taily)))
-          (and
-            (not (pstring-empty? tailx))
-            (not (pstring-empty? taily))
-            (let-values ([(hx tx) (pstring-uncons-code-point tailx)]
-                         [(hy ty) (pstring-uncons-code-point taily)])
-              (let ([c1 (integer->char hx)]
-                    [c2 (integer->char hy)])
-                (or (char<? c1 c2)
-                    (and (char=? c1 c2) (loop tx ty))))))))))
+      (let ([cursor-x (pstring->cursor x)] [cursor-y (pstring->cursor y)])
+        (let loop ([ch-x (pstring-cursor-read-char cursor-x)]
+                   [ch-y (pstring-cursor-read-char cursor-y)])
+          (or
+            (and (eof-object? ch-x)
+                 (not (eof-object? ch-y)))
+            (and (not (eof-object? ch-x))
+                 (not (eof-object? ch-y))
+                 (or (char<? ch-x ch-y)
+                     (and (char=? ch-x ch-y)
+                          (loop
+                            (pstring-cursor-read-char cursor-x)
+                            (pstring-cursor-read-char cursor-y))))))))))
 
   (define (pstring>? x y)
     (and
       (not (pstring-eq? x y))
-      (let loop ([tailx x] [taily y])
-        (or
-          ; is x longer than y?
-          (and (not (pstring-empty? tailx))
-               (pstring-empty? taily))
-          (and
-            (not (pstring-empty? tailx))
-            (not (pstring-empty? taily))
-            (let-values ([(hx tx) (pstring-uncons-code-point tailx)]
-                         [(hy ty) (pstring-uncons-code-point taily)])
-              (let ([c1 (integer->char hx)]
-                    [c2 (integer->char hy)])
-                (or (char>? c1 c2)
-                    (and (char=? c1 c2) (loop tx ty))))))))))
+      (let ([cursor-x (pstring->cursor x)]
+            [cursor-y (pstring->cursor y)])
+        (let loop ([ch-x (pstring-cursor-read-char cursor-x)]
+                   [ch-y (pstring-cursor-read-char cursor-y)])
+          (or
+            ; is x longer than y?
+            (and (not (eof-object? ch-x))
+                 (eof-object? ch-y))
+            (and
+              (not (eof-object? ch-x))
+              (not (eof-object? ch-y))
+              (or (char>? ch-x ch-y)
+                  (and (char=? ch-x ch-y)
+                       (loop (pstring-cursor-read-char cursor-x)
+                             (pstring-cursor-read-char cursor-y))))))))))
 
   (define (pstring<=? x y)
     (or
       (pstring-eq? x y)
-      (let loop ([tailx x] [taily y])
-        (or
-          (and
-            (pstring-empty? tailx)
-            (pstring-empty? taily))
-          (and (pstring-empty? tailx)
-               (not (pstring-empty? taily)))
-          (and
-            (not (pstring-empty? tailx))
-            (not (pstring-empty? taily))
-            (let-values ([(hx tx) (pstring-uncons-code-point tailx)]
-                         [(hy ty) (pstring-uncons-code-point taily)])
-              (let ([c1 (integer->char hx)]
-                    [c2 (integer->char hy)])
-                (or (char<? c1 c2)
-                    (and (char=? c1 c2) (loop tx ty))))))))))
+      (let ([cursor-x (pstring->cursor x)]
+            [cursor-y (pstring->cursor y)])
+        (let loop ([ch-x (pstring-cursor-read-char cursor-x)]
+                   [ch-y (pstring-cursor-read-char cursor-y)])
+          (or
+            (and
+              (eof-object? ch-x)
+              (eof-object? ch-y))
+            (and (eof-object? ch-x)
+                 (not (eof-object? ch-y)))
+            (and
+              (not (eof-object? ch-x))
+              (not (eof-object? ch-y))
+              (or (char<? ch-x ch-y)
+                  (and (char=? ch-x ch-y)
+                       (loop (pstring-cursor-read-char cursor-x)
+                             (pstring-cursor-read-char cursor-y))))))))))
 
   (define (pstring>=? x y)
     (or
       (pstring-eq? x y)
-      (let loop ([tailx x] [taily y])
-        (or
-          (and
-            (pstring-empty? tailx)
-            (pstring-empty? taily))
-          (and (not (pstring-empty? tailx))
-               (pstring-empty? taily))
-          (and
-            (not (pstring-empty? tailx))
-            (not (pstring-empty? taily))
-            (let-values ([(hx tx) (pstring-uncons-code-point tailx)]
-                         [(hy ty) (pstring-uncons-code-point taily)])
-              (let ([c1 (integer->char hx)]
-                    [c2 (integer->char hy)])
-                (or (char>? c1 c2)
-                    (and (char=? c1 c2) (loop tx ty))))))))))
+      (let ([cursor-x (pstring->cursor x)]
+            [cursor-y (pstring->cursor y)])
+        (let loop ([ch-x (pstring-cursor-read-char cursor-x)]
+                   [ch-y (pstring-cursor-read-char cursor-y)])
+          (or
+            (and
+              (eof-object? ch-x)
+              (eof-object? ch-y))
+            (and (not (eof-object? ch-x))
+                 (eof-object? ch-y))
+            (and
+              (not (eof-object? ch-x))
+              (not (eof-object? ch-y))
+              (or (char>? ch-x ch-y)
+                  (and (char=? ch-x ch-y)
+                       (loop (pstring-cursor-read-char cursor-x)
+                             (pstring-cursor-read-char cursor-y))))))))))
 
 
   ;
@@ -242,18 +257,19 @@
   (define (pstring-ref-last str)
     (pstring-buffer-ref (pstring-buffer str) (fx- (fx+ (pstring-offset str) (pstring-length str)) 1)))
 
+  (define (pstring-ref-code-unit str n)
+    (let ([bv (pstring-buffer str)])
+      (if (fx<? n (pstring-length str))
+        (pstring-buffer-ref bv (fx+ n (pstring-offset str)))
+        ; not enough bytes to read a full code unit
+        (raise-continuable
+          (make-message-condition
+            (format "pstring-ref-code-unit ~d is not a valid index" n))))))
+
   ; Gets the char at index `n`.
   ;
   ; Constant-time ref, like string-ref.
   (define (pstring-ref str n)
-    (define (pstring-ref-code-unit str n)
-      (let ([bv (pstring-buffer str)])
-        (if (fx<? n (pstring-length str))
-          (pstring-buffer-ref bv (fx+ n (pstring-offset str)))
-          ; not enough bytes to read a full code unit
-          (raise-continuable
-            (make-message-condition
-              (format "pstring-ref-code-unit ~d is not a valid index" n))))))
     (integer->char (pstring-ref-code-unit str n)))
 
   ; Returns the address to the beginning of the slice
@@ -262,75 +278,80 @@
 
   ; Gets the code point scalar value at index `n`
   (define (pstring-ref-code-point str n)
-    (let loop ([i 0] [cur str])
-      (if (pstring-empty? cur)
-        (raise-continuable
-          (make-message-condition
-            (format "pstring-ref-code-point: ~d is not a valid index" n))))
-      (let-values ([(head tail) (pstring-uncons-code-point cur)])
-        (if (fx=? i n)
-          head
-          (loop (fx1+ i) tail)))))
+    (let ([cur (pstring->cursor str)])
+      (let loop ([cp (pstring-cursor-read-code-point cur)])
+        (cond
+          [(eof-object? cp)
+           (raise-continuable
+             (make-message-condition
+               (format "pstring-ref-code-point: ~d is not a valid index" n)))]
+          [(fx>? (pstring-cursor-offset cur) (fx+ (pstring-offset str) n)) cp]
+          [else (loop (pstring-cursor-read-code-point cur))]))))
 
   ; Length in code points
   (define (pstring-length-code-points s)
-    (let loop ([i 0] [cur s])
-      (if (pstring-empty? cur)
-        i
-        (let-values ([(_ tail) (pstring-uncons-code-point cur)])
-          (loop (fx1+ i) tail)))))
+    (let ([cur (pstring->cursor s)])
+      (let loop ([i 0] [cp (pstring-cursor-read-code-point cur)])
+        (if (eof-object? cp)
+          i
+          (loop (fx1+ i) (pstring-cursor-read-code-point cur))))))
 
   ; Finds the starting index of first found `pattern`
   (define (pstring-index-of str pattern)
     (if (pstring-empty? pattern)
-      0
-      (let loop ([i 0]
-                 [candidate #f]    ; the index of the first matching char
-                 [hs str]           ; haystack
-                 [demand pattern]) ; chars left to be found
+      0 ; special case for zero-length patterns
+      (let loop ([candidate #f] ; the index of the first matching char
+                 [str-idx 0]
+                 [pattern-idx 0])
         (cond
-          ; Nothing is demanded, so we are done
-          [(pstring-empty? demand) candidate]
+          ; Found the end of the pattern, we are done
+          [(fx=? (pstring-length pattern) pattern-idx) candidate]
           ; In the middle of matching but we have no more input. No match found.
-          [(pstring-empty? hs) #f]
+          [(fx=? (pstring-length str) str-idx) #f]
           [else
-            (let-values ([(pc demand-rest) (pstring-uncons-code-unit demand)]
-                         [(ic hs-rest) (pstring-uncons-code-unit hs)])
-              (if (fx=? pc ic)
-                ; Found a match for char, advance to next char
-                (loop (fx1+ i) (or candidate i) hs-rest demand-rest)
-                (if candidate
-                  ; No match, rewind demand and start over at the same spot
-                  (loop i #f hs pattern)
-                  (loop (fx1+ i) #f hs-rest pattern))))]))))
+            (let ([str-cu (pstring-ref-code-unit str str-idx)]
+                  [pattern-cu (pstring-ref-code-unit pattern pattern-idx)])
+              (if (fx=? str-cu pattern-cu)
+                ; Found a match for char, remember this candidate and advance to next char
+                (loop (or candidate str-idx) (fx1+ str-idx) (fx1+ pattern-idx))
+                (loop #f
+                      (if candidate
+                        ; No match, rewind back to the possible next candidate
+                        (fx1+ candidate)
+                        ; No match and we didn't have any candidate so just advance to next char
+                        (fx1+ str-idx))
+                      0)))]))))
 
   ; Finds the index of last occurence of `pattern`.
   (define (pstring-last-index-of str pattern)
     (if (pstring-empty? pattern)
       (pstring-length str)
-      (let loop ([i 0]
-                 [last-match-candidate #f]
+      (let loop ([last-match-candidate #f]
                  [candidate #f]    ; the index of the first matching char
-                 [hs str]           ; haystack
-                 [demand pattern]) ; chars left to be found
+                 [str-idx 0]           ; haystack
+                 [pattern-idx 0]) ; chars left to be found
         (cond
-          [(and (not (pstring-empty? hs)) (pstring-empty? demand))
+          [(and (fx<? str-idx (pstring-length str)) (fx=? (pstring-length pattern) pattern-idx))
            ; found a match but haystack not consumed, continue searching
-           (loop i candidate #f hs pattern)]
-          ; Nothing is demanded, so we are done
-          [(pstring-empty? demand) candidate]
+           (loop candidate #f str-idx 0)]
+          ; Reached the end of input and pattern, so we are done
+          [(fx=? (pstring-length pattern) pattern-idx) candidate]
           ; In the middle of matching but we have no more input.
-          [(and (pstring-empty? hs) (not (pstring-empty? demand))) last-match-candidate]
+          [(fx=? str-idx (pstring-length str)) last-match-candidate]
           [else
-            (let-values ([(pc demand-rest) (pstring-uncons-code-unit demand)]
-                         [(ic hs-rest) (pstring-uncons-code-unit hs)])
+            (let ([pc (pstring-ref-code-unit pattern pattern-idx)]
+                  [ic (pstring-ref-code-unit str str-idx)])
               (if (fx=? pc ic)
                 ; Found a match for char, advance to next char
-                (loop (fx1+ i) last-match-candidate (or candidate i) hs-rest demand-rest)
-                (if candidate
-                  ; No match, rewind demand and start over at the same spot
-                  (loop i last-match-candidate #f hs pattern)
-                  (loop (fx1+ i) last-match-candidate #f hs-rest pattern))))]))))
+                (loop last-match-candidate (or candidate str-idx) (fx1+ str-idx) (fx1+ pattern-idx))
+                (loop last-match-candidate
+                      #f
+                      (if candidate
+                        ; No match, rewind back to the possible next candidate
+                        (fx1+ candidate)
+                        ; No match and we didn't have any candidate so just advance to next char
+                        (fx1+ str-idx))
+                      0)))]))))
 
 
   ;
@@ -361,11 +382,11 @@
 
   ; Turns a pstring to a list of chars
   (define (pstring->list str)
-    (let loop ([rest str] [ls '()])
-      (if (pstring-empty? rest)
-        (reverse ls)
-        (let-values ([(head tail) (pstring-uncons-code-point rest)])
-          (loop tail (cons (integer->char head) ls))))))
+    (let ([cur (pstring->cursor str)])
+      (let loop ([ch (pstring-cursor-read-char cur)] [ls '()])
+        (if (eof-object? ch)
+          (reverse ls)
+          (loop (pstring-cursor-read-char cur) (cons ch ls))))))
 
   ; Turns a pstring to a flexvector of code points
   (define (pstring->code-point-flexvector str)
@@ -377,11 +398,11 @@
             (loop (cdr rest) (fx1- i))))
         fv))
 
-    (let loop ([rest str] [ls '()] [len 0])
-      (if (pstring-empty? rest)
-        (reverse-list->flexvector ls len)
-        (let-values ([(head tail) (pstring-uncons-code-point rest)])
-          (loop tail (cons head ls) (fx1+ len))))))
+    (let ([cur (pstring->cursor str)])
+      (let loop ([ch (pstring-cursor-read-code-point cur)] [ls '()] [len 0])
+        (if (eof-object? ch)
+          (reverse-list->flexvector ls len)
+          (loop (pstring-cursor-read-code-point cur) (cons ch ls) (fx1+ len))))))
 
 
   ;
@@ -493,13 +514,14 @@
   (define (pstring-take-code-points str n)
     (if (fx<? n 1)
       empty-pstring
-      (let loop ([i n] [tail str])
-        (cond
-          [(and (fx>? i 0) (fx=? (pstring-length tail) 0)) str]
-          [(fx=? i 0) (pstring-take str (fx- (pstring-length str) (pstring-length tail)))]
-          [else
-            (let-values ([(_ t) (pstring-uncons-code-point tail)])
-              (loop (fx1- i) t))]))))
+      (let ([cur (pstring->cursor str)])
+        (let loop ([i n])
+          (if (fx=? i 0)
+            (pstring-take str (fx- (pstring-cursor-offset cur) (pstring-offset str)))
+            (let ([cp (pstring-cursor-read-code-point cur)])
+              (cond
+                [(eof-object? cp) str]
+                [else (loop (fx1- i))])))))))
 
   ; Like pstring-drop but without bounds checks
   (define (pstring-unsafe-drop str n)
@@ -522,35 +544,6 @@
       (let ([w1 (pstring-ref-first str)]
             [tail (pstring-unsafe-drop str 1)])
         (values w1 tail))))
-
-  ; Returns the first code point scalar and the rest of the pstring
-  (define (pstring-uncons-code-point str)
-    (if (pstring-empty? str)
-      (raise-continuable
-        (make-message-condition "pstring-uncons-code-point: pstring is empty"))
-      (let* ([buf (pstring-buffer str)]
-             [offset (pstring-offset str)]
-             [w1 (pstring-buffer-ref buf offset)])
-        (cond
-          ; Two-word encoding? Check for high surrogate
-          [(and (fx<= #xD800 w1 #xDBFF) (fx>=? (pstring-length str) 2))
-           (let ([w2 (pstring-buffer-ref buf (fx1+ offset))])
-             ; low surrogate?
-             (if (fx<= #xDC00 w2 #xDFFF)
-               (values
-                 (fx+
-                   (fxlogor
-                     (fxsll (fx- w1 #xD800) 10)
-                     (fx- w2 #xDC00))
-                   #x10000)
-                 (pstring-unsafe-drop str 2))
-               ; low surrogate not found, just return the high surrogate
-               (values w1 (pstring-unsafe-drop str 1))))]
-          ; misplaced continuation word?
-          [(fx<= #xDC00 w1 #xDFFF)
-           (values w1 (pstring-unsafe-drop str 1))]
-          ; one-word encoding
-          [else (values w1 (pstring-unsafe-drop str 1))]))))
 
 
   ; 
@@ -583,14 +576,15 @@
           (fx=? c #x2028)
           (fx=? c #x2029)))
 
-    (let ([suffix
-            (let loop ([rest str])
-              (if (pstring-empty? rest)
-                rest
-                (let-values ([(head tail) (pstring-uncons-code-unit rest)])
-                  (if (whitespace? head)
-                    (loop tail)
-                    rest))))])
+    (let* ([cur (pstring->cursor str)]
+           [suffix
+             (let loop ([u (pstring-cursor-peek-code-unit cur)])
+               (cond
+                 [(eof-object? u) (cursor->pstring cur)]
+                 [(whitespace? u) (begin
+                                    (pstring-cursor-read-code-unit cur)
+                                    (loop (pstring-cursor-peek-code-unit cur)))]
+                 [else (cursor->pstring cur)]))])
       (let loop ([rest suffix])
         (if (pstring-empty? rest)
           rest
@@ -1026,6 +1020,109 @@
     (foreign-procedure "pcre2_jit_compile_16" (uptr unsigned-32)
                        void))
 
+  ;
+  ; Cursor
+  ;
+  ; An abstraction much like scheme ports that allows looping over a string
+  ; without doing extra allocations
+  ; 
+
+  (define-record pstring-cursor (buffer offset end-offset))
+
+  (define (pstring->cursor str)
+    (make-pstring-cursor
+      (pstring-buffer str)
+      (pstring-offset str)
+      (fx+ (pstring-offset str) (pstring-length str))))
+
+  ; Slice the underlying buffer starting from where the cursor is pointing to
+  (define (cursor->pstring cur)
+    (make-pstring (pstring-cursor-buffer cur)
+                  (pstring-cursor-offset cur)
+                  (fx- (pstring-cursor-end-offset cur) (pstring-cursor-offset cur))))
+
+  (define (pstring-cursor-read-code-unit cur)
+    (if (fx<? (pstring-cursor-offset cur) (pstring-cursor-end-offset cur))
+      (let ([offset (pstring-cursor-offset cur)])
+        (set-pstring-cursor-offset! cur (fx1+ offset))
+        (pstring-buffer-ref (pstring-cursor-buffer cur) offset))
+      (eof-object)))
+
+  (define (pstring-cursor-peek-code-unit cur)
+    (if (fx<? (pstring-cursor-offset cur) (pstring-cursor-end-offset cur))
+      (pstring-buffer-ref (pstring-cursor-buffer cur) (pstring-cursor-offset cur))
+      (eof-object)))
+
+  (define (pstring-cursor-read-char cur)
+    (let ([cp (pstring-cursor-read-code-point cur)])
+      (if (eof-object? cp)
+        (eof-object)
+        (integer->char cp))))
+
+  (define (pstring-cursor-peek-char cur)
+    (let ([cp (pstring-cursor-peek-code-point cur)])
+      (if (eof-object? cp)
+        (eof-object)
+        (integer->char cp))))
+
+  (define (pstring-cursor-read-code-point cur)
+    (if (fx<? (pstring-cursor-offset cur) (pstring-cursor-end-offset cur))
+      (let ([buf (pstring-cursor-buffer cur)]
+            [offset (pstring-cursor-offset cur)]
+            [end-offset (pstring-cursor-end-offset cur)])
+        (let ([w1 (pstring-buffer-ref buf offset)])
+          (cond
+            ; Two-word encoding? Check for high surrogate
+            [(and (fx<= #xD800 w1 #xDBFF) (fx>=? (fx- end-offset offset) 2))
+             (let ([w2 (pstring-buffer-ref buf (fx1+ offset))])
+               ; low surrogate?
+               (if (fx<= #xDC00 w2 #xDFFF)
+                 (begin
+                   (set-pstring-cursor-offset! cur (fx+ offset 2))
+                   (fx+
+                     (fxlogor
+                       (fxsll (fx- w1 #xD800) 10)
+                       (fx- w2 #xDC00))
+                     #x10000))
+                 ; low surrogate not found, just return the high surrogate
+                 (begin
+                   (set-pstring-cursor-offset! cur (fx1+ offset))
+                   65533)))]
+            ; misplaced continuation word?
+            [(fx<= #xDC00 w1 #xDFFF)
+             (begin
+               (set-pstring-cursor-offset! cur (fx1+ offset))
+               65533)]
+            ; one-word encoding
+            [else
+             (begin
+               (set-pstring-cursor-offset! cur (fx1+ offset))
+               w1)])))
+      (eof-object)))
+
+  (define (pstring-cursor-peek-code-point cur)
+    (if (fx<? (pstring-cursor-offset cur) (pstring-cursor-end-offset cur))
+      (let ([buf (pstring-cursor-buffer cur)]
+            [offset (pstring-cursor-offset cur)]
+            [end-offset (pstring-cursor-end-offset cur)])
+        (let ([w1 (pstring-buffer-ref buf offset)])
+          (cond
+            ; Two-word encoding? Check for high surrogate
+            [(and (fx<= #xD800 w1 #xDBFF) (fx>=? (fx- end-offset offset) 2))
+             (let ([w2 (pstring-buffer-ref buf (fx1+ offset))])
+               ; low surrogate?
+               (if (fx<= #xDC00 w2 #xDFFF)
+                 (fx+
+                   (fxlogor
+                     (fxsll (fx- w1 #xD800) 10)
+                     (fx- w2 #xDC00))
+                   #x10000)
+                 65533))]
+            ; misplaced continuation word?
+            [(fx<= #xDC00 w1 #xDFFF) 65533]
+            ; one-word encoding
+            [else w1])))
+      (eof-object)))
 
   )
 
