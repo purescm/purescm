@@ -38,6 +38,7 @@
           pstring-split
           pstring->string
           pstring->symbol
+          symbol->pstring
           pstring-take
           pstring-take-code-points
           pstring-trim
@@ -368,6 +369,9 @@
 
   (define (pstring->symbol str)
     (string->symbol (pstring->string str)))
+
+  (define (symbol->pstring sym)
+    (string->pstring (symbol->string sym)))
 
   ; Turns a pstring to a flexvector of chars
   (define (pstring->char-flexvector str)
