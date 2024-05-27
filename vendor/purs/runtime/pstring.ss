@@ -61,12 +61,12 @@
           (only (purs runtime finalizers) finalizer)
           (purs runtime pstring-buffer))
 
-  (define-record pstring-base ())
-  (define-record slice pstring-base
+  (define-record pstring ())
+  (define-record slice pstring
                  ((immutable buffer)
                   (immutable offset)
                   (immutable length)))
-  (define-record concat pstring-base
+  (define-record concat pstring
                  ((mutable length)
                   (mutable rope)))
 
