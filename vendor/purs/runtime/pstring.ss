@@ -3,7 +3,7 @@
   (export char-flexvector->pstring
           code-points->pstring
           number->pstring
-          pstring
+          list->pstring
           pstring<=?
           pstring<?
           pstring=?
@@ -62,8 +62,8 @@
           (purs runtime pstring-buffer))
 
   ; pstring is a slice of an immobile bytevector
-  (define-structure
-    (pstring buffer offset length))
+  (define-record pstring
+    (buffer offset length))
 
   ;
   ; Constructors
@@ -87,7 +87,7 @@
   ; Makes a string from a list of chars
   ; NOTE: this only takes in PS chars which are guaranteed to
   ; be only one code unit in size
-  (define (pstring . chars)
+  (define (list->pstring . chars)
     (let* ([len (length chars)]
            [cv (pstring-buffer-alloc len)])
       (let loop ([i 0] [rest chars])
