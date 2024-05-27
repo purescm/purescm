@@ -9,7 +9,7 @@
           pstring=?
           pstring>=?
           pstring>?
-          pstring?
+          (rename (slice? pstring?))
           pstring->char-flexvector
           pstring->code-point-flexvector
           pstring-concat
@@ -46,7 +46,7 @@
           pstring-upcase
           regex-flags
           regex-source
-          (rename (make-pstring-of-length make-pstring))
+          (rename (make-pstring-of-length make-slice))
           string->pstring
           pstring->cursor
           cursor->pstring
@@ -61,19 +61,29 @@
           (only (purs runtime finalizers) finalizer)
           (purs runtime pstring-buffer))
 
-  ; pstring is a slice of an immobile bytevector
-  (define-record pstring
-    (buffer offset length))
+  (define-record pstring-base ())
+  (define-record slice pstring-base
+                 ((immutable buffer)
+                  (immutable offset)
+                  (immutable length)))
+  (define-record concat pstring-base
+                 ((mutable length)
+                  (mutable rope)))
+
+  (define (pstring-length str)
+    (cond
+      [(slice? str) (slice-length str)]
+      [else (concat-length str)]))
 
   ;
   ; Constructors
   ; 
 
-  (define empty-pstring (make-pstring (make-immobile-bytevector 0) 0 0))
+  (define empty-pstring (make-slice (make-immobile-bytevector 0) 0 0))
 
   ; Make a string of length `n` in code units
   (define (make-pstring-of-length n)
-    (make-pstring (pstring-buffer-alloc n) 0 n))
+    (make-slice (pstring-buffer-alloc n) 0 n))
 
   ; Makes a string of one scheme char
   ;
@@ -82,7 +92,7 @@
   (define (pstring-singleton c)
     (let ([bv (pstring-buffer-alloc 1)])
       (pstring-buffer-set! bv 0 (char->integer c))
-      (make-pstring bv 0 1)))
+      (make-slice bv 0 1)))
 
   ; Makes a string from a list of chars
   ; NOTE: this only takes in PS chars which are guaranteed to
@@ -96,7 +106,7 @@
           (begin
             (pstring-buffer-set! cv i (char->integer (car rest)))
             (loop (fx1+ i) (cdr rest)))))
-      (make-pstring cv 0 len)))
+      (make-slice cv 0 len)))
 
   ; Macro that encodes literal scheme strings to `pstrings`
   ; at compile time.
@@ -107,14 +117,14 @@
          (let ([d (syntax->datum #'s)])
            (if (string? d)
              (let ([bv (string->utf16-immobile d)])
-               #`(make-pstring #,bv 0 #,(fx/ (bytevector-length bv) 2)))
+               #`(make-slice #,bv 0 #,(fx/ (bytevector-length bv) 2)))
              #'(let ([bv (string->utf16-immobile s)])
-                 (make-pstring bv 0 (fx/ (bytevector-length bv) 2)))))])))
+                 (make-slice bv 0 (fx/ (bytevector-length bv) 2)))))])))
 
   ; Makes a pstring from a list of code point scalar values.
   (define (code-points->pstring . xs)
     (let ([bv (string->utf16 (apply string (map integer->char xs)) (native-endianness))])
-      (make-pstring bv 0 (fx/ (bytevector-length bv) code-unit-length))))
+      (make-slice bv 0 (fx/ (bytevector-length bv) code-unit-length))))
 
   ; Makes a pstring from a number
   (define number->pstring
@@ -130,20 +140,20 @@
         (lambda (i c)
           (pstring-buffer-set! bv i (char->integer c))) 
         v)
-      (make-pstring bv 0 len)))
+      (make-slice bv 0 len)))
 
   ;
   ; Comparisons
   ;
 
   (define (pstring-empty? str)
-    (fx=? (pstring-length str) 0))
+    (fx=? (slice-length str) 0))
 
   ; Fast equality check based on object reference.
   (define (pstring-eq? x y)
-    (and (fx=? (pstring-length x) (pstring-length y))
-               (fx=? (pstring-offset x) (pstring-offset y))
-               (eq? (pstring-buffer x) (pstring-buffer y))))
+    (and (fx=? (slice-length x) (slice-length y))
+               (fx=? (slice-offset x) (slice-offset y))
+               (eq? (slice-buffer x) (slice-buffer y))))
 
   (define (pstring=? x y)
     ; Assumes the buffers have the same length
@@ -160,11 +170,11 @@
                        (pstring-cursor-read-code-unit cursor-x)
                        (pstring-cursor-read-code-unit cursor-y)))))))
     (and
-      (fx=? (pstring-length x) (pstring-length y))
+      (fx=? (slice-length x) (slice-length y))
       (or
         ; Do they point to the same object in memory?
-        (and (fx=? (pstring-offset x) (pstring-offset y))
-              (eq? (pstring-buffer x) (pstring-buffer y)))
+        (and (fx=? (slice-offset x) (slice-offset y))
+              (eq? (slice-buffer x) (slice-buffer y)))
         (pstring-equal-code-units? x y))))
 
   (define (pstring<? x y)
@@ -252,16 +262,16 @@
 
   ; Gets first code unit scalar value
   (define (pstring-ref-first str)
-    (pstring-buffer-ref (pstring-buffer str) (pstring-offset str)))
+    (pstring-buffer-ref (slice-buffer str) (slice-offset str)))
 
   ; Get last code unit scalar value
   (define (pstring-ref-last str)
-    (pstring-buffer-ref (pstring-buffer str) (fx- (fx+ (pstring-offset str) (pstring-length str)) 1)))
+    (pstring-buffer-ref (slice-buffer str) (fx- (fx+ (slice-offset str) (slice-length str)) 1)))
 
   (define (pstring-ref-code-unit str n)
-    (let ([bv (pstring-buffer str)])
-      (if (fx<? n (pstring-length str))
-        (pstring-buffer-ref bv (fx+ n (pstring-offset str)))
+    (let ([bv (slice-buffer str)])
+      (if (fx<? n (slice-length str))
+        (pstring-buffer-ref bv (fx+ n (slice-offset str)))
         ; not enough bytes to read a full code unit
         (raise-continuable
           (make-message-condition
@@ -275,7 +285,7 @@
 
   ; Returns the address to the beginning of the slice
   (define (pstring-&ref str)
-    (pstring-buffer-&ref (pstring-buffer str) (pstring-offset str)))
+    (pstring-buffer-&ref (slice-buffer str) (slice-offset str)))
 
   ; Gets the code point scalar value at index `n`
   (define (pstring-ref-code-point str n)
@@ -286,7 +296,7 @@
            (raise-continuable
              (make-message-condition
                (format "pstring-ref-code-point: ~d is not a valid index" n)))]
-          [(fx>? (pstring-cursor-offset cur) (fx+ (pstring-offset str) n)) cp]
+          [(fx>? (pstring-cursor-offset cur) (fx+ (slice-offset str) n)) cp]
           [else (loop (pstring-cursor-read-code-point cur))]))))
 
   ; Length in code points
@@ -306,9 +316,9 @@
                  [pattern-idx 0])
         (cond
           ; Found the end of the pattern, we are done
-          [(fx=? (pstring-length pattern) pattern-idx) candidate]
+          [(fx=? (slice-length pattern) pattern-idx) candidate]
           ; In the middle of matching but we have no more input. No match found.
-          [(fx=? (pstring-length str) str-idx) #f]
+          [(fx=? (slice-length str) str-idx) #f]
           [else
             (let ([str-cu (pstring-ref-code-unit str str-idx)]
                   [pattern-cu (pstring-ref-code-unit pattern pattern-idx)])
@@ -326,19 +336,19 @@
   ; Finds the index of last occurence of `pattern`.
   (define (pstring-last-index-of str pattern)
     (if (pstring-empty? pattern)
-      (pstring-length str)
+      (slice-length str)
       (let loop ([last-match-candidate #f]
                  [candidate #f]    ; the index of the first matching char
                  [str-idx 0]           ; haystack
                  [pattern-idx 0]) ; chars left to be found
         (cond
-          [(and (fx<? str-idx (pstring-length str)) (fx=? (pstring-length pattern) pattern-idx))
+          [(and (fx<? str-idx (slice-length str)) (fx=? (slice-length pattern) pattern-idx))
            ; found a match but haystack not consumed, continue searching
            (loop candidate #f str-idx 0)]
           ; Reached the end of input and pattern, so we are done
-          [(fx=? (pstring-length pattern) pattern-idx) candidate]
+          [(fx=? (slice-length pattern) pattern-idx) candidate]
           ; In the middle of matching but we have no more input.
-          [(fx=? str-idx (pstring-length str)) last-match-candidate]
+          [(fx=? str-idx (slice-length str)) last-match-candidate]
           [else
             (let ([pc (pstring-ref-code-unit pattern pattern-idx)]
                   [ic (pstring-ref-code-unit str str-idx)])
@@ -360,7 +370,7 @@
   ; 
 
   (define (pstring->string str)
-    (utf16-immobile->string (pstring-buffer str) (pstring-offset str) (pstring-length str)))
+    (utf16-immobile->string (slice-buffer str) (slice-offset str) (slice-length str)))
 
   (define pstring->number
     (case-lambda
@@ -375,7 +385,7 @@
 
   ; Turns a pstring to a flexvector of chars
   (define (pstring->char-flexvector str)
-    (let* ([len (pstring-length str)]
+    (let* ([len (slice-length str)]
            [fv (srfi:214:make-flexvector len)])
       (let loop ([i 0] [rest str])
         (if (pstring-empty? rest)
@@ -416,55 +426,55 @@
   ; A linear-time string builder that builds a new pstring from a list
   ; of pstrings.
   (define (pstring-concat . xs)
-    (let* ([len (fold-right (lambda (s a) (fx+ (pstring-length s) a)) 0 xs)]
+    (let* ([len (fold-right (lambda (s a) (fx+ (slice-length s) a)) 0 xs)]
            [buf (pstring-buffer-alloc len)])
       (let loop ([i 0] [ls xs])
         (if (pair? ls)
           (let* ([str (car ls)]
-                 [slen (pstring-length str)])
-            (pstring-buffer-copy! (pstring-buffer str) (pstring-offset str) buf i slen)
+                 [slen (slice-length str)])
+            (pstring-buffer-copy! (slice-buffer str) (slice-offset str) buf i slen)
             (loop (fx+ i slen) (cdr ls)))
-          (make-pstring buf 0 len)))))
+          (make-slice buf 0 len)))))
 
   ; Create a new pstring by joining a flexvector of pstrings using a separator
   (define (pstring-join-with xs separator)
-    (let* ([len (srfi:214:flexvector-fold (lambda (len s) (fx+ len (pstring-length s))) 0 xs)]
+    (let* ([len (srfi:214:flexvector-fold (lambda (len s) (fx+ len (slice-length s))) 0 xs)]
            [xs-count (srfi:214:flexvector-length xs)]
            [separator-count (if (fx=? xs-count 0) 0 (fx1- xs-count))]
-           [separator-len (pstring-length separator)]
+           [separator-len (slice-length separator)]
            [bv-len (fx+ len (fx* separator-count separator-len))]
            [bv (pstring-buffer-alloc bv-len)])
       (let loop ([i 0]
                  [bi 0])
         (if (fx<? i xs-count)
           (let* ([s (srfi:214:flexvector-ref xs i)]
-                 [len (pstring-length s)])
+                 [len (slice-length s)])
             (if (fx>? i 0)
               (begin
                 (pstring-buffer-copy!
-                  (pstring-buffer separator)
-                  (pstring-offset separator)
+                  (slice-buffer separator)
+                  (slice-offset separator)
                   bv
                   (fx+ bi)
                   separator-len)
                 (pstring-buffer-copy!
-                  (pstring-buffer s)
-                  (pstring-offset s)
+                  (slice-buffer s)
+                  (slice-offset s)
                   bv
                   (fx+ bi separator-len)
                   len)
                 (loop (fx1+ i) (fx+ bi len separator-len)))
               (begin
-                (pstring-buffer-copy! (pstring-buffer s) (pstring-offset s) bv bi len)
+                (pstring-buffer-copy! (slice-buffer s) (slice-offset s) bv bi len)
                 (loop (fx1+ i) (fx+ bi len)))))
-          (make-pstring bv 0 bv-len)))))
+          (make-slice bv 0 bv-len)))))
 
   ; Splits a pstring into a flexvector of pstrings using a pattern
   (define (pstring-split str pattern)
     (cond
       [(pstring-empty? str) (srfi:214:flexvector)]
       [(pstring-empty? pattern)
-        (let* ([len (pstring-length str)]
+        (let* ([len (slice-length str)]
                [fv (srfi:214:make-flexvector len)])
           (let loop ([i 0] [rest str])
             (if (pstring-empty? rest)
@@ -484,7 +494,7 @@
                 vec)
               (let ([index (car indices)])
                 (srfi:214:flexvector-set! vec i (pstring-slice str pi index))
-                (loop (cdr indices) (fx1+ i) (fx+ index (pstring-length pattern)))))))]))
+                (loop (cdr indices) (fx1+ i) (fx+ index (slice-length pattern)))))))]))
 
 
   ; 
@@ -496,16 +506,16 @@
   (define pstring-slice
     (case-lambda
       [(str start)
-       (pstring-slice str start (pstring-length str))]
+       (pstring-slice str start (slice-length str))]
       [(str start end)
-        (let* ([start-index (fxmin (fxmax 0 start) (pstring-length str))]
-               [end-index (fxmin (fxmax 0 end) (pstring-length str))]
+        (let* ([start-index (fxmin (fxmax 0 start) (slice-length str))]
+               [end-index (fxmin (fxmax 0 end) (slice-length str))]
                [len (fx- end-index start-index)])
           (if (fx<? len 0)
             empty-pstring
-            (make-pstring
-              (pstring-buffer str)
-              (fx+ (pstring-offset str) start-index)
+            (make-slice
+              (slice-buffer str)
+              (fx+ (slice-offset str) start-index)
               len)))]))
 
   (define (pstring-take str n)
@@ -521,7 +531,7 @@
       (let ([cur (pstring->cursor str)])
         (let loop ([i n])
           (if (fx=? i 0)
-            (pstring-take str (fx- (pstring-cursor-offset cur) (pstring-offset str)))
+            (pstring-take str (fx- (pstring-cursor-offset cur) (slice-offset str)))
             (let ([cp (pstring-cursor-read-code-point cur)])
               (cond
                 [(eof-object? cp) str]
@@ -529,10 +539,10 @@
 
   ; Like pstring-drop but without bounds checks
   (define (pstring-unsafe-drop str n)
-    (make-pstring
-      (pstring-buffer str)
-      (fx+ (pstring-offset str) n)
-      (fx- (pstring-length str) n)))
+    (make-slice
+      (slice-buffer str)
+      (fx+ (slice-offset str) n)
+      (fx- (slice-length str) n)))
 
   ; Returns the first char and the rest of the pstring
   (define (pstring-uncons-char str)
@@ -593,7 +603,7 @@
         (if (pstring-empty? rest)
           rest
           (let ([last (pstring-ref-last rest)]
-                [prefix (pstring-take rest (fx1- (pstring-length rest)))])
+                [prefix (pstring-take rest (fx1- (slice-length rest)))])
             (if (whitespace? last) (loop prefix) rest))))))
 
   ; Replace the first occurence of `pattern` with `replacement`
@@ -603,21 +613,21 @@
       (let ([i (pstring-index-of str pattern)])
         (if (not i)
           str
-          (let* ([len (fx+ (fx- (pstring-length str) (pstring-length pattern))
-                           (pstring-length replacement))]
+          (let* ([len (fx+ (fx- (slice-length str) (slice-length pattern))
+                           (slice-length replacement))]
                  [bv (pstring-buffer-alloc len)])
-            (pstring-buffer-copy! (pstring-buffer str) (pstring-offset str) bv 0 i)
-            (pstring-buffer-copy! (pstring-buffer replacement)
-                              (pstring-offset replacement)
+            (pstring-buffer-copy! (slice-buffer str) (slice-offset str) bv 0 i)
+            (pstring-buffer-copy! (slice-buffer replacement)
+                              (slice-offset replacement)
                               bv
                               i
-                              (pstring-length replacement))
-            (pstring-buffer-copy! (pstring-buffer str)
-                              (fx+ (pstring-offset str) i (pstring-length pattern))
+                              (slice-length replacement))
+            (pstring-buffer-copy! (slice-buffer str)
+                              (fx+ (slice-offset str) i (slice-length pattern))
                               bv
-                              (fx+ i (pstring-length replacement))
-                              (fx- (pstring-length str) i (pstring-length pattern)))
-            (make-pstring bv 0 len))))))
+                              (fx+ i (slice-length replacement))
+                              (fx- (slice-length str) i (slice-length pattern)))
+            (make-slice bv 0 len))))))
 
   ; Find all occurences and return their indices as a list
   (define (all-index-of str pattern)
@@ -628,7 +638,7 @@
           (let ([i (pstring-index-of slice pattern)])
             (if i
               (cons (fx+ start i)
-                    (go (fx+ start i (pstring-length pattern))))
+                    (go (fx+ start i (slice-length pattern))))
               '()))))))
 
   ; Replace all occurences of `pattern` with `replacement`
@@ -637,38 +647,38 @@
       str
       (let* ([is (all-index-of str pattern)]
              [replacements-delta (fx* (length is)
-                                      (fx- (pstring-length pattern)
-                                           (pstring-length replacement)))]
-             [len (fx- (pstring-length str) replacements-delta)]
+                                      (fx- (slice-length pattern)
+                                           (slice-length replacement)))]
+             [len (fx- (slice-length str) replacements-delta)]
              [bv (pstring-buffer-alloc len)])
         (let loop ([stri 0] ; where we are at str
                    [bvi 0] ; where we are at bv
                    [rest is])
           (if (null? rest)
             ; copy the left-overs into place
-            (pstring-buffer-copy! (pstring-buffer str)
-                                    (fx+ (pstring-offset str) stri)
+            (pstring-buffer-copy! (slice-buffer str)
+                                    (fx+ (slice-offset str) stri)
                                     bv
                                     bvi
-                                    (fx- (pstring-length str) stri))
+                                    (fx- (slice-length str) stri))
             (let* ([i (car rest)] [before-len (fx- i stri)])
               ; copy stuff before the match
-              (pstring-buffer-copy! (pstring-buffer str)
-                                (fx+ (pstring-offset str) stri)
+              (pstring-buffer-copy! (slice-buffer str)
+                                (fx+ (slice-offset str) stri)
                                 bv
                                 bvi
                                 before-len)
               ; the replacement itself
-              (pstring-buffer-copy! (pstring-buffer replacement)
-                                (pstring-offset replacement)
+              (pstring-buffer-copy! (slice-buffer replacement)
+                                (slice-offset replacement)
                                 bv
                                 (fx+ bvi before-len)
-                                (pstring-length replacement))
+                                (slice-length replacement))
               (loop
-                (fx+ i (pstring-length pattern))
-                (fx+ (fx+ bvi before-len) (pstring-length replacement))
+                (fx+ i (slice-length pattern))
+                (fx+ (fx+ bvi before-len) (slice-length replacement))
                 (cdr rest)))))
-        (make-pstring bv 0 len))))
+        (make-slice bv 0 len))))
 
 
   ; 
@@ -697,45 +707,45 @@
                                  [replacement (f match matches)])
                             (match-next
                               ; Should slice be used here?
-                              (make-pstring
-                                (pstring-buffer sub-str)
-                                (fx+ (pstring-offset match) (pstring-length match))
-                                (fx- (pstring-length sub-str)
-                                     (fx- (fx+ (pstring-offset match) (pstring-length match))
-                                          (pstring-offset sub-str))))
-                              (fx+ delta (fx- (pstring-length replacement) (pstring-length match)))
+                              (make-slice
+                                (slice-buffer sub-str)
+                                (fx+ (slice-offset match) (slice-length match))
+                                (fx- (slice-length sub-str)
+                                     (fx- (fx+ (slice-offset match) (slice-length match))
+                                          (slice-offset sub-str))))
+                              (fx+ delta (fx- (slice-length replacement) (slice-length match)))
                               (cons (cons match replacement) all-matches-reverse)))
                           (values delta (reverse all-matches-reverse)))))]
-                  [(len) (fx+ (pstring-length str) delta)]
+                  [(len) (fx+ (slice-length str) delta)]
                   [(bv) (pstring-buffer-alloc len)])
-      (let loop ([stri (pstring-offset str)] [bvi 0] [rest all-matches])
+      (let loop ([stri (slice-offset str)] [bvi 0] [rest all-matches])
         (if (null? rest)
           ; copy the left-overs into place
           (pstring-buffer-copy!
-            (pstring-buffer str)
+            (slice-buffer str)
             stri
             bv
             bvi
-            (fx- (pstring-length str) (fx- stri (pstring-offset str))))
+            (fx- (slice-length str) (fx- stri (slice-offset str))))
           (let* ([match (caar rest)]
                  [replacement (cdar rest)]
-                 [i (pstring-offset match)]
+                 [i (slice-offset match)]
                  [before-len (fx- i stri)])
             ; copy stuff before the match
-            (pstring-buffer-copy! (pstring-buffer str) stri bv bvi before-len)
+            (pstring-buffer-copy! (slice-buffer str) stri bv bvi before-len)
             ; the replacement itself
             (pstring-buffer-copy!
-              (pstring-buffer replacement)
-              (pstring-offset replacement)
+              (slice-buffer replacement)
+              (slice-offset replacement)
               bv
               (fx+ bvi before-len)
-              (pstring-length replacement))
+              (slice-length replacement))
             (loop
-              (fx+ (pstring-offset match) (pstring-length match))
-              (fx+ (fx+ bvi before-len) (pstring-length replacement))
+              (fx+ (slice-offset match) (slice-length match))
+              (fx+ (fx+ bvi before-len) (slice-length replacement))
               (cdr rest)))))
 
-          (make-pstring bv 0 len)))
+          (make-slice bv 0 len)))
 
   ; Replace the first match using the replacement returned by calling `f` with the match.
   (define (pstring-regex-replace-single regex str f)
@@ -744,33 +754,33 @@
         (let* ([match (srfi:214:flexvector-ref matches 0)]
                [_ (srfi:214:flexvector-remove-front! matches)]
                [replacement (f match matches)]
-               [delta (fx- (pstring-length replacement) (pstring-length match))]
-               [len (fx+ (pstring-length str) delta)]
+               [delta (fx- (slice-length replacement) (slice-length match))]
+               [len (fx+ (slice-length str) delta)]
                [buf (pstring-buffer-alloc len)])
-          (let* ([before-len (fx- (pstring-offset match) (pstring-offset str))])
+          (let* ([before-len (fx- (slice-offset match) (slice-offset str))])
             ; copy stuff before the match
             (pstring-buffer-copy!
-              (pstring-buffer str)
-              (pstring-offset str)
+              (slice-buffer str)
+              (slice-offset str)
               buf
               0
               before-len)
             ; the replacement itself
             (pstring-buffer-copy!
-              (pstring-buffer replacement)
-              (pstring-offset replacement)
+              (slice-buffer replacement)
+              (slice-offset replacement)
               buf
               before-len
-              (pstring-length replacement))
+              (slice-length replacement))
             ; copy the stuff after the match
             (pstring-buffer-copy!
-              (pstring-buffer str)
-              (fx+ (pstring-offset match) (pstring-length match))
+              (slice-buffer str)
+              (fx+ (slice-offset match) (slice-length match))
               buf
-              (fx+ before-len (pstring-length replacement))
-              (fx- (pstring-length str)
-                   (fx+ before-len (pstring-length match))))
-            (make-pstring buf 0 len)))
+              (fx+ before-len (slice-length replacement))
+              (fx- (slice-length str)
+                   (fx+ before-len (slice-length match))))
+            (make-slice buf 0 len)))
         str)))
 
   ; Replace a match with `replacement`
@@ -778,9 +788,9 @@
     (let* ([match-data (pcre2_match_data_create_from_pattern_16 (regex-code regex) 0)]
            [buf-len (make-ftype-pointer size_t (foreign-alloc (foreign-sizeof 'size_t)))]
            [subject-addr (pstring-&ref subject)]
-           [subject-len (pstring-length subject)]
+           [subject-len (slice-length subject)]
            [replacement-addr (pstring-&ref replacement)]
-           [replacement-len (pstring-length replacement)]
+           [replacement-len (slice-length replacement)]
            [start-offset 0]
            [match-context 0]
            ; first calculate the size of the output buffer by passing in 0 as the buf size
@@ -820,7 +830,7 @@
                    (ftype-&ref size_t () buf-len))])
       (foreign-free (ftype-pointer-address buf-len))
       ; Subtract NULL code unit from length
-      (make-pstring buf 0 (fx1- len))))
+      (make-slice buf 0 (fx1- len))))
 
   (define (pstring-regex-split regex str)
     (cond
@@ -834,27 +844,27 @@
                       (let* ([match (srfi:214:flexvector-ref matches 0)])
                         (match-next
                           ; Should slice be used here?
-                          (make-pstring
-                            (pstring-buffer sub-str)
-                            (fx+ (pstring-offset match) (pstring-length match))
-                            (fx- (pstring-length sub-str)
-                                 (fx- (fx+ (pstring-offset match) (pstring-length match))
-                                      (pstring-offset sub-str))))
+                          (make-slice
+                            (slice-buffer sub-str)
+                            (fx+ (slice-offset match) (slice-length match))
+                            (fx- (slice-length sub-str)
+                                 (fx- (fx+ (slice-offset match) (slice-length match))
+                                      (slice-offset sub-str))))
                           (cons match all-matches-reverse)))
                       (reverse all-matches-reverse))))])
           (let* ([match-count (length all-matches)]
                  [fv (srfi:214:make-flexvector (fx1+ match-count))])
-            (let loop ([stri (pstring-offset str)] [rest all-matches] [match-idx 0])
+            (let loop ([stri (slice-offset str)] [rest all-matches] [match-idx 0])
               (if (null? rest)
                 ; copy rest of the string as the last element
                 (begin
-                  (srfi:214:flexvector-set! fv match-idx (pstring-drop str (fx- stri (pstring-offset str))))
+                  (srfi:214:flexvector-set! fv match-idx (pstring-drop str (fx- stri (slice-offset str))))
                   fv)
-                (let* ([prefix-len (fx- (pstring-offset (car rest)) stri)]
-                       [start-idx (fx- stri (pstring-offset str))]
+                (let* ([prefix-len (fx- (slice-offset (car rest)) stri)]
+                       [start-idx (fx- stri (slice-offset str))]
                        [end-idx (fx+ start-idx prefix-len)])
                   (srfi:214:flexvector-set! fv match-idx (pstring-slice str start-idx end-idx))
-                  (loop (fx+ stri prefix-len (pstring-length (car rest))) (cdr rest) (fx1+ match-idx)))))))]))
+                  (loop (fx+ stri prefix-len (slice-length (car rest))) (cdr rest) (fx1+ match-idx)))))))]))
 
   ; Compiles a regex pattern to a regex.
   (define pstring-make-regex
@@ -866,7 +876,7 @@
                [options (flags->options flags)]
                [code (pcre2_compile_16
                        (pstring-&ref str)
-                       (pstring-length str)
+                       (slice-length str)
                        options
                        errorcode
                        erroroffset
@@ -889,7 +899,7 @@
            [rc (pcre2_match_16
                  (regex-code regex)
                  (pstring-&ref subject)
-                 (pstring-length subject)
+                 (slice-length subject)
                  0
                  0
                  match-data
@@ -908,9 +918,9 @@
                          (recur (fx1+ i)))
                   (let* ([sub-end (foreign-ref 'size_t ovector (fx* (fx1+ (fx* i 2)) (foreign-sizeof 'size_t)))]
                          [sub-len (fx- sub-end sub-start)]
-                         [match-str (make-pstring
-                                     (pstring-buffer subject)
-                                     (fx+ (pstring-offset subject) sub-start)
+                         [match-str (make-slice
+                                     (slice-buffer subject)
+                                     (fx+ (slice-offset subject) sub-start)
                                      sub-len)])
                     (srfi:214:flexvector-set! out i (on-match match-str))
                     (recur (fx1+ i)))))
@@ -922,7 +932,7 @@
            [rc (pcre2_match_16
                  (regex-code regex)
                  (pstring-&ref subject)
-                 (pstring-length subject)
+                 (slice-length subject)
                  0
                  0
                  match-data
@@ -1035,15 +1045,15 @@
 
   (define (pstring->cursor str)
     (make-pstring-cursor
-      (pstring-buffer str)
-      (pstring-offset str)
-      (fx+ (pstring-offset str) (pstring-length str))))
+      (slice-buffer str)
+      (slice-offset str)
+      (fx+ (slice-offset str) (slice-length str))))
 
   ; Slice the underlying buffer starting from where the cursor is pointing to
   (define (cursor->pstring cur)
-    (make-pstring (pstring-cursor-buffer cur)
-                  (pstring-cursor-offset cur)
-                  (fx- (pstring-cursor-end-offset cur) (pstring-cursor-offset cur))))
+    (make-slice (pstring-cursor-buffer cur)
+                (pstring-cursor-offset cur)
+                (fx- (pstring-cursor-end-offset cur) (pstring-cursor-offset cur))))
 
   (define (pstring-cursor-read-code-unit cur)
     (if (fx<? (pstring-cursor-offset cur) (pstring-cursor-end-offset cur))
