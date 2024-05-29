@@ -56,10 +56,18 @@
           pstring-cursor-peek-code-unit
           pstring-cursor-read-code-point
           pstring-cursor-peek-code-point)
-  (import (chezscheme)
+  (import (except (chezscheme) append)
           (prefix (purs runtime srfi :214) srfi:214:)
           (only (purs runtime finalizers) finalizer)
           (purs runtime pstring-buffer))
+
+  ;
+  ; Internals
+  ; 
+
+  (define-record append ((immutable left)
+                         (immutable tree)
+                         (immutable right)))
 
   (define-record pstring ())
   (define-record slice pstring
@@ -67,13 +75,60 @@
                   (immutable offset)
                   (immutable length)))
   (define-record concat pstring
-                 ((mutable length)
-                  (mutable rope)))
+                 ((immutable length)
+                  (mutable str)))
 
   (define (pstring-length str)
     (cond
       [(slice? str) (slice-length str)]
       [else (concat-length str)]))
+
+  (define (pstring-compact? str)
+    (and (concat? str) (slice? (concat-str str))))
+
+  (define (append->slice len str)
+    (define (compact! bv at kons)
+      (cond
+        [(pair? kons)
+          (let ([at-1 (compact! bv at (car kons))])
+            (compact! bv at-1 (cdr kons)))]
+        [else
+          (begin
+            (pstring-buffer-copy! (slice-buffer kons)
+                                  (slice-offset kons)
+                                  bv
+                                  at
+                                  (slice-length kons))
+            (fx+ at (slice-length kons)))]))
+
+    (assert (append? str))
+    (let* ([bv (pstring-buffer-alloc len)]
+           [left (append-left str)]
+           [right (append-right str)])
+      (pstring-buffer-copy! (slice-buffer left)
+                            (slice-offset left)
+                            bv
+                            0
+                            (slice-length left))
+      (let ([tree-len (compact! bv (slice-length left) (append-tree str))])
+        (pstring-buffer-copy! (slice-buffer right)
+                              (slice-offset right)
+                              bv
+                              (fx+ (slice-length left) tree-len)
+                              (slice-length right))
+        (make-slice bv 0 len))))
+
+  (define (pstring-compact! str)
+    (cond
+      [(concat? str)
+        (if (slice? (concat-str str))
+          ; already compacted, return the memoized slice
+          (concat-str str)
+          (let ([s (append->slice (concat-length str) (concat-str str))])
+            (set-concat-str! str s)
+            s))]
+      [else str]))
+
 
   ;
   ; Constructors
@@ -151,9 +206,12 @@
 
   ; Fast equality check based on object reference.
   (define (pstring-eq? x y)
-    (and (fx=? (slice-length x) (slice-length y))
-               (fx=? (slice-offset x) (slice-offset y))
-               (eq? (slice-buffer x) (slice-buffer y))))
+    (and
+      (slice? x)
+      (slice? y))
+      (and (fx=? (slice-length x) (slice-length y))
+                 (fx=? (slice-offset x) (slice-offset y))
+                 (eq? (slice-buffer x) (slice-buffer y))))
 
   (define (pstring=? x y)
     ; Assumes the buffers have the same length
@@ -423,18 +481,117 @@
   ; Joining & splitting
   ; 
 
-  ; A linear-time string builder that builds a new pstring from a list
-  ; of pstrings.
+  (define (pstring-append a b)
+    ; slice -> append -> append
+    (define (cons-slice a b)
+      (assert (slice? a))
+      (assert (append? b))
+      (make-append
+        a
+        (if (null? (append-tree b))
+          (append-left b)
+          (cons (append-left b) (append-tree b)))
+        (append-right b)))
+
+    ; append -> slice -> append
+    (define (snoc-slice a b)
+      (assert (append? a))
+      (assert (slice? b))
+      (make-append
+        (append-left a)
+        (if (null? (append-tree a))
+          (append-right a)
+          (cons (append-tree a) (append-right a)))
+        b))
+
+    (define (append append-a append-b)
+      (assert (append? append-a))
+      (assert (append? append-b))
+      (make-append
+        (append-left append-a)
+        (cond
+          [(and (null? (append-tree a)) (null? (append-tree b)))
+            (cons (append-right a) (append-left b))]
+          [(null? (append-tree a))
+            (cons (cons (append-right a) (append-left b))
+                  (append-tree b))]
+          [(null? (append-tree b))
+            (cons (append-tree a)
+                  (cons (append-right a) (append-left b)))]
+          [else
+            (cons
+              (cons (append-tree a)
+                    (cons (append-right a) (append-left b)))
+              (append-tree b))])
+        (append-right b)))
+
+    (cond
+      [(and (concat? a) (concat? b))
+        (cond
+          ; If both are memoized compacted strings, then concat the slices
+          [(and (slice? (concat-str a)) (slice? (concat-str b)))
+           (make-concat
+             (fx+ (concat-length a) (concat-length b))
+             (make-append
+               (concat-str a)
+               '()
+               (concat-str b)))]
+          [(slice? (concat-str a))
+            (make-concat
+              (fx+ (slice-length (concat-str a)) (concat-length b))
+              (cons-slice (concat-str a) (concat-str b)))]
+          [(slice? (concat-str b))
+            (make-concat
+              (fx+ (concat-length a) (slice-length (concat-str b)))
+              (snoc-slice (concat-str a) (concat-str b)))]
+          [else
+            (make-concat
+              (fx+ (concat-length a) (concat-length b))
+              (append (concat-str a) (concat-str b)))])]
+      [(concat? a)
+        (if (fx=? (slice-length b) 0)
+          a
+          (make-concat
+            (fx+ (concat-length a) (slice-length b))
+            (if (slice? (concat-str a))
+              (make-append
+                (concat-str a)    
+                '()
+                b)
+              (snoc-slice (concat-str a) b))))]
+      [(concat? b)
+        (if (fx=? (slice-length a) 0)
+          b
+          (make-concat
+            (fx+ (slice-length a) (concat-length b))
+            (if (slice? (concat-str b))
+              (make-append
+                a    
+                '()
+                (concat-str b))
+              (cons-slice a (concat-str b)))))]
+      [(and (fx=? (slice-length a) 0) (fx=? (slice-length b) 0))
+        empty-pstring]
+      [else
+        (make-concat
+          (fx+ (slice-length a) (slice-length b))
+          (make-append
+            a
+            '()
+            b))]))
+
   (define (pstring-concat . xs)
-    (let* ([len (fold-right (lambda (s a) (fx+ (slice-length s) a)) 0 xs)]
-           [buf (pstring-buffer-alloc len)])
-      (let loop ([i 0] [ls xs])
-        (if (pair? ls)
-          (let* ([str (car ls)]
-                 [slen (slice-length str)])
-            (pstring-buffer-copy! (slice-buffer str) (slice-offset str) buf i slen)
-            (loop (fx+ i slen) (cdr ls)))
-          (make-slice buf 0 len)))))
+    (fold-right pstring-append empty-pstring xs))
+
+    ; (let* ([len (fold-right (lambda (s a) (fx+ (slice-length s) a)) 0 xs)]
+    ;        [buf (pstring-buffer-alloc len)])
+    ;   (let loop ([i 0] [ls xs])
+    ;     (if (pair? ls)
+    ;       (let* ([str (car ls)]
+    ;              [slen (slice-length str)])
+    ;         (pstring-buffer-copy! (slice-buffer str) (slice-offset str) buf i slen)
+    ;         (loop (fx+ i slen) (cdr ls)))
+    ;       (make-slice buf 0 len)))))
 
   ; Create a new pstring by joining a flexvector of pstrings using a separator
   (define (pstring-join-with xs separator)
@@ -506,17 +663,19 @@
   (define pstring-slice
     (case-lambda
       [(str start)
-       (pstring-slice str start (slice-length str))]
-      [(str start end)
-        (let* ([start-index (fxmin (fxmax 0 start) (slice-length str))]
-               [end-index (fxmin (fxmax 0 end) (slice-length str))]
-               [len (fx- end-index start-index)])
-          (if (fx<? len 0)
-            empty-pstring
-            (make-slice
-              (slice-buffer str)
-              (fx+ (slice-offset str) start-index)
-              len)))]))
+       (pstring-slice str start (pstring-length str))]
+      [(s start end)
+        ; TODO optimize to handle at least some cases without compacting
+        (let ([str (pstring-compact! s)])
+          (let* ([start-index (fxmin (fxmax 0 start) (slice-length str))]
+                 [end-index (fxmin (fxmax 0 end) (slice-length str))]
+                 [len (fx- end-index start-index)])
+            (if (fx<? len 0)
+              empty-pstring
+              (make-slice
+                (slice-buffer str)
+                (fx+ (slice-offset str) start-index)
+                len))))]))
 
   (define (pstring-take str n)
     (pstring-slice str 0 n))
@@ -1043,11 +1202,12 @@
 
   (define-record pstring-cursor (buffer offset end-offset))
 
-  (define (pstring->cursor str)
-    (make-pstring-cursor
-      (slice-buffer str)
-      (slice-offset str)
-      (fx+ (slice-offset str) (slice-length str))))
+  (define (pstring->cursor s)
+    (let ([str (pstring-compact! s)])
+      (make-pstring-cursor
+        (slice-buffer str)
+        (slice-offset str)
+        (fx+ (slice-offset str) (slice-length str)))))
 
   ; Slice the underlying buffer starting from where the cursor is pointing to
   (define (cursor->pstring cur)
