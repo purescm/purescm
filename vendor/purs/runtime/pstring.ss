@@ -4,6 +4,7 @@
           code-points->pstring
           number->pstring
           list->pstring
+          pstring-compact?
           pstring<=?
           pstring<?
           pstring=?
@@ -127,8 +128,10 @@
     (and (Concat? str) (Slice? (Concat-tree str))))
 
   (define (append->slice len str)
+    ; TODO rename to something like copy-tree
     (define (compact! bv at kons)
       (cond
+        [(null? kons) at]
         [(pair? kons)
           (let ([at-1 (compact! bv at (car kons))])
             (compact! bv at-1 (cdr kons)))]
@@ -149,13 +152,20 @@
                             bv
                             0
                             (Slice-length left))
-      (let ([tree-len (compact! bv (Slice-length left) (ConcatTree-deep str))])
+      (let ([at (compact! bv (Slice-length left) (ConcatTree-deep str))])
         (pstring-buffer-copy! (Slice-buffer right)
                               (Slice-offset right)
                               bv
-                              (fx+ (Slice-length left) tree-len)
+                              at
                               (Slice-length right))
         (make-Slice bv 0 len))))
+
+  ; Compact the string and memoize
+  ; Concat -> Slice
+  (define (compact! c)
+    (let ([s (append->slice (Concat-length c) (Concat-tree c))])
+      (set-Concat-tree! c s)
+      s))
 
   (define (pstring-compact! str)
     (cond
@@ -163,9 +173,7 @@
         (if (Slice? (Concat-tree str))
           ; already compacted, return the memoized slice
           (Concat-tree str)
-          (let ([s (append->slice (Concat-length str) (Concat-tree str))])
-            (set-Concat-tree! str s)
-            s))]
+          (compact! str))]
       [else str]))
 
 
@@ -568,6 +576,8 @@
               (tree-cons a (Concat-tree b)))))]
       [(and (fx=? (Slice-length a) 0) (fx=? (Slice-length b) 0))
         empty-pstring]
+      [(fx=? (Slice-length a) 0) b]
+      [(fx=? (Slice-length b) 0) a]
       [else
         (make-Concat
           (fx+ (Slice-length a) (Slice-length b))
@@ -578,16 +588,6 @@
 
   (define (pstring-concat . xs)
     (fold-right pstring-append empty-pstring xs))
-
-    ; (let* ([len (fold-right (lambda (s a) (fx+ (Slice-length s) a)) 0 xs)]
-    ;        [buf (pstring-buffer-alloc len)])
-    ;   (let loop ([i 0] [ls xs])
-    ;     (if (pair? ls)
-    ;       (let* ([str (car ls)]
-    ;              [slen (Slice-length str)])
-    ;         (pstring-buffer-copy! (Slice-buffer str) (Slice-offset str) buf i slen)
-    ;         (loop (fx+ i slen) (cdr ls)))
-    ;       (make-Slice buf 0 len)))))
 
   ; Create a new pstring by joining a flexvector of pstrings using a separator
   (define (pstring-join-with xs separator)
@@ -654,24 +654,56 @@
   ; Slicing
   ;
 
+  ; Slice -> fixnum -> fixnum -> Slice
+  (define slice
+    (case-lambda
+      [(str start)
+       (slice str start (pstring-length str))]
+      [(str start end)
+        (let* ([start-index (fxmin (fxmax 0 start) (Slice-length str))]
+               [end-index (fxmin (fxmax 0 end) (Slice-length str))]
+               [len (fx- end-index start-index)])
+          (if (fx<? len 0)
+            empty-pstring
+            (make-Slice
+              (Slice-buffer str)
+              (fx+ (Slice-offset str) start-index)
+              len)))]))
+
   ; The primitive constant-time slice operation.
   ; Takes in a` start` index and optionally an `end` index.
   (define pstring-slice
     (case-lambda
       [(str start)
        (pstring-slice str start (pstring-length str))]
-      [(s start end)
-        ; TODO optimize to handle at least some cases without compacting
-        (let ([str (pstring-compact! s)])
-          (let* ([start-index (fxmin (fxmax 0 start) (Slice-length str))]
-                 [end-index (fxmin (fxmax 0 end) (Slice-length str))]
-                 [len (fx- end-index start-index)])
-            (if (fx<? len 0)
-              empty-pstring
-              (make-Slice
-                (Slice-buffer str)
-                (fx+ (Slice-offset str) start-index)
-                len))))]))
+      [(str start end)
+        (cond
+          ; Already a Slice?
+          [(Slice? str) (slice str start end)]
+          [(and (Concat? str) (ConcatTree? (Concat-tree str)))
+            (let* ([tree (Concat-tree str)]
+                   [suffix-start
+                     (fx+ (Slice-length (ConcatTree-prefix tree))
+                          (fx- (Concat-length str)
+                               (Slice-length (ConcatTree-prefix tree))
+                               (Slice-length (ConcatTree-suffix tree))))])
+              (cond
+                ; Entirely reachable in the prefix?
+                [(fx<=? end (Slice-length (ConcatTree-prefix tree)))
+                  (slice (ConcatTree-prefix tree) start end)]
+                ; Entirely reachable in the suffix?
+                [(fx>=? start suffix-start)
+                  (slice (ConcatTree-suffix tree)
+                         (fx- start suffix-start)
+                         (fx- end suffix-start))]
+                ; TODO When `deep` is null, slice can reach both prefix and suffix
+                ; []
+                [else
+                  (let ([s (compact! str)])
+                    (slice s start end))]))]
+          ; It's a compacted string
+          [else
+            (slice (Concat-tree str) start end)])]))
 
   (define (pstring-take str n)
     (pstring-slice str 0 n))

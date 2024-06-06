@@ -76,6 +76,21 @@
                 (pstring-slice (lit "foo") -1)
                 (string->pstring "foo")))
 
+      ; Entirely in the prefix
+      (let ([s (pstring-concat (string->pstring "foo") (string->pstring "bar"))])
+        (assert (pstring=? (pstring-take s 3) (string->pstring "foo")))
+        (assert (not (pstring-compact? s))))
+
+      ; Reachable within prefix and suffix
+      (let ([s (pstring-concat (string->pstring "foo") (string->pstring "bar"))])
+        (assert (pstring=? (pstring-take s 4) (string->pstring "foob")))
+        (assert (pstring-compact? s)))
+
+      ; Reachable within suffix
+      (let ([s (pstring-concat (string->pstring "foo") (string->pstring "bar"))])
+        (assert (pstring=? (pstring-drop s 3) (string->pstring "bar")))
+        (assert (not (pstring-compact? s))))
+
       ;; take
       (assert (pstring=? (pstring-take (lit "foo") -1) (lit "")))
       (assert (pstring=? (pstring-take (lit "foo") 0) (lit "")))
