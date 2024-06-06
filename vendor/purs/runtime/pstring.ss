@@ -127,14 +127,14 @@
   (define (pstring-compact? str)
     (and (Concat? str) (Slice? (Concat-tree str))))
 
-  (define (append->slice len str)
-    ; TODO rename to something like copy-tree
-    (define (compact! bv at kons)
+  ; fixnum -> ConcatTree -> Slice
+  (define (compact-tree len str)
+    (define (copy-tree! bv at kons)
       (cond
         [(null? kons) at]
         [(pair? kons)
-          (let ([at-1 (compact! bv at (car kons))])
-            (compact! bv at-1 (cdr kons)))]
+          (let ([at-1 (copy-tree! bv at (car kons))])
+            (copy-tree! bv at-1 (cdr kons)))]
         [else
           (begin
             (pstring-buffer-copy! (Slice-buffer kons)
@@ -152,7 +152,7 @@
                             bv
                             0
                             (Slice-length left))
-      (let ([at (compact! bv (Slice-length left) (ConcatTree-deep str))])
+      (let ([at (copy-tree! bv (Slice-length left) (ConcatTree-deep str))])
         (pstring-buffer-copy! (Slice-buffer right)
                               (Slice-offset right)
                               bv
@@ -163,7 +163,7 @@
   ; Compact the string and memoize
   ; Concat -> Slice
   (define (compact! c)
-    (let ([s (append->slice (Concat-length c) (Concat-tree c))])
+    (let ([s (compact-tree (Concat-length c) (Concat-tree c))])
       (set-Concat-tree! c s)
       s))
 
