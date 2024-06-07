@@ -366,7 +366,7 @@
   ; 
 
   ; Gets first code unit scalar value
-  (define (pstring-ref-first str)
+  (define (slice-ref-first str)
     (pstring-buffer-ref (Slice-buffer str) (Slice-offset str)))
 
   ; Get last code unit scalar value
@@ -725,11 +725,11 @@
                 [else (loop (fx1- i))])))))))
 
   ; Like pstring-drop but without bounds checks
-  (define (pstring-unsafe-drop str n)
+  (define (slice-unsafe-drop s n)
     (make-Slice
-      (Slice-buffer str)
-      (fx+ (Slice-offset str) n)
-      (fx- (Slice-length str) n)))
+      (Slice-buffer s)
+      (fx+ (Slice-offset s) n)
+      (fx- (Slice-length s) n)))
 
   ; Returns the first char and the rest of the pstring
   (define (pstring-uncons-char str)
@@ -742,8 +742,9 @@
       (raise-continuable
         (make-message-condition
           (format "pstring-uncons-code-unit: cannot uncons an empty pstring ~a" str)))
-      (let ([w1 (pstring-ref-first str)]
-            [tail (pstring-unsafe-drop str 1)])
+      (let* ([slice (pstring-compact! str)]
+             [w1 (slice-ref-first slice)]
+             [tail (slice-unsafe-drop slice 1)])
         (values w1 tail))))
 
 
