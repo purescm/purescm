@@ -3,7 +3,7 @@
   (export char-flexvector->pstring
           code-points->pstring
           number->pstring
-          list->pstring
+          (rename (list->pstring pstring))
           pstring-compact?
           pstring<=?
           pstring<?
@@ -47,7 +47,7 @@
           pstring-upcase
           regex-flags
           regex-source
-          (rename (make-pstring-of-length make-Slice))
+          (rename (make-pstring-of-length make-pstring))
           string->pstring
           pstring->cursor
           cursor->pstring
@@ -117,7 +117,7 @@
                   (immutable length)))
   (define-record Concat pstring
                  ((immutable length)
-                  (mutable tree)))
+                  (mutable str)))
 
   (define (pstring-length str)
     (cond
@@ -125,7 +125,7 @@
       [else (Concat-length str)]))
 
   (define (pstring-compact? str)
-    (and (Concat? str) (Slice? (Concat-tree str))))
+    (and (Concat? str) (Slice? (Concat-str str))))
 
   ; fixnum -> ConcatTree -> Slice
   (define (compact-tree len str)
@@ -163,16 +163,16 @@
   ; Compact the string and memoize
   ; Concat -> Slice
   (define (compact! c)
-    (let ([s (compact-tree (Concat-length c) (Concat-tree c))])
-      (set-Concat-tree! c s)
+    (let ([s (compact-tree (Concat-length c) (Concat-str c))])
+      (set-Concat-str! c s)
       s))
 
   (define (pstring-compact! str)
     (cond
       [(Concat? str)
-        (if (Slice? (Concat-tree str))
+        (if (Slice? (Concat-str str))
           ; already compacted, return the memoized slice
-          (Concat-tree str)
+          (Concat-str str)
           (compact! str))]
       [else str]))
 
@@ -533,47 +533,47 @@
       [(and (Concat? a) (Concat? b))
         (cond
           ; If both are memoized compacted strings, then concat the slices
-          [(and (Slice? (Concat-tree a)) (Slice? (Concat-tree b)))
+          [(and (Slice? (Concat-str a)) (Slice? (Concat-str b)))
            (make-Concat
              (fx+ (Concat-length a) (Concat-length b))
              (make-ConcatTree
-               (Concat-tree a)
+               (Concat-str a)
                '()
-               (Concat-tree b)))]
-          [(Slice? (Concat-tree a))
+               (Concat-str b)))]
+          [(Slice? (Concat-str a))
             (make-Concat
-              (fx+ (Slice-length (Concat-tree a)) (Concat-length b))
-              (tree-cons (Concat-tree a) (Concat-tree b)))]
-          [(Slice? (Concat-tree b))
+              (fx+ (Slice-length (Concat-str a)) (Concat-length b))
+              (tree-cons (Concat-str a) (Concat-str b)))]
+          [(Slice? (Concat-str b))
             (make-Concat
-              (fx+ (Concat-length a) (Slice-length (Concat-tree b)))
-              (tree-snoc (Concat-tree a) (Concat-tree b)))]
+              (fx+ (Concat-length a) (Slice-length (Concat-str b)))
+              (tree-snoc (Concat-str a) (Concat-str b)))]
           [else
             (make-Concat
               (fx+ (Concat-length a) (Concat-length b))
-              (concat (Concat-tree a) (Concat-tree b)))])]
+              (concat (Concat-str a) (Concat-str b)))])]
       [(Concat? a)
         (if (fx=? (Slice-length b) 0)
           a
           (make-Concat
             (fx+ (Concat-length a) (Slice-length b))
-            (if (Slice? (Concat-tree a))
+            (if (Slice? (Concat-str a))
               (make-ConcatTree
-                (Concat-tree a)    
+                (Concat-str a)    
                 '()
                 b)
-              (tree-snoc (Concat-tree a) b))))]
+              (tree-snoc (Concat-str a) b))))]
       [(Concat? b)
         (if (fx=? (Slice-length a) 0)
           b
           (make-Concat
             (fx+ (Slice-length a) (Concat-length b))
-            (if (Slice? (Concat-tree b))
+            (if (Slice? (Concat-str b))
               (make-ConcatTree
                 a    
                 '()
-                (Concat-tree b))
-              (tree-cons a (Concat-tree b)))))]
+                (Concat-str b))
+              (tree-cons a (Concat-str b)))))]
       [(and (fx=? (Slice-length a) 0) (fx=? (Slice-length b) 0))
         empty-pstring]
       [(fx=? (Slice-length a) 0) b]
@@ -680,8 +680,8 @@
         (cond
           ; Already a Slice?
           [(Slice? str) (slice str start end)]
-          [(and (Concat? str) (ConcatTree? (Concat-tree str)))
-            (let* ([tree (Concat-tree str)]
+          [(and (Concat? str) (ConcatTree? (Concat-str str)))
+            (let* ([tree (Concat-str str)]
                    [suffix-start
                      (fx+ (Slice-length (ConcatTree-prefix tree))
                           (fx- (Concat-length str)
@@ -703,7 +703,7 @@
                     (slice s start end))]))]
           ; It's a compacted string
           [else
-            (slice (Concat-tree str) start end)])]))
+            (slice (Concat-str str) start end)])]))
 
   (define (pstring-take str n)
     (pstring-slice str 0 n))
