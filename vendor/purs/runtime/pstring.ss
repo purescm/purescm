@@ -370,17 +370,18 @@
     (pstring-buffer-ref (Slice-buffer str) (Slice-offset str)))
 
   ; Get last code unit scalar value
-  (define (pstring-ref-last str)
+  (define (slice-ref-last str)
     (pstring-buffer-ref (Slice-buffer str) (fx- (fx+ (Slice-offset str) (Slice-length str)) 1)))
 
   (define (pstring-ref-code-unit str n)
-    (let ([bv (Slice-buffer str)])
-      (if (fx<? n (Slice-length str))
-        (pstring-buffer-ref bv (fx+ n (Slice-offset str)))
-        ; not enough bytes to read a full code unit
-        (raise-continuable
-          (make-message-condition
-            (format "pstring-ref-code-unit ~d is not a valid index" n))))))
+    (let ([slice (pstring-compact! str)])
+      (let ([bv (Slice-buffer slice)])
+        (if (fx<? n (Slice-length slice))
+          (pstring-buffer-ref bv (fx+ n (Slice-offset slice)))
+          ; not enough bytes to read a full code unit
+          (raise-continuable
+            (make-message-condition
+              (format "pstring-ref-code-unit ~d is not a valid index" n)))))))
 
   ; Gets the char at index `n`.
   ;
@@ -388,9 +389,10 @@
   (define (pstring-ref str n)
     (integer->char (pstring-ref-code-unit str n)))
 
-  ; Returns the address to the beginning of the slice
+  ; Returns the address to the beginning of the string
   (define (pstring-&ref str)
-    (pstring-buffer-&ref (Slice-buffer str) (Slice-offset str)))
+    (let ([slice (pstring-compact! str)])
+      (pstring-buffer-&ref (Slice-buffer slice) (Slice-offset slice))))
 
   ; Gets the code point scalar value at index `n`
   (define (pstring-ref-code-point str n)
@@ -475,7 +477,8 @@
   ; 
 
   (define (pstring->string str)
-    (utf16-immobile->string (Slice-buffer str) (Slice-offset str) (Slice-length str)))
+    (let ([slice (pstring-compact! str)])
+      (utf16-immobile->string (Slice-buffer slice) (Slice-offset slice) (Slice-length slice))))
 
   (define pstring->number
     (case-lambda
@@ -790,7 +793,7 @@
       (let loop ([rest suffix])
         (if (pstring-empty? rest)
           rest
-          (let ([last (pstring-ref-last rest)]
+          (let ([last (slice-ref-last rest)]
                 [prefix (pstring-take rest (fx1- (Slice-length rest)))])
             (if (whitespace? last) (loop prefix) rest))))))
 
