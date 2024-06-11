@@ -67,7 +67,11 @@ loadModuleMain options = do
   when options.hasMain do
     spawned.stdin.writeUtf8End $ Array.fold
       [ "(base-exception-handler (lambda (e) (display-condition e (console-error-port)) (newline (console-error-port)) (exit -1)))"
-      , "(top-level-program (import (" <> options.moduleName <> " lib)) (main))"
+      , "(top-level-program (import (only (chezscheme) base-exception-handler exit lambda)"
+      , "                           (" <> options.moduleName <> " lib)"
+      , "                           (only (purs runtime stack-trace) print-stack-trace))"
+      , "  (base-exception-handler (lambda (e) (print-stack-trace e) (exit -1)))"
+      , "  (main))"
       ]
   spawned.stdout.pipeToParentStdout
   spawned.stderr.pipeToParentStderr
