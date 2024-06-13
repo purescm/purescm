@@ -55,7 +55,7 @@ scheme --program output/main
 
 ### Running the tests
 
-To run all tests, run `npm run test`. This will run both the scheme runtime unit tests tests and the snapshot tests.
+To run all tests, run `npm run test`. This will run both the scheme runtime unit tests and the snapshot tests.
 
 To overwrite old snapshots with the latest output, run `npm run test -- -a "--accept"`.
 To add a new snapshot, create a file called `Snapshot.X.purs` where `X` indicates what is being tested.
