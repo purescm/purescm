@@ -51,7 +51,17 @@ which generates a single file `output/main` which can be run with `scheme` or `p
 scheme --program output/main
 ```
 
-## Vendored Dependencies
+## Development
+
+### Running the tests
+
+To run all tests, run `npm run test`. This will run both the scheme runtime unit tests tests and the snapshot tests.
+
+To overwrite old snapshots with the latest output, run `npm run test -- -a "--accept"`.
+To add a new snapshot, create a file called `Snapshot.X.purs` where `X` indicates what is being tested.
+If a snapshot needs a dependency, install it by running `spago -x test-snapshots/spago.dhall install <packages...>`. The snapshots have their own `spago.dhall` file so as not to pollute the `purescm` binary with unneeded dependencies.
+
+### Vendored Dependencies
 
 In order to represent `Array` and record types in `purescm`, the backend has a runtime dependency on implementation of SRFI 214 (Flexvectors). This is due in part to how [vectors](https://cisco.github.io/ChezScheme/csug9.5/objects.html#./objects:h5) are more like "arrays" than "array lists".
 
@@ -78,9 +88,3 @@ Copyright 1984-2022 Cisco Systems, Inc.
 >
 ```
 
-## Snapshots
-
-To run snapshots, run `npm run test`.
-To overwrite old snapshots with the latest output, run `npm run test -- -a "--accept"`.
-To add a new snapshot, create a file called `Snapshot.X.purs` where `X` indicates what is being tested.
-If a snapshot needs a dependency, install it by running `spago -x test-snapshots/spago.dhall install <packages...>`. The snapshots have their own `spago.dhall` file so as not to pollute the `purescm` binary with unneeded dependencies.

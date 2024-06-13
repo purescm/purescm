@@ -43,7 +43,7 @@ jobs:
 
       - name: Run tests
         run: |
-          nix-shell --run "spago test"
+          nix-shell --run "npm run test"
 
       - name: Check Formatting
         run: |

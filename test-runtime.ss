@@ -1,0 +1,10 @@
+#!/usr/bin/env -S scheme --libdirs vendor: --program
+(import (chezscheme)
+        (only (purs runtime finalizers) run-finalizers)
+        (only (purs runtime stack-trace) print-stack-trace)
+        (only (purs runtime test pstring-test) main))
+(display "Testing pstring\n")
+(collect-request-handler (lambda () (collect) (run-finalizers)))
+(base-exception-handler (lambda (e) (print-stack-trace e) (exit -1)))
+(display "All good!\n")
+(main)
