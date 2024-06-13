@@ -126,7 +126,8 @@
     },
     "strings": {
       "git": "https://github.com/purescm/purescript-core.git",
-      "ref": "b55c8bb976dcddf69fda2593c5707969ca1e13b4"
+      "ref": "b55c8bb976dcddf69fda2593c5707969ca1e13b4",
+      "subdir": "strings"
     },
     "semirings": "7.0.0",
     "tailrec": "6.1.0",
