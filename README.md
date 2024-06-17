@@ -59,7 +59,7 @@ To run all tests, run `npm run test`. This will run both the scheme runtime unit
 
 To overwrite old snapshots with the latest output, run `npm run test -- -a "--accept"`.
 To add a new snapshot, create a file called `Snapshot.X.purs` where `X` indicates what is being tested.
-If a snapshot needs a dependency, install it by running `spago -x test-snapshots/spago.dhall install <packages...>`. The snapshots have their own `spago.dhall` file so as not to pollute the `purescm` binary with unneeded dependencies.
+If a snapshot needs a dependency, install it by running `cd test-snapshots && spago install <packages...>`.
 
 ### Vendored Dependencies
 
