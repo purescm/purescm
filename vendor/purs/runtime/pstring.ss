@@ -189,7 +189,7 @@
 
   ; Makes a string of one scheme char
   ;
-  ; NOTE: this only takes in PS a char which are guaranteed to
+  ; NOTE: this only takes a PS char which is guaranteed to
   ; be only one code unit in size
   (define (pstring-singleton c)
     (let ([bv (pstring-buffer-alloc 1)])
