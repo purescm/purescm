@@ -202,8 +202,10 @@ runBundle cliRoot args = do
     mainContent = String.joinWith "\n"
       [ "#!chezscheme"
       , "(import (chezscheme)"
+      , "        (only (purs runtime stack-trace) print-stack-trace)"
       , "        (only (purs runtime finalizers) run-finalizers)"
       , "        (only (" <> args.moduleName <> " lib) main))"
+      , "(base-exception-handler (lambda (e) (print-stack-trace e) (exit -1)))"
       , "(collect-request-handler (lambda () (collect) (run-finalizers)))"
       , "(main)"
       ]
@@ -238,14 +240,16 @@ runRun cliRoot args = do
     libDirs = runtimePath <> ":" <> args.libDir <> ":"
     arguments = [ "-q", "--libdirs", libDirs ]
   res <- evalScheme arguments $ Array.fold
-    -- Catch errors so that we exit with an error code
+    -- Set up an exception handler here so that compilation warnings get caught
     [ "(base-exception-handler (lambda (e)"
     , "  (display-condition e (console-error-port))"
     , "  (newline (console-error-port))"
     , "  (exit -1)))"
     , "(top-level-program (import (chezscheme)"
     , "                           (only (purs runtime finalizers) run-finalizers)"
+    , "                           (only (purs runtime stack-trace) print-stack-trace)"
     , "                           (only (" <> args.moduleName <> " lib) main))"
+    , "  (base-exception-handler (lambda (e) (print-stack-trace e) (exit -1)))"
     , "  (collect-request-handler (lambda () (collect) (run-finalizers)))"
     , "  (main))"
     ]

@@ -1,4 +1,4 @@
-(library (purs runtime pstring-test)
+(library (purs runtime test pstring-test)
   (export main)
   (import (chezscheme)
           (prefix (purs runtime) rt:)
@@ -420,6 +420,5 @@
         (assert (eqv? #\o (pstring-cursor-read-char cur)))
         (assert (eqv? (eof-object) (pstring-cursor-read-char cur))))
 
-      (display "All good!\n")
       ))
   )
