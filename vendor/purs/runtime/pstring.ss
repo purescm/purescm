@@ -249,7 +249,7 @@
   ;
 
   (define (pstring-empty? str)
-    (fx=? (Slice-length str) 0))
+    (fx=? (pstring-length str) 0))
 
   ; Fast equality check based on object reference.
   (define (pstring-eq? x y)

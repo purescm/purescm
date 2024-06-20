@@ -36,6 +36,16 @@
   (define (regex-match r s)
     (pstring-regex-match (pstring-make-regex r) s (lambda (x) x) #f))
 
+  (define (assert-all-pstring f)
+    (assert (f (string->pstring "foobarbaz")))
+    (assert (f (lit "foobarbaz")))
+    (assert (f (pstring-concat (string->pstring "") (string->pstring "foobarbaz"))))
+    (assert (f (pstring-concat (string->pstring "foobarbaz") (string->pstring ""))))
+    (assert (f (pstring-concat (string->pstring "fooba") (string->pstring "rbaz"))))
+    (assert (f (pstring-concat (lit "fooba") (lit "rbaz"))))
+    (assert (f (pstring-concat (string->pstring "foo") (string->pstring "bar") (string->pstring "baz"))))
+    (assert (f (pstring-concat (lit "foo") (lit "bar") (lit "baz")))))
+
   (define main
     (lambda ()
 
@@ -50,6 +60,7 @@
       (assert (fx=? 2 (pstring-length (lit "ää"))))
       (assert (fx=? 2 (pstring-length (lit "🍔"))))
       (assert (fx=? 4 (pstring-length (lit "🍔🍔"))))
+      (assert-all-pstring (lambda (s) (fx=? (pstring-length s) 9)))
 
       ;; length in code points
       (assert (fx=? 0 (pstring-length-code-points (lit ""))))
@@ -57,6 +68,7 @@
       (assert (fx=? 1 (pstring-length-code-points (lit "ä"))))
       (assert (fx=? 2 (pstring-length-code-points (lit "äが"))))
       (assert (fx=? 2 (pstring-length-code-points (lit "🍔🍔"))))
+      (assert-all-pstring (lambda (s) (fx=? (pstring-length-code-points s) 9)))
 
 
       ;; slicing
@@ -75,6 +87,7 @@
       (assert (pstring=?
                 (pstring-slice (lit "foo") -1)
                 (string->pstring "foo")))
+      (assert-all-pstring (lambda (s) (pstring=? (pstring-slice s 2 6) (string->pstring "obar"))))
 
       ; Entirely in the prefix
       (let ([s (pstring-concat (string->pstring "foo") (string->pstring "bar"))])
@@ -119,6 +132,7 @@
       (assert (fx=? 0 (pstring-index-of (lit "𝕒𝕓𝕔") (lit "𝕒"))))
       (assert (fx=? 2 (pstring-index-of (lit "𝕒𝕓𝕔") (lit "𝕓"))))
       (assert (fx=? 1 (pstring-index-of (lit "11112") (lit "1112"))))
+      (assert-all-pstring (lambda (s) (fx=? 2 (pstring-index-of s (string->pstring "obar")))))
 
       ;; last-index-of
       (assert (fx=? 7 (pstring-last-index-of (lit "foo bar") (lit ""))))
