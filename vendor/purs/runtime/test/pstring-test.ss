@@ -193,6 +193,11 @@
                 equal?
                 (pstring->char-flexvector (lit "foo"))
                 (srfi:214:flexvector #\f #\o #\o)))
+      (assert-all-pstring (lambda (s)
+                            (srfi:214:flexvector=?
+                              equal?
+                              (pstring->char-flexvector s)
+                              (srfi:214:flexvector #\f #\o #\o #\b #\a #\r #\b #\a #\z))))
 
       (assert (srfi:214:flexvector=?
                 equal?

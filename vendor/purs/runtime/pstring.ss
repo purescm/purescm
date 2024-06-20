@@ -493,14 +493,16 @@
 
   ; Turns a pstring to a flexvector of chars
   (define (pstring->char-flexvector str)
-    (let* ([len (Slice-length str)]
-           [fv (srfi:214:make-flexvector len)])
-      (let loop ([i 0] [rest str])
-        (if (pstring-empty? rest)
-          fv
-          (let-values ([(c tail) (pstring-uncons-char rest)])
-            (srfi:214:flexvector-set! fv i c)
-            (loop (fx1+ i) tail))))))
+    (let* ([len (pstring-length str)]
+           [fv (srfi:214:make-flexvector len)]
+           [cur (pstring->cursor str)])
+      (let loop ([i 0] [c (pstring-cursor-read-char cur)])
+        (cond
+          [(eof-object? c) fv]
+          [else
+            (begin
+              (srfi:214:flexvector-set! fv i c)
+              (loop (fx1+ i) (pstring-cursor-read-char cur)))]))))
 
   ; Turns a pstring to a list of chars
   (define (pstring->list str)
@@ -699,7 +701,7 @@
                   (slice (ConcatTree-suffix tree)
                          (fx- start suffix-start)
                          (fx- end suffix-start))]
-                ; TODO When `deep` is null, slice can reach both prefix and suffix
+                ; TODO When `str` is null, slice can reach both prefix and suffix
                 ; []
                 [else
                   (let ([s (compact! str)])
