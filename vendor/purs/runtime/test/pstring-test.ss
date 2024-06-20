@@ -140,6 +140,7 @@
       (assert (not (pstring-index-of (lit "foo bar") (lit "baz"))))
       (assert (fx=? 8 (pstring-last-index-of (lit "foo bar foo") (lit "foo"))))
       (assert (fx=? 6 (pstring-last-index-of (lit "1112 1112") (lit "112"))))
+      (assert-all-pstring (lambda (s) (fx=? 6 (pstring-last-index-of s (string->pstring "ba")))))
 
       ;; comparisons
       (assert (pstring=? (lit "abc") (lit "abc")))

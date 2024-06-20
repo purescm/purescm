@@ -423,9 +423,9 @@
                  [pattern-idx 0])
         (cond
           ; Found the end of the pattern, we are done
-          [(fx=? (Slice-length pattern) pattern-idx) candidate]
+          [(fx=? (pstring-length pattern) pattern-idx) candidate]
           ; In the middle of matching but we have no more input. No match found.
-          [(fx=? (Slice-length str) str-idx) #f]
+          [(fx=? (pstring-length str) str-idx) #f]
           [else
             (let ([str-cu (pstring-ref-code-unit str str-idx)]
                   [pattern-cu (pstring-ref-code-unit pattern pattern-idx)])
@@ -443,19 +443,19 @@
   ; Finds the index of last occurence of `pattern`.
   (define (pstring-last-index-of str pattern)
     (if (pstring-empty? pattern)
-      (Slice-length str)
+      (pstring-length str)
       (let loop ([last-match-candidate #f]
                  [candidate #f]    ; the index of the first matching char
                  [str-idx 0]           ; haystack
                  [pattern-idx 0]) ; chars left to be found
         (cond
-          [(and (fx<? str-idx (Slice-length str)) (fx=? (Slice-length pattern) pattern-idx))
+          [(and (fx<? str-idx (pstring-length str)) (fx=? (pstring-length pattern) pattern-idx))
            ; found a match but haystack not consumed, continue searching
            (loop candidate #f str-idx 0)]
           ; Reached the end of input and pattern, so we are done
-          [(fx=? (Slice-length pattern) pattern-idx) candidate]
+          [(fx=? (pstring-length pattern) pattern-idx) candidate]
           ; In the middle of matching but we have no more input.
-          [(fx=? str-idx (Slice-length str)) last-match-candidate]
+          [(fx=? str-idx (pstring-length str)) last-match-candidate]
           [else
             (let ([pc (pstring-ref-code-unit pattern pattern-idx)]
                   [ic (pstring-ref-code-unit str str-idx)])
