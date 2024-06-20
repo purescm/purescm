@@ -595,17 +595,17 @@
     (fold-right pstring-append empty-pstring xs))
 
   ; Create a new pstring by joining a flexvector of pstrings using a separator
-  (define (pstring-join-with xs separator)
-    (let* ([len (srfi:214:flexvector-fold (lambda (len s) (fx+ len (Slice-length s))) 0 xs)]
+  (define (pstring-join-with xs sep)
+    (let* ([len (srfi:214:flexvector-fold (lambda (len s) (fx+ len (pstring-length s))) 0 xs)]
            [xs-count (srfi:214:flexvector-length xs)]
            [separator-count (if (fx=? xs-count 0) 0 (fx1- xs-count))]
+           [separator (pstring-compact! sep)]
            [separator-len (Slice-length separator)]
            [bv-len (fx+ len (fx* separator-count separator-len))]
            [bv (pstring-buffer-alloc bv-len)])
-      (let loop ([i 0]
-                 [bi 0])
+      (let loop ([i 0] [bi 0])
         (if (fx<? i xs-count)
-          (let* ([s (srfi:214:flexvector-ref xs i)]
+          (let* ([s (pstring-compact! (srfi:214:flexvector-ref xs i))]
                  [len (Slice-length s)])
             (if (fx>? i 0)
               (begin

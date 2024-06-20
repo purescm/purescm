@@ -246,6 +246,9 @@
       (assert (pstring=? (pstring-join-with (srfi:214:flexvector (lit "a") (lit "b")) (lit ",")) (lit "a,b")))
       (assert (pstring=? (pstring-join-with (srfi:214:flexvector (lit "abc") (lit "def")) (lit " ")) (lit "abc def")))
       (assert (pstring=? (pstring-join-with (srfi:214:flexvector (lit "𝕒") (lit "𝕔")) (lit "𝕓")) (lit "𝕒𝕓𝕔")))
+      (assert-all-pstring (lambda (s)
+                            (pstring=? (pstring-join-with (srfi:214:flexvector s s) (lit ","))
+                                       (string->pstring "foobarbaz,foobarbaz"))))
 
 
       ; Code points
