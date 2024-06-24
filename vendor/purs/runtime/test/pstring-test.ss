@@ -232,6 +232,9 @@
                               (lit "𝕓𝕓")
                               (lit "b"))
                             (lit "𝕒b𝕔")))
+      (assert-all-pstring (lambda (s)
+                            (pstring=? (pstring-replace-all s (string->pstring "ba") (string->pstring "zz"))
+                                       (string->pstring "foozzrzzz"))))
 
       (assert (srfi:214:flexvector=? pstring=? (split "" "a") (srfi:214:flexvector)))
       (assert (srfi:214:flexvector=? pstring=? (split "ab" "") (srfi:214:flexvector (lit "a") (lit "b"))))
@@ -250,6 +253,25 @@
                             (pstring=? (pstring-join-with (srfi:214:flexvector s s) (lit ","))
                                        (string->pstring "foobarbaz,foobarbaz"))))
 
+      (assert-all-pstring (lambda (s)
+                            (srfi:214:flexvector=? pstring=?
+                              (pstring-split s (lit "b"))
+                              (srfi:214:flexvector (string->pstring "foo")
+                                                   (string->pstring "ar")
+                                                   (string->pstring "az")))))
+
+      (assert-all-pstring (lambda (s)
+                            (srfi:214:flexvector=? pstring=?
+                              (pstring-split s (lit ""))
+                              (srfi:214:flexvector (string->pstring "f")
+                                                   (string->pstring "o")
+                                                   (string->pstring "o")
+                                                   (string->pstring "b")
+                                                   (string->pstring "a")
+                                                   (string->pstring "r")
+                                                   (string->pstring "b")
+                                                   (string->pstring "a")
+                                                   (string->pstring "z")))))
 
       ; Code points
 

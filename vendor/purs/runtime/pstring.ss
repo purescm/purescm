@@ -632,14 +632,16 @@
     (cond
       [(pstring-empty? str) (srfi:214:flexvector)]
       [(pstring-empty? pattern)
-        (let* ([len (Slice-length str)]
-               [fv (srfi:214:make-flexvector len)])
-          (let loop ([i 0] [rest str])
-            (if (pstring-empty? rest)
-              fv
-              (let-values ([(c tail) (pstring-uncons-char rest)])
-                (srfi:214:flexvector-set! fv i (pstring-singleton c))
-                (loop (fx1+ i) tail)))))]
+        (let* ([len (pstring-length str)]
+               [fv (srfi:214:make-flexvector len)]
+               [cur (pstring->cursor str)])
+          (let loop ([i 0] [ch (pstring-cursor-read-char cur)])
+            (cond
+              [(eof-object? ch) fv]
+              [else
+                (begin
+                  (srfi:214:flexvector-set! fv i (pstring-singleton ch))
+                  (loop (fx1+ i) (pstring-cursor-read-char cur)))])))]
       [else
         (let* ([all-indices (all-index-of str pattern)]
                [vec (srfi:214:make-flexvector (fx1+ (length all-indices)))])
@@ -836,42 +838,43 @@
 
   ; Replace all occurences of `pattern` with `replacement`
   (define (pstring-replace-all str pattern replacement)
-    (if (pstring-empty? pattern)
-      str
-      (let* ([is (all-index-of str pattern)]
-             [replacements-delta (fx* (length is)
-                                      (fx- (Slice-length pattern)
-                                           (Slice-length replacement)))]
-             [len (fx- (Slice-length str) replacements-delta)]
-             [bv (pstring-buffer-alloc len)])
-        (let loop ([stri 0] ; where we are at str
-                   [bvi 0] ; where we are at bv
-                   [rest is])
-          (if (null? rest)
-            ; copy the left-overs into place
-            (pstring-buffer-copy! (Slice-buffer str)
-                                    (fx+ (Slice-offset str) stri)
-                                    bv
-                                    bvi
-                                    (fx- (Slice-length str) stri))
-            (let* ([i (car rest)] [before-len (fx- i stri)])
-              ; copy stuff before the match
-              (pstring-buffer-copy! (Slice-buffer str)
-                                (fx+ (Slice-offset str) stri)
-                                bv
-                                bvi
-                                before-len)
-              ; the replacement itself
-              (pstring-buffer-copy! (Slice-buffer replacement)
-                                (Slice-offset replacement)
-                                bv
-                                (fx+ bvi before-len)
-                                (Slice-length replacement))
-              (loop
-                (fx+ i (Slice-length pattern))
-                (fx+ (fx+ bvi before-len) (Slice-length replacement))
-                (cdr rest)))))
-        (make-Slice bv 0 len))))
+    (let ([slice (pstring-compact! str)])
+      (if (pstring-empty? slice)
+        slice
+        (let* ([is (all-index-of slice pattern)]
+               [replacements-delta (fx* (length is)
+                                        (fx- (Slice-length pattern)
+                                             (Slice-length replacement)))]
+               [len (fx- (Slice-length slice) replacements-delta)]
+               [bv (pstring-buffer-alloc len)])
+          (let loop ([stri 0] ; where we are at str
+                     [bvi 0] ; where we are at bv
+                     [rest is])
+            (if (null? rest)
+              ; copy the left-overs into place
+              (pstring-buffer-copy! (Slice-buffer slice)
+                                      (fx+ (Slice-offset slice) stri)
+                                      bv
+                                      bvi
+                                      (fx- (Slice-length slice) stri))
+              (let* ([i (car rest)] [before-len (fx- i stri)])
+                ; copy stuff before the match
+                (pstring-buffer-copy! (Slice-buffer slice)
+                                  (fx+ (Slice-offset slice) stri)
+                                  bv
+                                  bvi
+                                  before-len)
+                ; the replacement itself
+                (pstring-buffer-copy! (Slice-buffer replacement)
+                                  (Slice-offset replacement)
+                                  bv
+                                  (fx+ bvi before-len)
+                                  (Slice-length replacement))
+                (loop
+                  (fx+ i (Slice-length pattern))
+                  (fx+ (fx+ bvi before-len) (Slice-length replacement))
+                  (cdr rest)))))
+          (make-Slice bv 0 len)))))
 
 
   ; 
