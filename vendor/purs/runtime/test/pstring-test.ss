@@ -316,6 +316,11 @@
       (assert (not (srfi:214:flexvector-ref
                      (regex-match (lit "(a|(b))|(c)") (lit "ac"))
                      2)))
+      (assert-all-pstring (lambda (s)
+                            (srfi:214:flexvector=?
+                              pstring=?
+                              (regex-match s s)
+                              (srfi:214:flexvector (string->pstring "foobarbaz")))))
 
       (assert (pstring=?
                 (pstring-regex-replace-by
@@ -323,55 +328,90 @@
                   (lit "aaa")
                   (lambda (m xs) (lit "b")))
                 (lit "baa")))
-
       (assert (pstring=?
                 (pstring-regex-replace-by
                   (pstring-make-regex (lit "foo") (list '(global . #f)))
                   (lit "bar")
                   (lambda (m xs) (lit "fail")))
                 (lit "bar")))
-
       (assert (pstring=?
                 (pstring-regex-replace-by
                   (pstring-make-regex (lit "[a-z]") (list '(global . #t)))
                   (string->pstring "")
                   (lambda (m xs) (lit "123")))
                 (string->pstring "")))
-
       (assert (pstring=?
                 (pstring-regex-replace-by
                   (pstring-make-regex (lit "aa") (list '(global . #t)))
                   (lit "bb")
                   (lambda (m xs) (lit "123")))
                 (lit "bb")))
-
       (assert (pstring=?
                 (pstring-regex-replace-by
                   (pstring-make-regex (lit "b") (list '(global . #t)))
                   (lit "abc")
                   (lambda (m xs) (lit "123")))
                 (lit "a123c")))
-
       (assert (pstring=?
                 (pstring-regex-replace-by
                   (pstring-make-regex (lit "a") (list '(global . #t)))
                   (lit "aaa")
                   (lambda (m xs) (lit "b")))
                 (lit "bbb")))
-
       (assert (pstring=?
                 (pstring-regex-replace-by
                   (pstring-make-regex (lit "([a-z]{2})") (list '(global . #t)))
                   (lit "aazz")
                   (lambda (m xs) (if (pstring=? m (lit "aa")) (lit "foo") (lit "bar"))))
                 (lit "foobar")))
-
       (assert (pstring=?
                 (pstring-regex-replace-by
                   (pstring-make-regex (lit "Hello, ([a-z]+)") (list '(global . #t)))
                   (lit "Hello, purescript")
                   (lambda (m xs) (srfi:214:flexvector-ref xs 0)))
                 (lit "purescript")))
+      (assert-all-pstring (lambda (s)
+                            (pstring=?
+                              (pstring-regex-replace-by
+                                (pstring-make-regex (lit "foo") '((global . #f)))
+                                s
+                                (lambda (m xs) (lit "FOO")))
+                              (lit "FOObarbaz"))))
+      (assert-all-pstring (lambda (s)
+                            (pstring=?
+                              (pstring-regex-replace-by
+                                (pstring-make-regex (lit "foo") '((global . #t)))
+                                s
+                                (lambda (m xs) (lit "FOO")))
+                              (lit "FOObarbaz"))))
+      (assert-all-pstring (lambda (s)
+                            (pstring=?
+                              (pstring-regex-replace-by
+                                (pstring-make-regex s '((global . #f)))
+                                (string->pstring "hello foobarbaz!")
+                                (lambda (m xs) (lit "world")))
+                              (lit "hello world!"))))
+      (assert-all-pstring (lambda (s)
+                            (pstring=?
+                              (pstring-regex-replace-by
+                                (pstring-make-regex s '((global . #t)))
+                                (string->pstring "hello foobarbaz and foobarbaz!")
+                                (lambda (m xs) (lit "world")))
+                              (lit "hello world and world!"))))
+      (assert-all-pstring (lambda (s)
+                            (pstring=?
+                              (pstring-regex-replace-by
+                                (pstring-make-regex s '((global . #f)))
+                                (string->pstring "hello foobarbaz!")
+                                (lambda (m xs) s))
+                              (lit "hello foobarbaz!"))))
+      (assert-all-pstring (lambda (s)
+                            (pstring=?
+                              (pstring-regex-replace-by
+                                (pstring-make-regex s '((global . #t)))
+                                (string->pstring "hello foobarbaz and foobarbaz!")
+                                (lambda (m xs) s))
+                              (lit "hello foobarbaz and foobarbaz!"))))
 
       ; replace
       (assert (pstring=?
@@ -380,13 +420,33 @@
                   (lit "aaa")
                   (lit "b"))
                 (lit "baa")))
-
       (assert (pstring=?
                 (pstring-regex-replace
                   (pstring-make-regex (lit "a") (list '(global . #t)))
                   (lit "aaa")
                   (lit "b"))
                 (lit "bbb")))
+      (assert-all-pstring (lambda (s)
+                            (pstring=?
+                              (pstring-regex-replace
+                                (pstring-make-regex (string->pstring "foo") '((global . #t)))
+                                s
+                                (lit "FOO"))
+                              (lit "FOObarbaz"))))
+      (assert-all-pstring (lambda (s)
+                            (pstring=?
+                              (pstring-regex-replace
+                                (pstring-make-regex s '((global . #t)))
+                                (string->pstring "hello foobarbaz!")
+                                (lit "world"))
+                              (lit "hello world!"))))
+      (assert-all-pstring (lambda (s)
+                            (pstring=?
+                              (pstring-regex-replace
+                                (pstring-make-regex s '((global . #t)))
+                                (string->pstring "hello foobarbaz!")
+                                s)
+                              (lit "hello foobarbaz!"))))
 
 
       ; search
@@ -394,29 +454,31 @@
                 (pstring-regex-search
                   (pstring-make-regex (lit "a") (list '(global . #f)))
                   (lit "b"))))
-
       (assert (not
                 (pstring-regex-search
                   (pstring-make-regex (lit "a") (list '(global . #f)))
                   (lit ""))))
-
       (assert (equal?
                 (pstring-regex-search
                   (pstring-make-regex (lit "a") (list '(global . #f)))
                   (lit "abc"))
                 0))
-
       (assert (equal?
                 (pstring-regex-search
                   (pstring-make-regex (lit "b") (list '(global . #f)))
                   (lit "abc"))
                 1))
-
       (assert (equal?
                 (pstring-regex-search
                   (pstring-make-regex (lit "c") (list '(global . #f)))
                   (lit "abc"))
                 2))
+      (assert-all-pstring (lambda (s)
+                            (equal?
+                              (pstring-regex-search
+                                (pstring-make-regex s (list '(global . #f)))
+                                s)
+                              0)))
 
       ; regex-split
 
@@ -424,37 +486,40 @@
                 pstring=?
                 (pstring-regex-split (pstring-make-regex (lit "")) (lit ""))
                 (srfi:214:flexvector)))
-
       (assert (srfi:214:flexvector=?
                 pstring=?
                 (pstring-regex-split (pstring-make-regex (lit "")) (lit "abc"))
                 (srfi:214:flexvector (lit "a") (lit "b") (lit "c"))))
-
       (assert (srfi:214:flexvector=?
                 pstring=?
                 (pstring-regex-split (pstring-make-regex (lit ",")) (lit ""))
                 (srfi:214:flexvector (lit ""))))
-
       (assert (srfi:214:flexvector=?
                 pstring=?
                 (pstring-regex-split (pstring-make-regex (lit ",")) (lit "a,b,"))
                 (srfi:214:flexvector (lit "a") (lit "b") (lit ""))))
-
       (assert (srfi:214:flexvector=?
                 pstring=?
                 (pstring-regex-split (pstring-make-regex (lit ",")) (lit "a,b,c"))
                 (srfi:214:flexvector (lit "a") (lit "b") (lit "c"))))
-
       (assert (srfi:214:flexvector=?
                 pstring=?
                 (pstring-regex-split (pstring-make-regex (lit "[,.]")) (lit "a,b,c.de"))
                 (srfi:214:flexvector (lit "a") (lit "b") (lit "c") (lit "de"))))
-
       (assert (srfi:214:flexvector=?
                 pstring=?
                 (pstring-regex-split (pstring-make-regex (lit "🍔")) (lit "𝕒🍔𝕓🍔𝕔🍔de"))
                 (srfi:214:flexvector (lit "𝕒") (lit "𝕓") (lit "𝕔") (lit "de"))))
-
+      (assert-all-pstring (lambda (s)
+                            (srfi:214:flexvector=?
+                              pstring=?
+                              (pstring-regex-split (pstring-make-regex s) (lit "hello foobarbaz world"))
+                              (srfi:214:flexvector (lit "hello ") (lit " world")))))
+      (assert-all-pstring (lambda (s)
+                            (srfi:214:flexvector=?
+                              pstring=?
+                              (pstring-regex-split (pstring-make-regex (string->pstring "bar")) s)
+                              (srfi:214:flexvector (lit "foo") (lit "baz")))))
 
       (assert (eqv? (eof-object) (pstring-cursor-peek-char (pstring->cursor (lit "")))))
       (assert (eqv? #\f (pstring-cursor-peek-char (pstring->cursor (lit "foo")))))

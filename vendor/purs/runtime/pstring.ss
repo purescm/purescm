@@ -390,9 +390,8 @@
     (integer->char (pstring-ref-code-unit str n)))
 
   ; Returns the address to the beginning of the string
-  (define (pstring-&ref str)
-    (let ([slice (pstring-compact! str)])
-      (pstring-buffer-&ref (Slice-buffer slice) (Slice-offset slice))))
+  (define (slice-&ref slice)
+    (pstring-buffer-&ref (Slice-buffer slice) (Slice-offset slice)))
 
   ; Gets the code point scalar value at index `n`
   (define (pstring-ref-code-point str n)
@@ -885,22 +884,27 @@
     (regex code match-data source flags))
 
   ; Replace match(es) using the replacement returned by calling `f` with the match.
+  ;
+  ; Regex -> Slice -> (String -> flexvector String -> String) -> String
   (define (pstring-regex-replace-by regex subject f)
-    (if (regex-has-flag regex PCRE2_SUBSTITUTE_GLOBAL)
-      (pstring-regex-replace-all regex subject f)
-      (pstring-regex-replace-single regex subject f)))
+    (let ([subject-slice (pstring-compact! subject)])
+      (if (regex-has-flag regex PCRE2_SUBSTITUTE_GLOBAL)
+        (pstring-regex-replace-all-by regex subject-slice f)
+        (pstring-regex-replace-single-by regex subject-slice f))))
 
   (define identity (lambda (x) x))
 
   ; Replace all matches using the replacement returned by calling `f` with the match.
-  (define (pstring-regex-replace-all regex str f)
+  ;
+  ; Regex -> Slice -> (String -> flexvector String -> String) -> String
+  (define (pstring-regex-replace-all-by regex str f)
     (let*-values ([(delta all-matches)
                     (let match-next ([sub-str str] [delta 0] [all-matches-reverse '()])
                       (let ([matches (pstring-regex-match regex sub-str identity #f)])
                         (if (and matches (fx>? (srfi:214:flexvector-length matches) 0))
                           (let* ([match (srfi:214:flexvector-ref matches 0)]
                                  [_ (srfi:214:flexvector-remove-front! matches)]
-                                 [replacement (f match matches)])
+                                 [replacement (pstring-compact! (f match matches))])
                             (match-next
                               ; Should slice be used here?
                               (make-Slice
@@ -944,12 +948,14 @@
           (make-Slice bv 0 len)))
 
   ; Replace the first match using the replacement returned by calling `f` with the match.
-  (define (pstring-regex-replace-single regex str f)
+  ;
+  ; Regex -> Slice -> (String -> flexvector String -> String) -> String
+  (define (pstring-regex-replace-single-by regex str f)
     (let ([matches (pstring-regex-match regex str identity #f)])
       (if (and matches (fx>? (srfi:214:flexvector-length matches) 0))
         (let* ([match (srfi:214:flexvector-ref matches 0)]
                [_ (srfi:214:flexvector-remove-front! matches)]
-               [replacement (f match matches)]
+               [replacement (pstring-compact! (f match matches))]
                [delta (fx- (Slice-length replacement) (Slice-length match))]
                [len (fx+ (Slice-length str) delta)]
                [buf (pstring-buffer-alloc len)])
@@ -981,12 +987,14 @@
 
   ; Replace a match with `replacement`
   (define (pstring-regex-replace regex subject replacement)
-    (let* ([match-data (pcre2_match_data_create_from_pattern_16 (regex-code regex) 0)]
+    (let* ([subject-slice (pstring-compact! subject)]
+           [replacement-slice (pstring-compact! replacement)]
+           [match-data (pcre2_match_data_create_from_pattern_16 (regex-code regex) 0)]
            [buf-len (make-ftype-pointer size_t (foreign-alloc (foreign-sizeof 'size_t)))]
-           [subject-addr (pstring-&ref subject)]
-           [subject-len (Slice-length subject)]
-           [replacement-addr (pstring-&ref replacement)]
-           [replacement-len (Slice-length replacement)]
+           [subject-addr (slice-&ref subject-slice)]
+           [subject-len (Slice-length subject-slice)]
+           [replacement-addr (slice-&ref replacement-slice)]
+           [replacement-len (Slice-length replacement-slice)]
            [start-offset 0]
            [match-context 0]
            ; first calculate the size of the output buffer by passing in 0 as the buf size
@@ -1033,8 +1041,9 @@
       [(pstring=? (regex-source regex) empty-pstring)
         (srfi:214:flexvector-map pstring-singleton (pstring->char-flexvector str))]
       [else
-        (let* ([all-matches
-                (let match-next ([sub-str str] [all-matches-reverse '()])
+        (let* ([str-slice (pstring-compact! str)]
+               [all-matches
+                (let match-next ([sub-str str-slice] [all-matches-reverse '()])
                   (let ([matches (pstring-regex-match regex sub-str identity #f)])
                     (if (and matches (fx>? (srfi:214:flexvector-length matches) 0))
                       (let* ([match (srfi:214:flexvector-ref matches 0)])
@@ -1050,16 +1059,16 @@
                       (reverse all-matches-reverse))))])
           (let* ([match-count (length all-matches)]
                  [fv (srfi:214:make-flexvector (fx1+ match-count))])
-            (let loop ([stri (Slice-offset str)] [rest all-matches] [match-idx 0])
+            (let loop ([stri (Slice-offset str-slice)] [rest all-matches] [match-idx 0])
               (if (null? rest)
                 ; copy rest of the string as the last element
                 (begin
-                  (srfi:214:flexvector-set! fv match-idx (pstring-drop str (fx- stri (Slice-offset str))))
+                  (srfi:214:flexvector-set! fv match-idx (pstring-drop str-slice (fx- stri (Slice-offset str-slice))))
                   fv)
                 (let* ([prefix-len (fx- (Slice-offset (car rest)) stri)]
-                       [start-idx (fx- stri (Slice-offset str))]
+                       [start-idx (fx- stri (Slice-offset str-slice))]
                        [end-idx (fx+ start-idx prefix-len)])
-                  (srfi:214:flexvector-set! fv match-idx (pstring-slice str start-idx end-idx))
+                  (srfi:214:flexvector-set! fv match-idx (pstring-slice str-slice start-idx end-idx))
                   (loop (fx+ stri prefix-len (Slice-length (car rest))) (cdr rest) (fx1+ match-idx)))))))]))
 
   ; Compiles a regex pattern to a regex.
@@ -1067,12 +1076,13 @@
     (case-lambda
       [(str) (pstring-make-regex str '())]
       [(str flags)
-        (let* ([errorcode (foreign-alloc 4)]
+        (let* ([slice (pstring-compact! str)]
+               [errorcode (foreign-alloc 4)]
                [erroroffset (foreign-alloc 4)]
                [options (flags->options flags)]
                [code (pcre2_compile_16
-                       (pstring-&ref str)
-                       (Slice-length str)
+                       (slice-&ref slice)
+                       (Slice-length slice)
                        options
                        errorcode
                        erroroffset
@@ -1083,7 +1093,7 @@
             #f
             (begin
               (pcre2_jit_compile_16 code PCRE2_JIT_COMPLETE)
-              (finalizer (make-regex code (pcre2_match_data_create_from_pattern_16 code 0) str options)
+              (finalizer (make-regex code (pcre2_match_data_create_from_pattern_16 code 0) slice options)
                          (lambda (r)
                            (pcre2_code_free_16 (regex-code r))
                            (pcre2_match_data_free_16 (regex-match-data r)))))))]))
@@ -1091,11 +1101,12 @@
   ; Performs a regex match and then calls `on-match` for a successful match
   ; and `nomatch` for a non-match.
   (define (pstring-regex-match regex subject on-match nomatch)
-    (let* ([match-data (regex-match-data regex)]
+    (let* ([subject-slice (pstring-compact! subject)]
+           [match-data (regex-match-data regex)]
            [rc (pcre2_match_16
                  (regex-code regex)
-                 (pstring-&ref subject)
-                 (Slice-length subject)
+                 (slice-&ref subject-slice)
+                 (Slice-length subject-slice)
                  0
                  0
                  match-data
@@ -1115,8 +1126,8 @@
                   (let* ([sub-end (foreign-ref 'size_t ovector (fx* (fx1+ (fx* i 2)) (foreign-sizeof 'size_t)))]
                          [sub-len (fx- sub-end sub-start)]
                          [match-str (make-Slice
-                                     (Slice-buffer subject)
-                                     (fx+ (Slice-offset subject) sub-start)
+                                     (Slice-buffer subject-slice)
+                                     (fx+ (Slice-offset subject-slice) sub-start)
                                      sub-len)])
                     (srfi:214:flexvector-set! out i (on-match match-str))
                     (recur (fx1+ i)))))
@@ -1124,11 +1135,12 @@
 
   ; Finds the index of the first match using a regex
   (define (pstring-regex-search regex subject)
-    (let* ([match-data (pcre2_match_data_create_from_pattern_16 (regex-code regex) 0)]
+    (let* ([subject-slice (pstring-compact! subject)]
+           [match-data (pcre2_match_data_create_from_pattern_16 (regex-code regex) 0)]
            [rc (pcre2_match_16
                  (regex-code regex)
-                 (pstring-&ref subject)
-                 (Slice-length subject)
+                 (slice-&ref subject-slice)
+                 (Slice-length subject-slice)
                  0
                  0
                  match-data
