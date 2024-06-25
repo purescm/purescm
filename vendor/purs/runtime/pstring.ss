@@ -275,11 +275,13 @@
                        (pstring-cursor-read-code-unit cursor-x)
                        (pstring-cursor-read-code-unit cursor-y)))))))
     (and
-      (fx=? (Slice-length x) (Slice-length y))
+      (fx=? (pstring-length x) (pstring-length y))
       (or
         ; Do they point to the same object in memory?
-        (and (fx=? (Slice-offset x) (Slice-offset y))
-              (eq? (Slice-buffer x) (Slice-buffer y)))
+        (and (Slice? x)
+             (Slice? y)
+             (fx=? (Slice-offset x) (Slice-offset y))
+             (eq? (Slice-buffer x) (Slice-buffer y)))
         (pstring-equal-code-units? x y))))
 
   (define (pstring<? x y)

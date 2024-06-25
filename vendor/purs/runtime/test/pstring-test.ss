@@ -145,6 +145,7 @@
       ;; comparisons
       (assert (pstring=? (lit "abc") (lit "abc")))
       (assert (pstring=? (lit "𝕒𝕓𝕔") (lit "𝕒𝕓𝕔")))
+      (assert-all-pstring (lambda (s) (pstring=? s s)))
       (assert (pstring<? (lit "fo") (lit "foo")))
       (assert (pstring<? (lit "a") (lit "z")))
       (assert (pstring<? (lit "az") (lit "z")))
