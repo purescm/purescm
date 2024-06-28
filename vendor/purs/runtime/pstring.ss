@@ -81,7 +81,9 @@
   ; * Getting the length of the string in code units is always constant-time.
   ; * If the string is a `Concat` (after concatenation) then slicing is
   ;   constant-time if the offsets are reachable in the first or last slice of
-  ;   the tree.
+  ;   the tree. If the slice cannot be reached in the prefix or suffix, then
+  ;   slicing is a linear-time operation because the tree needs to be compacted
+  ;   to a continuous slice first.
   ; 
   ; Rough sketch of the type:
   ; 
@@ -104,6 +106,10 @@
       [else (Concat-length str)]))
 
   ; A concatenation of two slices with constant-time access to the first and last slice
+  ;
+  ;   type Rope = Slice | pair Rope Rope
+  ;   type ConcatTree = ConcatTree { prefix :: Slice, deep :: Rope | null, suffix :: Slice }
+  ;
   (define-record ConcatTree
                  ((immutable prefix)
                   (immutable deep)
