@@ -160,36 +160,39 @@
 
   ; fixnum -> ConcatTree -> Slice
   (define (compact-tree len str)
-    (define (copy-tree! bv at kons)
+
+    ; Copies the rope binary tree into an already allocated bytevector
+    ; of the correct size
+    (define (copy-tree! buffer buffer-index tree)
       (cond
-        [(null? kons) at]
-        [(pair? kons)
-          (let ([at-1 (copy-tree! bv at (car kons))])
-            (copy-tree! bv at-1 (cdr kons)))]
+        [(null? tree) buffer-index]
+        [(pair? tree)
+          (let ([at-1 (copy-tree! buffer buffer-index (car tree))])
+            (copy-tree! buffer at-1 (cdr tree)))]
         [else
           (begin
-            (pstring-buffer-copy! (Slice-buffer kons)
-                                  (Slice-offset kons)
-                                  bv
-                                  at
-                                  (Slice-length kons))
-            (fx+ at (Slice-length kons)))]))
+            (pstring-buffer-copy! (Slice-buffer tree)
+                                  (Slice-offset tree)
+                                  buffer
+                                  buffer-index
+                                  (Slice-length tree))
+            (fx+ buffer-index (Slice-length tree)))]))
 
-    (let* ([bv (pstring-buffer-alloc len)]
+    (let* ([buffer (pstring-buffer-alloc len)]
            [left (ConcatTree-prefix str)]
            [right (ConcatTree-suffix str)])
       (pstring-buffer-copy! (Slice-buffer left)
                             (Slice-offset left)
-                            bv
+                            buffer
                             0
                             (Slice-length left))
-      (let ([at (copy-tree! bv (Slice-length left) (ConcatTree-deep str))])
+      (let ([buffer-index (copy-tree! buffer (Slice-length left) (ConcatTree-deep str))])
         (pstring-buffer-copy! (Slice-buffer right)
                               (Slice-offset right)
-                              bv
-                              at
+                              buffer
+                              buffer-index
                               (Slice-length right))
-        (make-Slice bv 0 len))))
+        (make-Slice buffer 0 len))))
 
   ; Compact the string and memoize
   ; Concat -> Slice
