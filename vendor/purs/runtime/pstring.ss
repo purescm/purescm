@@ -66,11 +66,11 @@
   ; Internals
   ; 
 
-  ; A concatenation of two slices with fast access to the first and last slice
+  ; A concatenation of two slices with constant-time access to the first and last slice
   (define-record ConcatTree
                  ((immutable prefix)
-                 (immutable deep)
-                 (immutable suffix)))
+                  (immutable deep)
+                  (immutable suffix)))
 
   ; Slice -> ConcatTree -> ConcatTree
   (define (tree-cons a b)
