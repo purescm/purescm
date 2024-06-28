@@ -154,7 +154,9 @@
       (ConcatTree-suffix b)))
 
   (define (pstring-compact? str)
-    (and (Concat? str) (Slice? (Concat-str str))))
+    (or
+      (Slice? str)
+      (and (Concat? str) (Slice? (Concat-str str)))))
 
   ; fixnum -> ConcatTree -> Slice
   (define (compact-tree len str)
