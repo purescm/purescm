@@ -66,6 +66,43 @@
   ; Internals
   ; 
 
+  ; Persistent string with support for constant-time `concat` using a rope data structure.
+  ;
+  ; * When the string is a `Slice`, then slicing by code unit offsets is a constant-time
+  ;   operation.
+  ; * Concatenating two strings is always constant-time because no new string buffer is
+  ;   allocated until a single continuous buffer is required by a read.
+  ; * When a single continuous buffer is required and the string is a `Concat`,
+  ;   then a new string buffer is allocated and the chunks are copied in linear
+  ;   time to that new buffer. This new buffer is memoized such that any existing
+  ;   references to the string will internally see the new buffer and not the
+  ;   tree of chunks.
+  ; * All chunks in the tree (rope) are non-empty.
+  ; * Getting the length of the string in code units is always constant-time.
+  ; * If the string is a `Concat` (after concatenation) then slicing is
+  ;   constant-time if the offsets are reachable in the first or last slice of
+  ;   the tree.
+  ; 
+  ; Rough sketch of the type:
+  ; 
+  ;   type pstring
+  ;     = Slice { buffer :: pstring-buffer, offset :: fixnum, length :: fixnum }
+  ;     | Concat { length :: fixnum, str :: MutableRef (ConcatTree | Slice) }
+  ;
+  (define-record pstring ())
+  (define-record Slice pstring
+                 ((immutable buffer)
+                  (immutable offset)
+                  (immutable length)))
+  (define-record Concat pstring
+                 ((immutable length)
+                  (mutable str)))
+
+  (define (pstring-length str)
+    (cond
+      [(Slice? str) (Slice-length str)]
+      [else (Concat-length str)]))
+
   ; A concatenation of two slices with constant-time access to the first and last slice
   (define-record ConcatTree
                  ((immutable prefix)
@@ -109,20 +146,6 @@
                   (cons (ConcatTree-suffix a) (ConcatTree-prefix b)))
             (ConcatTree-deep b))])
       (ConcatTree-suffix b)))
-
-  (define-record pstring ())
-  (define-record Slice pstring
-                 ((immutable buffer)
-                  (immutable offset)
-                  (immutable length)))
-  (define-record Concat pstring
-                 ((immutable length)
-                  (mutable str)))
-
-  (define (pstring-length str)
-    (cond
-      [(Slice? str) (Slice-length str)]
-      [else (Concat-length str)]))
 
   (define (pstring-compact? str)
     (and (Concat? str) (Slice? (Concat-str str))))
