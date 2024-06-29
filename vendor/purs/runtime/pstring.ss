@@ -74,9 +74,8 @@
   ;   allocated until a single continuous buffer is required by a read.
   ; * When a single continuous buffer is required and the string is a `Concat`,
   ;   then a new string buffer is allocated and the chunks are copied in linear
-  ;   time to that new buffer. This new buffer is memoized such that any existing
-  ;   references to the string will internally see the new buffer and not the
-  ;   tree of chunks.
+  ;   time to that new buffer. This new buffer is memoized so that the expensive
+  ;   copy will only be computed once.
   ; * All chunks in the tree (rope) are non-empty.
   ; * Getting the length of the string in code units is always constant-time.
   ; * If the string is a `Concat` (after concatenation) then slicing is
