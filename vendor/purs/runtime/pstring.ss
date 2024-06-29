@@ -285,7 +285,7 @@
     (fx=? (pstring-length str) 0))
 
   ; Fast equality check based on object reference.
-  (define (pstring-eq? x y)
+  (define (pstring-slice-eq? x y)
     (and
       (Slice? x)
       (Slice? y))
@@ -319,7 +319,7 @@
 
   (define (pstring<? x y)
     (and
-      (not (pstring-eq? x y))
+      (not (pstring-slice-eq? x y))
       (let ([cursor-x (pstring->cursor x)] [cursor-y (pstring->cursor y)])
         (let loop ([ch-x (pstring-cursor-read-char cursor-x)]
                    [ch-y (pstring-cursor-read-char cursor-y)])
@@ -336,7 +336,7 @@
 
   (define (pstring>? x y)
     (and
-      (not (pstring-eq? x y))
+      (not (pstring-slice-eq? x y))
       (let ([cursor-x (pstring->cursor x)]
             [cursor-y (pstring->cursor y)])
         (let loop ([ch-x (pstring-cursor-read-char cursor-x)]
@@ -355,7 +355,7 @@
 
   (define (pstring<=? x y)
     (or
-      (pstring-eq? x y)
+      (pstring-slice-eq? x y)
       (let ([cursor-x (pstring->cursor x)]
             [cursor-y (pstring->cursor y)])
         (let loop ([ch-x (pstring-cursor-read-char cursor-x)]
@@ -376,7 +376,7 @@
 
   (define (pstring>=? x y)
     (or
-      (pstring-eq? x y)
+      (pstring-slice-eq? x y)
       (let ([cursor-x (pstring->cursor x)]
             [cursor-y (pstring->cursor y)])
         (let loop ([ch-x (pstring-cursor-read-char cursor-x)]
