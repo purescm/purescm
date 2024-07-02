@@ -100,6 +100,8 @@
                  (loop (fx+ i 1) (fx1+ char-i)))]
               ;; one-word encoding
               [else (begin (string-set! out char-i (integer->char w1)) (loop (fx+ i 1) (fx1+ char-i)))]))
-          (begin (string-truncate! out char-i) out)))))
+          (if (eq? len 0)
+            out
+            (string-truncate! out char-i))))))
   )
 
