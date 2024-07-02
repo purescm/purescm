@@ -288,10 +288,10 @@
   (define (pstring-slice-eq? x y)
     (and
       (Slice? x)
-      (Slice? y))
+      (Slice? y)
       (and (fx=? (Slice-length x) (Slice-length y))
                  (fx=? (Slice-offset x) (Slice-offset y))
-                 (eq? (Slice-buffer x) (Slice-buffer y))))
+                 (eq? (Slice-buffer x) (Slice-buffer y)))))
 
   (define (pstring=? x y)
     ; Assumes the buffers have the same length
