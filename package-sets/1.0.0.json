@@ -137,6 +137,7 @@
     "transformers": "6.0.0",
     "tuples": "7.0.0",
     "type-equality": "4.0.1",
+    "typelevel-prelude": "7.0.0",
     "unfoldable": {
       "git": "https://github.com/purescm/purescript-core.git",
       "ref": "b55c8bb976dcddf69fda2593c5707969ca1e13b4",
