@@ -121,6 +121,11 @@
       "subdir": "prelude"
     },
     "profunctor": "6.0.0",
+    "quickcheck": {
+      "git": "https://github.com/purescm/purescript-core.git",
+      "ref": "98f12cc76d4941f979f2530da94f5b46ce9551cd",
+      "subdir": "quickcheck"
+    },
     "record": {
       "git": "https://github.com/purescm/purescript-core.git",
       "ref": "98f12cc76d4941f979f2530da94f5b46ce9551cd",
