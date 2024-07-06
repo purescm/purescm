@@ -89,6 +89,7 @@
       "ref": "98f12cc76d4941f979f2530da94f5b46ce9551cd",
       "subdir": "lazy"
     },
+    "lcg": "4.0.0",
     "lists": {
       "git": "https://github.com/purescm/purescript-lists.git",
       "ref": "71502a132567cf7f32c2242d57b1cba2c77ebc15"
@@ -125,6 +126,11 @@
       "git": "https://github.com/purescm/purescript-core.git",
       "ref": "98f12cc76d4941f979f2530da94f5b46ce9551cd",
       "subdir": "quickcheck"
+    },
+    "random": {
+      "git": "https://github.com/purescm/purescript-core.git",
+      "ref": "98f12cc76d4941f979f2530da94f5b46ce9551cd",
+      "subdir": "random"
     },
     "record": {
       "git": "https://github.com/purescm/purescript-core.git",
