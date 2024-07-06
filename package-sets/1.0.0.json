@@ -5,56 +5,66 @@
   "packages": {
     "arrays": {
       "git": "https://github.com/purescm/purescript-core.git",
-      "ref": "b55c8bb976dcddf69fda2593c5707969ca1e13b4",
+      "ref": "98f12cc76d4941f979f2530da94f5b46ce9551cd",
       "subdir": "arrays"
     },
     "assert": {
       "git": "https://github.com/purescm/purescript-core.git",
-      "ref": "b55c8bb976dcddf69fda2593c5707969ca1e13b4",
+      "ref": "98f12cc76d4941f979f2530da94f5b46ce9551cd",
       "subdir": "assert"
     },
     "bifunctors": "6.0.0",
     "catenable-lists": "7.0.0",
     "console": {
       "git": "https://github.com/purescm/purescript-core.git",
-      "ref": "b55c8bb976dcddf69fda2593c5707969ca1e13b4",
+      "ref": "98f12cc76d4941f979f2530da94f5b46ce9551cd",
       "subdir": "console"
     },
     "const": "6.0.0",
     "contravariant": "6.0.0",
     "control": {
       "git": "https://github.com/purescm/purescript-core.git",
-      "ref": "b55c8bb976dcddf69fda2593c5707969ca1e13b4",
+      "ref": "98f12cc76d4941f979f2530da94f5b46ce9551cd",
       "subdir": "control"
+    },
+    "datetime": {
+      "git": "https://github.com/purescm/purescript-core.git",
+      "ref": "98f12cc76d4941f979f2530da94f5b46ce9551cd",
+      "subdir": "datetime"
     },
     "distributive": "6.0.0",
     "effect": {
       "git": "https://github.com/purescm/purescript-core.git",
-      "ref": "b55c8bb976dcddf69fda2593c5707969ca1e13b4",
+      "ref": "98f12cc76d4941f979f2530da94f5b46ce9551cd",
       "subdir": "effect"
     },
     "either": "6.1.0",
     "enums": {
       "git": "https://github.com/purescm/purescript-core.git",
-      "ref": "b55c8bb976dcddf69fda2593c5707969ca1e13b4",
+      "ref": "98f12cc76d4941f979f2530da94f5b46ce9551cd",
       "subdir": "enums"
     },
     "exceptions": {
       "git": "https://github.com/purescm/purescript-core.git",
-      "ref": "b55c8bb976dcddf69fda2593c5707969ca1e13b4",
+      "ref": "98f12cc76d4941f979f2530da94f5b46ce9551cd",
       "subdir": "exceptions"
     },
     "exists": "6.0.0",
     "filterable": "5.0.0",
     "foldable-traversable": {
       "git": "https://github.com/purescm/purescript-core.git",
-      "ref": "b55c8bb976dcddf69fda2593c5707969ca1e13b4",
+      "ref": "98f12cc76d4941f979f2530da94f5b46ce9551cd",
       "subdir": "foldable-traversable"
+    },
+    "foreign-object": {
+      "git": "https://github.com/purescm/purescript-core.git",
+      "ref": "98f12cc76d4941f979f2530da94f5b46ce9551cd",
+      "subdir": "foreign-object"
     },
     "free": "7.1.0",
     "functions": {
       "git": "https://github.com/purescm/purescript-core.git",
-      "ref": "b55c8bb976dcddf69fda2593c5707969ca1e13b4",
+      "ref": "98f12cc76d4941f979f2530da94f5b46ce9551cd",
       "subdir": "functions",
       "dependencies": [
         "prelude"
@@ -65,18 +75,18 @@
     "identity": "6.0.0",
     "integers": {
       "git": "https://github.com/purescm/purescript-core.git",
-      "ref": "b55c8bb976dcddf69fda2593c5707969ca1e13b4",
+      "ref": "98f12cc76d4941f979f2530da94f5b46ce9551cd",
       "subdir": "integers"
     },
     "invariant": "6.0.0",
     "json": {
       "git": "https://github.com/purescm/purescript-core.git",
-      "ref": "b55c8bb976dcddf69fda2593c5707969ca1e13b4",
+      "ref": "98f12cc76d4941f979f2530da94f5b46ce9551cd",
       "subdir": "json"
     },
     "lazy": {
       "git": "https://github.com/purescm/purescript-core.git",
-      "ref": "b55c8bb976dcddf69fda2593c5707969ca1e13b4",
+      "ref": "98f12cc76d4941f979f2530da94f5b46ce9551cd",
       "subdir": "lazy"
     },
     "lists": {
@@ -86,14 +96,14 @@
     "maybe": "6.0.0",
     "minibench": {
       "git": "https://github.com/purescm/purescript-core.git",
-      "ref": "b55c8bb976dcddf69fda2593c5707969ca1e13b4",
+      "ref": "98f12cc76d4941f979f2530da94f5b46ce9551cd",
       "subdir": "minibench"
     },
     "newtype": "5.0.0",
     "nonempty": "7.0.0",
     "numbers": {
       "git": "https://github.com/purescm/purescript-core.git",
-      "ref": "b55c8bb976dcddf69fda2593c5707969ca1e13b4",
+      "ref": "98f12cc76d4941f979f2530da94f5b46ce9551cd",
       "subdir": "numbers"
     },
     "ordered-collections": "3.1.1",
@@ -101,35 +111,35 @@
     "parallel": "7.0.0",
     "partial": {
       "git": "https://github.com/purescm/purescript-core.git",
-      "ref": "b55c8bb976dcddf69fda2593c5707969ca1e13b4",
+      "ref": "98f12cc76d4941f979f2530da94f5b46ce9551cd",
       "subdir": "partial",
       "dependencies": []
     },
     "prelude": {
       "git": "https://github.com/purescm/purescript-core.git",
-      "ref": "b55c8bb976dcddf69fda2593c5707969ca1e13b4",
+      "ref": "98f12cc76d4941f979f2530da94f5b46ce9551cd",
       "subdir": "prelude"
     },
     "profunctor": "6.0.0",
     "record": {
       "git": "https://github.com/purescm/purescript-core.git",
-      "ref": "b55c8bb976dcddf69fda2593c5707969ca1e13b4",
+      "ref": "98f12cc76d4941f979f2530da94f5b46ce9551cd",
       "subdir": "record"
     },
     "refs": {
       "git": "https://github.com/purescm/purescript-core.git",
-      "ref": "b55c8bb976dcddf69fda2593c5707969ca1e13b4",
+      "ref": "98f12cc76d4941f979f2530da94f5b46ce9551cd",
       "subdir": "refs"
     },
     "safe-coerce": "2.0.0",
     "st": {
       "git": "https://github.com/purescm/purescript-core.git",
-      "ref": "b55c8bb976dcddf69fda2593c5707969ca1e13b4",
+      "ref": "98f12cc76d4941f979f2530da94f5b46ce9551cd",
       "subdir": "st"
     },
     "strings": {
       "git": "https://github.com/purescm/purescript-core.git",
-      "ref": "b55c8bb976dcddf69fda2593c5707969ca1e13b4",
+      "ref": "98f12cc76d4941f979f2530da94f5b46ce9551cd",
       "subdir": "strings"
     },
     "semirings": "7.0.0",
@@ -140,12 +150,12 @@
     "typelevel-prelude": "7.0.0",
     "unfoldable": {
       "git": "https://github.com/purescm/purescript-core.git",
-      "ref": "b55c8bb976dcddf69fda2593c5707969ca1e13b4",
+      "ref": "98f12cc76d4941f979f2530da94f5b46ce9551cd",
       "subdir": "unfoldable"
     },
     "unsafe-coerce": {
       "git": "https://github.com/purescm/purescript-core.git",
-      "ref": "b55c8bb976dcddf69fda2593c5707969ca1e13b4",
+      "ref": "98f12cc76d4941f979f2530da94f5b46ce9551cd",
       "subdir": "unsafe-coerce",
       "dependencies": []
     },
