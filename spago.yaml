@@ -48,9 +48,9 @@ package:
       - posix-types
       - refs
 workspace:
-  package_set:
+  packageSet:
     registry: 41.2.0
-  extra_packages:
+  extraPackages:
     dodo-printer:
       git: https://github.com/natefaubion/purescript-dodo-printer.git
       ref: 831c5c963a57ca4bfd62f96335267d7d0785851d
