@@ -173,6 +173,8 @@
       (assert (pstring=? (pstring-upcase (lit "")) (lit "")))
       (assert (pstring=? (pstring-upcase (lit "FOO")) (lit "FOO")))
       (assert (pstring=? (pstring-upcase (lit "foo")) (lit "FOO")))
+      (assert (pstring=? (pstring-upcase (lit "ß")) (lit "SS")))
+      (assert (pstring=? (pstring-upcase (lit "straße")) (lit "STRASSE")))
       (assert (not (pstring=? (pstring-upcase (lit "foo")) (lit "FOo"))))
 
       (assert (pstring=?

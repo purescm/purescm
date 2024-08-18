@@ -37,21 +37,23 @@
               ''
               else ''
                 patchelf $out/bin/scheme --add-rpath ${pkgs.pcre2.out}/lib
+                patchelf $out/bin/scheme --add-rpath ${pkgs.icu}/lib
               '';
             });
         in {
           default = pkgs.mkShell {
             name = "purescm";
-            packages = with pkgs; [
-              purescript-language-server
-              purs-backend-es
-              purs-bin.purs-0_15_10
-              purs-tidy
-              spago-unstable
-              nodejs-slim
-              esbuild
+            packages = [
+              pkgs.purescript-language-server
+              pkgs.purs-backend-es
+              pkgs.purs-bin.purs-0_15_10
+              pkgs.purs-tidy
+              pkgs.spago-unstable
+              pkgs.nodejs-slim
+              pkgs.esbuild
+              pkgs.pkg-config
+              pkgs.icu
               chez
-              pkg-config
             ];
           };
         });
