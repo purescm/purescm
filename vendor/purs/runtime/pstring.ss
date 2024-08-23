@@ -798,24 +798,32 @@
            ; The output might be twice the length of the input in some languages
            [dst-len (fx1+ (fx* (Slice-length src) 2))]
            [dst (pstring-buffer-alloc dst-len)]
-           [errorcode (foreign-alloc (foreign-sizeof 'int))])
+           [errorcode-addr (foreign-alloc (foreign-sizeof 'int))]
+           [errorcode-ptr (make-ftype-pointer int errorcode-addr)])
       ; ICU requires that we set the initial error code value to 0
-      (ftype-set! int () (make-ftype-pointer int errorcode) 0 0)
-      (let ([len (u_strToLower (pstring-buffer-&ref dst 0) dst-len (slice-&ref src) (Slice-length src) "" errorcode)])
-        (foreign-free errorcode)
-        (make-Slice dst 0 len))))
+      (ftype-set! int () errorcode-ptr 0 0)
+      (let* ([len (u_strToLower (pstring-buffer-&ref dst 0) dst-len (slice-&ref src) (Slice-length src) "" errorcode-addr)]
+             [errorcode (ftype-ref int () (make-ftype-pointer int errorcode-addr) 0)])
+        (foreign-free errorcode-addr)
+        (if (not (= errorcode 0))
+          (error "pstring-downcase" (format "error calling u_strToLower, error code ~a" errorcode))
+          (make-Slice dst 0 len)))))
 
   (define (pstring-upcase str)
     (let* ([src (pstring-compact! str)]
            ; The output might be twice the length of the input in some languages
            [dst-len (fx1+ (fx* (Slice-length src) 2))]
            [dst (pstring-buffer-alloc dst-len)]
-           [errorcode (foreign-alloc (foreign-sizeof 'int))])
+           [errorcode-addr (foreign-alloc (foreign-sizeof 'int))]
+           [errorcode-ptr (make-ftype-pointer int errorcode-addr)])
       ; ICU requires that we set the initial error code value to 0
-      (ftype-set! int () (make-ftype-pointer int errorcode) 0 0)
-      (let ([len (u_strToUpper (pstring-buffer-&ref dst 0) dst-len (slice-&ref src) (Slice-length src) "" errorcode)])
-        (foreign-free errorcode)
-        (make-Slice dst 0 len))))
+      (ftype-set! int () errorcode-ptr 0 0)
+      (let* ([len (u_strToUpper (pstring-buffer-&ref dst 0) dst-len (slice-&ref src) (Slice-length src) "" errorcode-addr)]
+             [errorcode (ftype-ref int () (make-ftype-pointer int errorcode-addr) 0)])
+        (foreign-free errorcode-addr)
+        (if (not (= errorcode 0))
+          (error "pstring-upcase" (format "error calling u_strToUpper, error code ~a" errorcode))
+          (make-Slice dst 0 len)))))
 
   ; Trim whitespace around the pstring
   (define (pstring-trim str)
