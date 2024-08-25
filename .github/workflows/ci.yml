@@ -37,12 +37,12 @@ jobs:
 
       - name: Build the project
         run: |
-          nix-shell --run "spago build"
+          nix shell -c bash -c "spago build"
 
       - name: Run tests
         run: |
-          nix-shell --run "npm run test"
+          nix shell -c bash -c "npm run test"
 
       - name: Check Formatting
         run: |
-          nix-shell --run "purs-tidy check src test"
+          nix shell -c bash -c "purs-tidy check src test"
