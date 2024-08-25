@@ -802,7 +802,7 @@
            [errorcode-ptr (make-ftype-pointer int errorcode-addr)])
       ; ICU requires that we set the initial error code value to 0
       (ftype-set! int () errorcode-ptr 0 0)
-      (let* ([len (u_strToLower (pstring-buffer-&ref dst 0) dst-len (slice-&ref src) (Slice-length src) "" errorcode-addr)]
+      (let* ([len (u_strToLower (pstring-buffer-&ref dst 0) dst-len (slice-&ref src) (Slice-length src) 0 errorcode-addr)]
              [errorcode (ftype-ref int () (make-ftype-pointer int errorcode-addr) 0)])
         (foreign-free errorcode-addr)
         (if (not (= errorcode 0))
@@ -818,7 +818,7 @@
            [errorcode-ptr (make-ftype-pointer int errorcode-addr)])
       ; ICU requires that we set the initial error code value to 0
       (ftype-set! int () errorcode-ptr 0 0)
-      (let* ([len (u_strToUpper (pstring-buffer-&ref dst 0) dst-len (slice-&ref src) (Slice-length src) "" errorcode-addr)]
+      (let* ([len (u_strToUpper (pstring-buffer-&ref dst 0) dst-len (slice-&ref src) (Slice-length src) 0 errorcode-addr)]
              [errorcode (ftype-ref int () (make-ftype-pointer int errorcode-addr) 0)])
         (foreign-free errorcode-addr)
         (if (not (= errorcode 0))
@@ -1315,11 +1315,11 @@
                    (format "Failed to load libicuuc, machine-type ~s not supported." (machine-type)))]))
 
   (define u_strToUpper
-    (foreign-procedure "u_strToUpper_74" ((* unsigned-16) integer-32 (* unsigned-16) integer-32 string uptr)
+    (foreign-procedure "u_strToUpper_74" ((* unsigned-16) integer-32 (* unsigned-16) integer-32 uptr uptr)
                        integer-32))
 
   (define u_strToLower
-    (foreign-procedure "u_strToLower_74" ((* unsigned-16) integer-32 (* unsigned-16) integer-32 string uptr)
+    (foreign-procedure "u_strToLower_74" ((* unsigned-16) integer-32 (* unsigned-16) integer-32 uptr uptr)
                        integer-32))
 
 
