@@ -37,6 +37,9 @@ jobs:
       - name: Install Nix
         uses: cachix/install-nix-action@v22
 
+      - name: Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
+
       - name: Build the project
         run: |
           nix-shell --run "spago build"
