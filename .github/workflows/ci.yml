@@ -29,11 +29,6 @@ jobs:
             .spago
             output
 
-      - name: Set up Node toolchain
-        uses: actions/setup-node@v2
-        with:
-          node-version: "16"
-
       - name: Install Nix
         uses: cachix/install-nix-action@v22
 
