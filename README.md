@@ -6,6 +6,7 @@ Install requisites:
 
 * [`chezscheme`](https://cisco.github.io/ChezScheme/) - you should have the `scheme` command available in your `$PATH`.
 * [`libpcre2`](https://pcre2project.github.io/pcre2/) - `purescm` has a runtime dependency on the 16-bit variant of pcre2. Check your package manager for `pcre2` or `pcre2-16` or similar.
+* [`icu`](https://icu.unicode.org/) - `libicu` is used for locale-aware case conversions.
 
 You can install purescm with npm:
 

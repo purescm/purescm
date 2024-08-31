@@ -793,13 +793,37 @@
   ; Modifications
   ;
 
-  ; Slow downcasing that does an extra allocation to a scheme string
   (define (pstring-downcase str)
-    (string->pstring (string-downcase (pstring->string str))))
+    (let* ([src (pstring-compact! str)]
+           ; The output might be twice the length of the input in some languages
+           [dst-len (fx1+ (fx* (Slice-length src) 2))]
+           [dst (pstring-buffer-alloc dst-len)]
+           [errorcode-addr (foreign-alloc (foreign-sizeof 'int))]
+           [errorcode-ptr (make-ftype-pointer int errorcode-addr)])
+      ; ICU requires that we set the initial error code value to 0
+      (ftype-set! int () errorcode-ptr 0 0)
+      (let* ([len (u_strToLower (pstring-buffer-&ref dst 0) dst-len (slice-&ref src) (Slice-length src) 0 errorcode-addr)]
+             [errorcode (ftype-ref int () (make-ftype-pointer int errorcode-addr) 0)])
+        (foreign-free errorcode-addr)
+        (if (not (= errorcode 0))
+          (error "pstring-downcase" (format "error calling u_strToLower, error code ~a" errorcode))
+          (make-Slice dst 0 len)))))
 
-  ; Slow upcasing that does an extra allocation to a scheme string
   (define (pstring-upcase str)
-    (string->pstring (string-upcase (pstring->string str))))
+    (let* ([src (pstring-compact! str)]
+           ; The output might be twice the length of the input in some languages
+           [dst-len (fx1+ (fx* (Slice-length src) 2))]
+           [dst (pstring-buffer-alloc dst-len)]
+           [errorcode-addr (foreign-alloc (foreign-sizeof 'int))]
+           [errorcode-ptr (make-ftype-pointer int errorcode-addr)])
+      ; ICU requires that we set the initial error code value to 0
+      (ftype-set! int () errorcode-ptr 0 0)
+      (let* ([len (u_strToUpper (pstring-buffer-&ref dst 0) dst-len (slice-&ref src) (Slice-length src) 0 errorcode-addr)]
+             [errorcode (ftype-ref int () (make-ftype-pointer int errorcode-addr) 0)])
+        (foreign-free errorcode-addr)
+        (if (not (= errorcode 0))
+          (error "pstring-upcase" (format "error calling u_strToUpper, error code ~a" errorcode))
+          (make-Slice dst 0 len)))))
 
   ; Trim whitespace around the pstring
   (define (pstring-trim str)
@@ -1277,6 +1301,28 @@
     (foreign-procedure "pcre2_jit_compile_16" (uptr unsigned-32)
                        void))
 
+
+  ;
+  ; ICU bindings
+  ;
+
+  (define icu-init
+    (case (machine-type)
+      ; [(i3nt ti3nt a6nt ta6nt) (load-shared-object "libicuuc.dll")]
+      [(i3osx ti3osx a6osx ta6osx arm64osx tarm64osx) (load-shared-object "libicuuc.dylib")]
+      [(i3le ti3le a6le ta6le arm64le tarm64le) (load-shared-object "libicuuc.so")]
+      [else (error "purescm"
+                   (format "Failed to load libicuuc, machine-type ~s not supported." (machine-type)))]))
+
+  (define u_strToUpper
+    (foreign-procedure "u_strToUpper_74" ((* unsigned-16) integer-32 (* unsigned-16) integer-32 uptr uptr)
+                       integer-32))
+
+  (define u_strToLower
+    (foreign-procedure "u_strToLower_74" ((* unsigned-16) integer-32 (* unsigned-16) integer-32 uptr uptr)
+                       integer-32))
+
+
   ;
   ; Cursor
   ;
@@ -1381,6 +1427,7 @@
             ; one-word encoding
             [else w1])))
       (eof-object)))
+
 
   )
 
