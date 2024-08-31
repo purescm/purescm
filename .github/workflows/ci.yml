@@ -29,22 +29,20 @@ jobs:
             .spago
             output
 
-      - name: Set up Node toolchain
-        uses: actions/setup-node@v2
-        with:
-          node-version: "16"
-
       - name: Install Nix
         uses: cachix/install-nix-action@v22
 
+      - name: Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
+
       - name: Build the project
         run: |
-          nix-shell --run "spago build"
+          nix develop -c bash -c "spago build"
 
       - name: Run tests
         run: |
-          nix-shell --run "npm run test"
+          nix develop -c bash -c "npm run test"
 
       - name: Check Formatting
         run: |
-          nix-shell --run "purs-tidy check src test"
+          nix develop -c bash -c "purs-tidy check src test"
