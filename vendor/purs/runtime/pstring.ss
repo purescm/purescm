@@ -10,7 +10,7 @@
           pstring=?
           pstring>=?
           pstring>?
-          (rename (Slice? pstring?))
+          pstring?
           pstring->char-flexvector
           pstring->code-point-flexvector
           pstring-concat
