@@ -49,6 +49,8 @@
   (define main
     (lambda ()
 
+      (assert-all-pstring pstring?)
+
       ;; reffing
       (assert (check-raises (lambda () (pstring-ref-code-point (lit "") 0))))
       (assert (fx=? 228 (pstring-ref-code-point (lit "ä") 0)))
