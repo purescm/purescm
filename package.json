@@ -1,6 +1,6 @@
 {
   "name": "purescm",
-  "version": "1.9.2",
+  "version": "1.9.3",
   "main": "index.js",
   "type": "module",
   "files": [
