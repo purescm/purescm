@@ -55,5 +55,5 @@ workspace:
     cmd: ../index.dev.js
     args:
       - build
-  package_set:
+  packageSet:
     path: ../package-sets/1.0.0.json
