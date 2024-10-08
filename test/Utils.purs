@@ -16,6 +16,7 @@ import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Effect.Aff (Aff, effectCanceler, error, makeAff, message, throwError)
 import Effect.Class (liftEffect)
+import Foreign.Object as Object
 import Node.EventEmitter (on_)
 import Node.FS.Aff as FS
 import Node.FS.Perms as Perms
@@ -63,7 +64,18 @@ loadModuleMain options = do
         [ "--script", options.modulePath ]
       else
         []
-  spawned <- execa options.scheme arguments identity
+
+  -- Apple blocks DYLD environment variables, so loading libraries with DYLD_LIBRARY_PATH
+  -- will not work across process spawns. We go around this by carrying the library path
+  -- in CHEZ_DYLD_LIBRARY_PATH and setting DYLD_LIBRARY_PATH when spawning. For more info see:
+  -- https://developer.apple.com/library/archive/documentation/Security/Conceptual/System_Integrity_Protection_Guide/RuntimeProtections/RuntimeProtections.html
+  env <- liftEffect $ Process.getEnv
+  case Object.lookup "CHEZ_DYLD_LIBRARY_PATH" env of
+    Just dyldPath -> do
+      liftEffect $ Process.setEnv "DYLD_LIBRARY_PATH" dyldPath
+    _ -> pure unit
+
+  spawned <- execa options.scheme arguments (_ { extendEnv = Just true })
   when options.hasMain do
     spawned.stdin.writeUtf8End $ Array.fold
       [ "(base-exception-handler (lambda (e) (display-condition e (console-error-port)) (newline (console-error-port)) (exit -1)))"

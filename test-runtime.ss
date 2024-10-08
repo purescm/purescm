@@ -1,4 +1,3 @@
-#!/usr/bin/env -S scheme --libdirs vendor: --program
 (import (chezscheme)
         (only (purs runtime finalizers) run-finalizers)
         (only (purs runtime stack-trace) print-stack-trace)

@@ -13,7 +13,7 @@
   },
   "scripts": {
     "version": "sed -i'' -e \"s|version:.*|version: $npm_package_version|g\" spago.yaml",
-    "test": "./test-runtime.ss && spago test",
+    "test": "./test-runtime.js && spago test",
     "build": "spago build && purs-backend-es bundle-module -m Main --int-tags --platform=node --minify --to=./bundle/index.js"
   }
 }

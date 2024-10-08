@@ -20,6 +20,7 @@ import Effect.Aff (Aff, attempt, effectCanceler, error, launchAff_, makeAff, run
 import Effect.Class (liftEffect)
 import Effect.Class.Console as Console
 import Effect.Exception (message)
+import Foreign.Object as Object
 import Node.Encoding (Encoding(..))
 import Node.EventEmitter (on_)
 import Node.FS.Aff as FS
@@ -260,7 +261,18 @@ runRun cliRoot args = do
 evalScheme :: Array String -> String -> Aff ExecaResult
 evalScheme arguments code = do
   schemeBin <- getSchemeBinary
-  spawned <- execa schemeBin arguments identity
+
+  -- Apple blocks DYLD environment variables, so loading libraries with DYLD_LIBRARY_PATH
+  -- will not work across process spawns. We go around this by carrying the library path
+  -- in CHEZ_DYLD_LIBRARY_PATH and setting DYLD_LIBRARY_PATH when spawning. For more info see:
+  -- https://developer.apple.com/library/archive/documentation/Security/Conceptual/System_Integrity_Protection_Guide/RuntimeProtections/RuntimeProtections.html
+  env <- liftEffect $ Process.getEnv
+  case Object.lookup "CHEZ_DYLD_LIBRARY_PATH" env of
+    Just dyldPath -> do
+      liftEffect $ Process.setEnv "DYLD_LIBRARY_PATH" dyldPath
+    _ -> pure unit
+
+  spawned <- execa schemeBin arguments (_ { extendEnv = Just true })
   spawned.stdin.writeUtf8End code
   spawned.stdout.pipeToParentStdout
   spawned.stderr.pipeToParentStderr
