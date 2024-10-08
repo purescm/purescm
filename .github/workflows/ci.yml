@@ -41,7 +41,7 @@ jobs:
 
       - name: Bundle
         run: |
-          nix develop -c bash -c "npm run bundle"
+          nix develop -c bash -c "npm run build"
 
       - name: Run tests
         run: |
