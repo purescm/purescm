@@ -244,9 +244,9 @@ printDefinition = case _ of
     printNamedIndentedList
       ( D.words
           [ D.text $ rtPrefixed "define-lazy"
+          , D.text (lazyRefName ident)
           , D.text origIdentName
           , D.text moduleName
-          , D.text (lazyRefName ident)
           ]
       )
       $ printChezExpr expr

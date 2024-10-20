@@ -38,10 +38,10 @@
             [(scm:fx=? y1 v0) (($lazy-bravo) 0)]
             [scm:else 1.0]))])))
 
-  (rt:define-lazy "charlie" "Snapshot.RecursiveDefinition" $lazy-charlie
+  (rt:define-lazy $lazy-charlie "charlie" "Snapshot.RecursiveDefinition"
     (alpha 4))
 
-  (rt:define-lazy "bravo" "Snapshot.RecursiveDefinition" $lazy-bravo
+  (rt:define-lazy $lazy-bravo "bravo" "Snapshot.RecursiveDefinition"
     (alpha 3))
 
   (scm:define charlie

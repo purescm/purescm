@@ -116,7 +116,8 @@
 
   (define-syntax define-lazy
     (syntax-rules ()
-      [(_ ident module id body ...) (define id (lazy ident module (lambda () body ...)))]))
+      [(_ id ident module body ...)
+        (define id (lazy ident module (lambda () body ...)))]))
 
   (define (lazy ident module f)
     (let ([state 0]
@@ -124,7 +125,7 @@
       (lambda ()
         (cond
           [(eq? state 2) value]
-          [(eq? state 1) (error #f (format "Binding for ~a ~a demanded before initialized" module ident))]
+          [(eq? state 1) (error #f (format "~a was needed before it finished initializing (module ~a)" ident module))]
           [else
             (begin
               (set! state 1)
