@@ -19,7 +19,7 @@ import Data.Tuple (Tuple(..))
 import Dodo (Doc)
 import Dodo as D
 import PureScript.Backend.Chez.Constants (rtPrefixed, scmPrefixed)
-import PureScript.Backend.Chez.Syntax (ChezDefinition(..), ChezExport(..), ChezExpr(..), ChezImport(..), ChezImportLevel(..), ChezImportSet(..), ChezLibrary, LibraryBody, LibraryName, LibraryReference, LibraryVersion(..), LiteralDigit(..), SubVersionReference(..), VersionReference(..), recordTypeAccessor, recordTypeCurriedConstructor, recordTypeName, recordTypePredicate, recordTypeUncurriedConstructor)
+import PureScript.Backend.Chez.Syntax (ChezDefinition(..), ChezExport(..), ChezExpr(..), ChezImport(..), ChezImportLevel(..), ChezImportSet(..), ChezLibrary, LibraryBody, LibraryName, LibraryReference, LibraryVersion(..), LiteralDigit(..), SubVersionReference(..), VersionReference(..), lazyRefName, recordTypeAccessor, recordTypeCurriedConstructor, recordTypeName, recordTypePredicate, recordTypeUncurriedConstructor)
 import PureScript.Backend.Optimizer.CoreFn (ModuleName(..))
 
 printWrap :: Doc Void -> Doc Void -> Doc Void -> Doc Void
@@ -239,14 +239,14 @@ printDefinition = case _ of
     printNamedIndentedList (D.words [ D.text $ scmPrefixed "define", D.text ident ])
       $ printChezExpr expr
   DefineLazy ident (ModuleName m) expr -> do
-    let identName = Json.stringify $ Json.fromString ident
+    let origIdentName = Json.stringify $ Json.fromString ident
     let moduleName = Json.stringify $ Json.fromString m
     printNamedIndentedList
       ( D.words
           [ D.text $ rtPrefixed "define-lazy"
-          , D.text identName
+          , D.text origIdentName
           , D.text moduleName
-          , D.text ("$lazy-" <> ident)
+          , D.text (lazyRefName ident)
           ]
       )
       $ printChezExpr expr

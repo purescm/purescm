@@ -8,7 +8,6 @@ import Data.Array.NonEmpty as NEA
 import Data.Array.NonEmpty as NonEmptyArray
 import Data.Bifunctor (bimap)
 import Data.Char (toCharCode)
-import Data.Filterable (separate)
 import Data.Foldable (fold, foldMap)
 import Data.Int as Int
 import Data.Maybe (Maybe(..))
@@ -134,8 +133,8 @@ codegenTopLevelBindingGroup codegenEnv { bindings, recursive }
           { lazyTopLevelRefs = foldMap (Set.singleton <<< fst) lazyBindings.no }
       fold
         [ Array.concatMap (codegenTopLevelBinding codegenEnv') lazyBindings.yes
-        , Array.concatMap (codegenLazyTopLevelBinding codegenEnv') lazyBindings.no
-        , (\(Tuple (Ident ident) _) -> Define ident $ S.forceLazyRef ident) <$> lazyBindings.no
+        , map (codegenLazyTopLevelBinding codegenEnv') lazyBindings.no
+        , map (\(Tuple (Ident ident) _) -> Define ident $ S.forceLazyRef ident) lazyBindings.no
         ]
   | otherwise = Array.concatMap (codegenTopLevelBinding codegenEnv) bindings
 
@@ -155,15 +154,15 @@ isLazyBinding (Tuple _ expr) = case unwrap expr of
     true
   EffectDefer _ ->
     true
-  _ -> false
+  _ ->
+    false
 
 codegenLazyTopLevelBinding
   :: CodegenEnv
   -> Tuple Ident NeutralExpr
-  -> Array ChezDefinition
-codegenLazyTopLevelBinding codegenEnv@{ currentModule } (Tuple (Ident i) n) =
-  case unwrap n of
-    _ -> [ DefineLazy i currentModule $ codegenExpr codegenEnv n ]
+  -> ChezDefinition
+codegenLazyTopLevelBinding codegenEnv (Tuple (Ident i) n) =
+  DefineLazy i codegenEnv.currentModule $ codegenExpr codegenEnv n
 
 codegenTopLevelBinding
   :: CodegenEnv

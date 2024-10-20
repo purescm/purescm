@@ -11,7 +11,7 @@ import Data.Maybe (Maybe)
 import Data.Newtype (class Newtype)
 import Data.Tuple (Tuple)
 import PureScript.Backend.Chez.Constants (rtPrefixed, scmPrefixed)
-import PureScript.Backend.Optimizer.CoreFn (ModuleName(..), Prop(..))
+import PureScript.Backend.Optimizer.CoreFn (ModuleName, Prop(..))
 
 type ChezLibrary =
   { "#!r6rs" :: Boolean
@@ -181,14 +181,8 @@ recordUpdate h f = do
   foldr field h f
 
 forceLazyRef :: String -> ChezExpr
-forceLazyRef i = List [ Identifier ("$lazy-" <> i) ]
+forceLazyRef i = List [ Identifier $ lazyRefName i ]
 
-lazyBinding :: ChezExpr -> ChezExpr
-lazyBinding expr = List
-  [ Identifier (rtPrefixed "lazy")
-  , List
-      [ Identifier (scmPrefixed "lambda")
-      , List []
-      , expr
-      ]
-  ]
+lazyRefName :: String -> String
+lazyRefName i = "$lazy-" <> i
+
