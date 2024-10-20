@@ -11,6 +11,8 @@
     array-length
     array-ref
     make-array
+    define-lazy
+    lazy
     boolean<?
     boolean<=?
     boolean>=?
@@ -106,6 +108,29 @@
 
   (define list-cons
     (lambda (x) (lambda (xs) (cons x xs))))
+
+
+  ;
+  ; Lazy bindings
+  ;
+
+  (define-syntax define-lazy
+    (syntax-rules ()
+      [(_ ident module id body ...) (define id (lazy ident module (lambda () body ...)))]))
+
+  (define (lazy ident module f)
+    (let ([state 0]
+          [value #f])
+      (lambda ()
+        (cond
+          [(eq? state 2) value]
+          [(eq? state 1) (error #f (format "Binding for ~a ~a demanded before initialized" module ident))]
+          [else
+            (begin
+              (set! state 1)
+              (set! value (f))
+              (set! state 2)
+              value)]))))
 
 
   )

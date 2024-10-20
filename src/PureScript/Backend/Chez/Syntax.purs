@@ -9,9 +9,9 @@ import Data.Array.NonEmpty (NonEmptyArray)
 import Data.Array.NonEmpty as NonEmptyArray
 import Data.Maybe (Maybe)
 import Data.Newtype (class Newtype)
-import Data.Tuple (Tuple(..))
+import Data.Tuple (Tuple)
 import PureScript.Backend.Chez.Constants (rtPrefixed, scmPrefixed)
-import PureScript.Backend.Optimizer.CoreFn (Prop(..))
+import PureScript.Backend.Optimizer.CoreFn (ModuleName(..), Prop(..))
 
 type ChezLibrary =
   { "#!r6rs" :: Boolean
@@ -78,6 +78,7 @@ type LibraryBody =
 data ChezDefinition
   = Define String ChezExpr
   | DefineRecordType String (Array String)
+  | DefineLazy String ModuleName ChezExpr
 
 newtype LiteralDigit = LiteralDigit String
 
@@ -178,3 +179,16 @@ recordUpdate h f = do
         , rest
         ]
   foldr field h f
+
+forceLazyRef :: String -> ChezExpr
+forceLazyRef i = List [ Identifier ("$lazy-" <> i) ]
+
+lazyBinding :: ChezExpr -> ChezExpr
+lazyBinding expr = List
+  [ Identifier (rtPrefixed "lazy")
+  , List
+      [ Identifier (scmPrefixed "lambda")
+      , List []
+      , expr
+      ]
+  ]

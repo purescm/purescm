@@ -11,7 +11,6 @@ import Ansi.Codes (Color(..))
 import Ansi.Output (foreground, withGraphics)
 import ArgParse.Basic (ArgParser)
 import ArgParse.Basic as ArgParser
-import Data.Array (findMap)
 import Data.Array as Array
 import Data.Array.NonEmpty (NonEmptyArray)
 import Data.Array.NonEmpty as NonEmptyArray
@@ -36,8 +35,6 @@ import Node.Path as Path
 import Node.Process as Process
 import Partial.Unsafe (unsafeCrashWith)
 import PureScript.Backend.Chez.Constants (moduleLib, schemeExt)
-import PureScript.Backend.Optimizer.Convert (BackendModule)
-import PureScript.Backend.Optimizer.CoreFn (Comment(..))
 import Test.Utils (canRunMain, execWithStdin, loadModuleMain, mkdirp, spawnFromParent)
 
 type TestArgs =
@@ -121,8 +118,14 @@ runSnapshotTests { accept, filter } = do
           , modulePath: actualSnapshotOutputPath
           , moduleName: name
           }
+        let shouldFail = isFailingTestFile purescriptFile
         case result.exitCode of
           Just 0 -> pure true
+          Just 0 | shouldFail -> do
+            Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <> " should have failed."
+            Console.log result.message
+            pure false
+          _ | shouldFail -> pure true
           _ -> do
             Console.log $ withGraphics (foreground Red) "✗" <> " " <> name <> " failed."
             Console.log result.message
@@ -154,21 +157,8 @@ runSnapshotTests { accept, filter } = do
   unless (Foldable.and results) do
     liftEffect $ Process.exit' 1
 
-hasFails :: BackendModule -> Maybe String
-hasFails = findMap go <<< _.comments
-  where
-  go = case _ of
-    LineComment comm ->
-      String.stripPrefix (Pattern "@fails ") (String.trim comm)
-    _ ->
-      Nothing
-
-matchesFail :: String -> Maybe String -> Boolean
-matchesFail errMsg = case _ of
-  Just msg ->
-    String.contains (Pattern msg) errMsg
-  Nothing ->
-    false
+isFailingTestFile :: String -> Boolean
+isFailingTestFile = String.contains (Pattern "Failing")
 
 getSchemeBinary :: Aff String
 getSchemeBinary = do
