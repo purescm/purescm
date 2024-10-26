@@ -21,7 +21,8 @@
     pstring>?
     pstring>=?
     pstring<?
-    pstring<=?)
+    pstring<=?
+    fail)
   (import
     (chezscheme)
     (only (purs runtime pstring) string->pstring
@@ -106,6 +107,13 @@
 
   (define list-cons
     (lambda (x) (lambda (xs) (cons x xs))))
+
+
+  (define (fail)
+    (raise
+      (condition
+        (make-error)
+        (make-message-condition "Failed pattern match"))))
 
 
   )

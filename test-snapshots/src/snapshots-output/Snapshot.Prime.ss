@@ -108,7 +108,7 @@
       (scm:cond
         [(F1? v0) (rt:string->pstring "F1")]
         [(F2? v0) (rt:string->pstring "F2")]
-        [scm:else (scm:raise (scm:condition (scm:make-error) (scm:make-message-condition "Failed pattern match")))])))))
+        [scm:else (rt:fail)])))))
 
   (scm:define useInstance
     (rt:string->pstring "F1F2"))
