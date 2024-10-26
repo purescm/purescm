@@ -109,6 +109,10 @@
     (lambda (x) (lambda (xs) (cons x xs))))
 
 
+  ;
+  ; Runtime failures
+  ;
+
   (define (fail)
     (raise
       (condition
