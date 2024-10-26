@@ -20,7 +20,7 @@
 
   (scm:define insert
     (((Record.insert (scm:list (scm:cons (scm:string->symbol "reflectSymbol") (scm:lambda (_)
-      (rt:string->pstring "anotherField"))))) (scm:gensym "purs-undefined")) (scm:gensym "purs-undefined")))
+      (rt:string->pstring "anotherField"))))) (scm:quote purs-undefined)) (scm:quote purs-undefined)))
 
   (scm:define recordUpdate
     (scm:lambda (v0)
@@ -38,7 +38,7 @@
     (scm:let*
       ([r0 (scm:list (scm:cons (scm:string->symbol "fooBarBaz") 5))]
        [s1 (recordUpdate r0)]
-       [t2 ((recordAddField (scm:gensym "purs-undefined")) s1)]
+       [t2 ((recordAddField (scm:quote purs-undefined)) s1)]
        [u3 (scm:list (scm:cons (scm:string->symbol "fooBarBaz") minusTwo))]
        [_4 (Test.Assert.assert (scm:fx=? (recordAccess t2) 10))])
         (scm:lambda ()
