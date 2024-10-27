@@ -22,6 +22,3 @@ moduleLib = "lib"
 
 schemeExt :: String
 schemeExt = ".ss"
-
-undefinedSymbol :: String
-undefinedSymbol = "purs-undefined"

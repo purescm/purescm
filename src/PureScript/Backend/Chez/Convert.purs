@@ -22,7 +22,7 @@ import Data.String.Regex.Unsafe as R.Unsafe
 import Data.Tuple (Tuple(..), uncurry)
 import Data.Tuple as Tuple
 import Partial.Unsafe (unsafeCrashWith)
-import PureScript.Backend.Chez.Constants (libChezSchemePrefix, moduleForeign, moduleLib, rtPrefixed, runtimePrefix, scmPrefixed, undefinedSymbol)
+import PureScript.Backend.Chez.Constants (libChezSchemePrefix, moduleForeign, moduleLib, rtPrefixed, runtimePrefix, scmPrefixed)
 import PureScript.Backend.Chez.Syntax (ChezDefinition(..), ChezExport(..), ChezExpr, ChezImport(..), ChezImportSet(..), ChezLibrary, recordTypeAccessor, recordTypeCurriedConstructor, recordTypePredicate, recordTypeUncurriedConstructor)
 import PureScript.Backend.Chez.Syntax as S
 import PureScript.Backend.Optimizer.Convert (BackendModule, BackendBindingGroup)
@@ -234,7 +234,7 @@ codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
 
   PrimOp o ->
     codegenPrimOp codegenEnv o
-  PrimUndefined -> S.quote $ S.Identifier undefinedSymbol
+  PrimUndefined -> S.quote $ S.Identifier "undefined"
 
   Fail i ->
     -- Note: This can be improved by using `error`, but it requires
