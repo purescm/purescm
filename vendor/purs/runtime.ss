@@ -140,7 +140,7 @@
   ;
 
   (define (fail)
-    (raise
+    (raise-continuable
       (condition
         (make-error)
         (make-message-condition "Failed pattern match"))))
