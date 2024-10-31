@@ -5,6 +5,7 @@ module PureScript.Backend.Chez.Printer
 import Prelude
 
 import Control.Alternative as Alternative
+import Data.Argonaut as Json
 import Data.Array as Array
 import Data.Array.NonEmpty (NonEmptyArray)
 import Data.Array.NonEmpty as NEA
@@ -17,8 +18,9 @@ import Data.String as String
 import Data.Tuple (Tuple(..))
 import Dodo (Doc)
 import Dodo as D
-import PureScript.Backend.Chez.Constants (scmPrefixed)
-import PureScript.Backend.Chez.Syntax (ChezDefinition(..), ChezExport(..), ChezExpr(..), ChezImport(..), ChezImportLevel(..), ChezImportSet(..), ChezLibrary, LibraryBody, LibraryName, LibraryReference, LibraryVersion(..), LiteralDigit(..), SubVersionReference(..), VersionReference(..), recordTypeAccessor, recordTypeCurriedConstructor, recordTypeName, recordTypePredicate, recordTypeUncurriedConstructor)
+import PureScript.Backend.Chez.Constants (rtPrefixed, scmPrefixed)
+import PureScript.Backend.Chez.Syntax (ChezDefinition(..), ChezExport(..), ChezExpr(..), ChezImport(..), ChezImportLevel(..), ChezImportSet(..), ChezLibrary, LibraryBody, LibraryName, LibraryReference, LibraryVersion(..), LiteralDigit(..), SubVersionReference(..), VersionReference(..), lazyRefName, recordTypeAccessor, recordTypeCurriedConstructor, recordTypeName, recordTypePredicate, recordTypeUncurriedConstructor)
+import PureScript.Backend.Optimizer.CoreFn (ModuleName(..))
 
 printWrap :: Doc Void -> Doc Void -> Doc Void -> Doc Void
 printWrap l r x = l <> x <> r
@@ -89,6 +91,7 @@ escapeIdentifiers lib = lib
 
   escapeDefinition = case _ of
     Define i expr -> Define (escapeIdent i) $ escapeExpr expr
+    DefineLazy i moduleName expr -> DefineLazy (escapeIdent i) moduleName $ escapeExpr expr
     DefineRecordType i fields -> DefineRecordType (escapeIdent i) $ map escapeIdent fields
 
   escapeExpr = case _ of
@@ -234,6 +237,18 @@ printDefinition :: ChezDefinition -> Doc Void
 printDefinition = case _ of
   Define ident expr ->
     printNamedIndentedList (D.words [ D.text $ scmPrefixed "define", D.text ident ])
+      $ printChezExpr expr
+  DefineLazy ident (ModuleName m) expr -> do
+    let origIdentName = Json.stringify $ Json.fromString ident
+    let moduleName = Json.stringify $ Json.fromString m
+    printNamedIndentedList
+      ( D.words
+          [ D.text $ rtPrefixed "define-lazy"
+          , D.text (lazyRefName ident)
+          , D.text origIdentName
+          , D.text moduleName
+          ]
+      )
       $ printChezExpr expr
   DefineRecordType ident [ field ] ->
     printRecordDefinition

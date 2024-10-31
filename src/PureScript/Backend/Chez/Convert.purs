@@ -8,18 +8,20 @@ import Data.Array.NonEmpty as NEA
 import Data.Array.NonEmpty as NonEmptyArray
 import Data.Bifunctor (bimap)
 import Data.Char (toCharCode)
+import Data.Foldable (fold, foldMap)
 import Data.Int as Int
 import Data.Maybe (Maybe(..))
 import Data.Monoid (power)
 import Data.Newtype (unwrap, wrap)
 import Data.Number (isNaN)
+import Data.Set (Set)
 import Data.Set as Set
 import Data.String as String
 import Data.String.CodeUnits as CodeUnits
 import Data.String.Regex as R
 import Data.String.Regex.Flags as R.Flags
 import Data.String.Regex.Unsafe as R.Unsafe
-import Data.Tuple (Tuple(..), uncurry)
+import Data.Tuple (Tuple(..), fst, uncurry)
 import Data.Tuple as Tuple
 import Partial.Unsafe (unsafeCrashWith)
 import PureScript.Backend.Chez.Constants (libChezSchemePrefix, moduleForeign, moduleLib, rtPrefixed, runtimePrefix, scmPrefixed)
@@ -33,13 +35,14 @@ import Safe.Coerce (coerce)
 
 type CodegenEnv =
   { currentModule :: ModuleName
+  , lazyTopLevelRefs :: Set Ident
   }
 
 codegenModule :: BackendModule -> ChezLibrary
 codegenModule { name, bindings, imports, foreign: foreign_ } =
   let
     codegenEnv :: CodegenEnv
-    codegenEnv = { currentModule: name }
+    codegenEnv = { currentModule: name, lazyTopLevelRefs: Set.empty }
 
     definitions :: Array ChezDefinition
     definitions = Array.concat $
@@ -100,6 +103,7 @@ definitionIdentifiers = case _ of
     [ recordTypeUncurriedConstructor i
     , recordTypePredicate i
     ] <> map (recordTypeAccessor i) fields
+  DefineLazy _ _ _ -> []
 
 flattenQualified :: ModuleName -> Qualified Ident -> String
 flattenQualified _ (Qualified Nothing (Ident i)) = i
@@ -118,8 +122,47 @@ codegenTopLevelBindingGroup
   :: CodegenEnv
   -> BackendBindingGroup Ident NeutralExpr
   -> Array ChezDefinition
-codegenTopLevelBindingGroup codegenEnv { bindings } =
-  Array.concatMap (codegenTopLevelBinding codegenEnv) bindings
+codegenTopLevelBindingGroup codegenEnv { bindings, recursive }
+  | recursive, Just bindings' <- NonEmptyArray.fromArray bindings = do
+      -- Turn non-lazy bindings into lazy bindings so that they can refer to each
+      -- other during initialization. Some definitions are initialized lazily,
+      -- like lambda exressions, so we don't have to touch those.
+      let lazyBindings = NonEmptyArray.partition isLazyBinding bindings'
+      let
+        codegenEnv' = codegenEnv
+          { lazyTopLevelRefs = foldMap (Set.singleton <<< fst) lazyBindings.no }
+      fold
+        [ Array.concatMap (codegenTopLevelBinding codegenEnv') lazyBindings.yes
+        , map (codegenLazyTopLevelBinding codegenEnv') lazyBindings.no
+        , map (\(Tuple (Ident ident) _) -> Define ident $ S.forceLazyRef ident) lazyBindings.no
+        ]
+  | otherwise = Array.concatMap (codegenTopLevelBinding codegenEnv) bindings
+
+isLazyBinding :: Tuple Ident NeutralExpr -> Boolean
+isLazyBinding (Tuple _ expr) = case unwrap expr of
+  Abs _ _ ->
+    true
+  UncurriedAbs _ _ ->
+    true
+  UncurriedEffectAbs _ _ ->
+    true
+  CtorDef _ _ _ _ ->
+    true
+  EffectBind _ _ _ _ ->
+    true
+  EffectPure _ ->
+    true
+  EffectDefer _ ->
+    true
+  _ ->
+    false
+
+codegenLazyTopLevelBinding
+  :: CodegenEnv
+  -> Tuple Ident NeutralExpr
+  -> ChezDefinition
+codegenLazyTopLevelBinding codegenEnv (Tuple (Ident i) n) =
+  DefineLazy i codegenEnv.currentModule $ codegenExpr codegenEnv n
 
 codegenTopLevelBinding
   :: CodegenEnv
@@ -149,9 +192,12 @@ codegenTopLevelBinding codegenEnv (Tuple (Ident i) n) =
       [ Define i $ codegenExpr codegenEnv n ]
 
 codegenExpr :: CodegenEnv -> NeutralExpr -> ChezExpr
-codegenExpr codegenEnv@{ currentModule } s = case unwrap s of
+codegenExpr codegenEnv@{ currentModule, lazyTopLevelRefs } s = case unwrap s of
   Var (Qualified (Just (ModuleName "Data.List.Types")) (Ident "Cons")) ->
     S.Identifier (rtPrefixed "list-cons")
+  Var qi@(Qualified (Just moduleName) ident)
+    | moduleName == currentModule && Set.member ident lazyTopLevelRefs ->
+        S.forceLazyRef $ flattenQualified currentModule qi
   Var qi ->
     S.Identifier $ flattenQualified currentModule qi
   Local i l ->
