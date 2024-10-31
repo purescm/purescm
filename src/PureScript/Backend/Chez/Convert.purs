@@ -18,9 +18,6 @@ import Data.Set (Set)
 import Data.Set as Set
 import Data.String as String
 import Data.String.CodeUnits as CodeUnits
-import Data.String.Regex as R
-import Data.String.Regex.Flags as R.Flags
-import Data.String.Regex.Unsafe as R.Unsafe
 import Data.Tuple (Tuple(..), fst, uncurry)
 import Data.Tuple as Tuple
 import Partial.Unsafe (unsafeCrashWith)
@@ -296,7 +293,7 @@ codegenLiteral codegenEnv = case _ of
   LitNumber n -> S.Float $ wrap $ codegenFloat n
   LitString s -> S.List
     [ S.Identifier $ rtPrefixed "string->pstring"
-    , S.StringExpr $ jsonToChezString $ Json.stringify $ Json.fromString s
+    , S.StringExpr s
     ]
   LitChar c -> codegenChar c
   LitBoolean b -> S.Identifier $ if b then "#t" else "#f"
@@ -313,23 +310,6 @@ codegenFloat x = case x of
     | bottom == x -> "-inf.0"
     | isNaN x -> "+nan.0"
     | otherwise -> show x
-
-jsonToChezString :: String -> String
-jsonToChezString str = unicodeReplace str
-  where
-  unicodeRegex :: R.Regex
-  unicodeRegex = R.Unsafe.unsafeRegex """\\u([A-F\d]{4})""" R.Flags.global
-
-  unicodeReplace :: String -> String
-  unicodeReplace s = R.replace' unicodeRegex unicodeReplaceMatch s
-
-  unicodeReplaceMatch
-    :: String
-    -> Array (Maybe String)
-    -> String
-  unicodeReplaceMatch _ = case _ of
-    [ (Just x) ] -> "\\x" <> x <> ";"
-    _ -> unsafeCrashWith "Error matching at unicodeReplaceMatch in jsonToChezString"
 
 -- > In addition to the standard named characters 
 -- > #\alarm, #\backspace, #\delete, #\esc, #\linefeed, #\newline, #\page, #\return, #\space, and #\tab, 
