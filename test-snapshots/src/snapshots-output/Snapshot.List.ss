@@ -35,14 +35,14 @@
       (scm:cond
         [(scm:null? v0) Data.Maybe.Nothing]
         [(scm:pair? v0) (Data.Maybe.Just (scm:cdr v0))]
-        [scm:else (scm:raise (scm:condition (scm:make-error) (scm:make-message-condition "Failed pattern match")))])))
+        [scm:else (rt:fail)])))
 
   (scm:define car
     (scm:lambda (v0)
       (scm:cond
         [(scm:null? v0) Data.Maybe.Nothing]
         [(scm:pair? v0) (Data.Maybe.Just (scm:car v0))]
-        [scm:else (scm:raise (scm:condition (scm:make-error) (scm:make-message-condition "Failed pattern match")))])))
+        [scm:else (rt:fail)])))
 
   (scm:define main
     (scm:let ([_0 (Test.Assert.assert #t)])

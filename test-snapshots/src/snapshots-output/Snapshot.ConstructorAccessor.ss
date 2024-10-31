@@ -88,14 +88,14 @@
       (scm:lambda (v1)
         (scm:cond
           [(First? v1) (First-value0 v1)]
-          [scm:else (scm:raise (scm:condition (scm:make-error) (scm:make-message-condition "Failed pattern match")))]))))
+          [scm:else (rt:fail)]))))
 
   (scm:define test5
     (scm:lambda (v0)
       (scm:cond
         [(First? v0) (First-value0 v0)]
         [(Last? v0) (Last-value0 v0)]
-        [scm:else (scm:raise (scm:condition (scm:make-error) (scm:make-message-condition "Failed pattern match")))])))
+        [scm:else (rt:fail)])))
 
   (scm:define test4
     (scm:lambda (v0)

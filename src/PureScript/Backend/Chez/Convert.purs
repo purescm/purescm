@@ -282,21 +282,13 @@ codegenExpr codegenEnv@{ currentModule, lazyTopLevelRefs } s = case unwrap s of
     codegenPrimOp codegenEnv o
   PrimUndefined -> S.quote $ S.Identifier "undefined"
 
-  Fail i ->
+  Fail "Failed pattern match" ->
     -- Note: This can be improved by using `error`, but it requires
     -- that we track where exactly this `Fail` is defined. We can
     -- make use of the `codegenEnv` for this.
-    S.List
-      [ S.Identifier $ scmPrefixed "raise"
-      , S.List
-          [ S.Identifier $ scmPrefixed "condition"
-          , S.List [ S.Identifier $ scmPrefixed "make-error" ]
-          , S.List
-              [ S.Identifier $ scmPrefixed "make-message-condition"
-              , S.StringExpr $ Json.stringify $ Json.fromString i
-              ]
-          ]
-      ]
+    S.List [ S.Identifier $ rtPrefixed "fail" ]
+  Fail _ ->
+    unsafeCrashWith "Unsupported fail."
 
 codegenLiteral :: CodegenEnv -> Literal NeutralExpr -> ChezExpr
 codegenLiteral codegenEnv = case _ of

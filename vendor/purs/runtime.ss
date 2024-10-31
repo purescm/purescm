@@ -23,7 +23,8 @@
     pstring>?
     pstring>=?
     pstring<?
-    pstring<=?)
+    pstring<=?
+    fail)
   (import
     (chezscheme)
     (only (purs runtime pstring) string->pstring
@@ -132,6 +133,17 @@
               (set! value (f))
               (set! state 2)
               value)]))))
+
+
+  ;
+  ; Runtime failures
+  ;
+
+  (define (fail)
+    (raise-continuable
+      (condition
+        (make-error)
+        (make-message-condition "Failed pattern match"))))
 
 
   )
