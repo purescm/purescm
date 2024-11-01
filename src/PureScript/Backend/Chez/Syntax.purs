@@ -126,7 +126,7 @@ app f x = List [ f, x ]
 recordLabel :: String -> ChezExpr
 recordLabel key = List
   [ Identifier $ scmPrefixed "string->symbol"
-  , StringExpr $ Json.stringify $ Json.fromString key
+  , StringExpr key
   ]
 
 record :: Array (Prop ChezExpr) -> ChezExpr

@@ -15,7 +15,11 @@ import Data.Maybe (Maybe(..), maybe)
 import Data.Newtype (un)
 import Data.String (Pattern(..), Replacement(..))
 import Data.String as String
+import Data.String.Regex as R
+import Data.String.Regex.Flags as R.Flags
+import Data.String.Regex.Unsafe as R.Unsafe
 import Data.Tuple (Tuple(..))
+import Partial.Unsafe (unsafeCrashWith)
 import Dodo (Doc)
 import Dodo as D
 import PureScript.Backend.Chez.Constants (rtPrefixed, scmPrefixed)
@@ -270,13 +274,30 @@ printChezExpr e = case e of
   Integer (LiteralDigit x) -> D.text x
   Float (LiteralDigit x) -> D.text x
   Char x -> D.text x
-  StringExpr x -> D.text x
+  StringExpr x -> D.text $ jsonToChezString $ Json.stringify $ Json.fromString x
   Bool x -> D.text $ if x then "#t" else "#f"
   Identifier x -> D.text x
   List xs -> printList $ D.words (printChezExpr <$> xs)
   Cond branches fallback -> printCond branches fallback
   Let recursive bindings' expr -> printLet recursive bindings' expr
   Lambda args expr -> printLambda args expr
+
+jsonToChezString :: String -> String
+jsonToChezString str = unicodeReplace str
+  where
+  unicodeRegex :: R.Regex
+  unicodeRegex = R.Unsafe.unsafeRegex """\\u([A-F\d]{4})""" R.Flags.global
+
+  unicodeReplace :: String -> String
+  unicodeReplace s = R.replace' unicodeRegex unicodeReplaceMatch s
+
+  unicodeReplaceMatch
+    :: String
+    -> Array (Maybe String)
+    -> String
+  unicodeReplaceMatch _ = case _ of
+    [ (Just x) ] -> "\\x" <> x <> ";"
+    _ -> unsafeCrashWith "Error matching at unicodeReplaceMatch in jsonToChezString"
 
 printRecordDefinition
   :: Prim.String
