@@ -1,7 +1,7 @@
 #!r6rs
 #!chezscheme
 (library
-  (purs runtime)
+  (purescm runtime)
   (export
     list-cons
     record-set
@@ -27,14 +27,14 @@
     fail)
   (import
     (chezscheme)
-    (only (purs runtime pstring) string->pstring
-                                    pstring-concat
-                                    pstring=?
-                                    pstring>?
-                                    pstring>=?
-                                    pstring<?
-                                    pstring<=?)
-    (prefix (purs runtime srfi :214) srfi:214:))
+    (only (purescm pstring) string->pstring
+                            pstring-concat
+                            pstring=?
+                            pstring>?
+                            pstring>=?
+                            pstring<?
+                            pstring<=?)
+    (prefix (srfi :214) srfi:214:))
 
   ;
   ; Booleans

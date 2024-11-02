@@ -6,7 +6,7 @@
 ; runtime, so there is no need to call `run-finalizers` by the user. Finalizers
 ; are implemented using Chez's guardians, documented here:
 ; <https://cisco.github.io/ChezScheme/csug10.0/smgmt.html#./smgmt:h2>
-(library (purs runtime finalizers)
+(library (purescm finalizers)
   (export finalizer
           run-finalizers)
   (import (chezscheme))

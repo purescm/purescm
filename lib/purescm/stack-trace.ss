@@ -1,4 +1,4 @@
-(library (purs runtime stack-trace)
+(library (purescm stack-trace)
   (export print-stack-trace)
   (import (chezscheme))
 

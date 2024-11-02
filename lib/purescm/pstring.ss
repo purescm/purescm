@@ -1,5 +1,5 @@
 #!chezscheme
-(library (purs runtime pstring)
+(library (purescm pstring)
   (export char-flexvector->pstring
           code-points->pstring
           number->pstring
@@ -58,9 +58,9 @@
           pstring-cursor-read-code-point
           pstring-cursor-peek-code-point)
   (import (chezscheme)
-          (prefix (purs runtime srfi :214) srfi:214:)
-          (only (purs runtime finalizers) finalizer)
-          (purs runtime pstring-buffer))
+          (prefix (srfi :214) srfi:214:)
+          (only (purescm finalizers) finalizer)
+          (purescm pstring-buffer))
 
   ;
   ; Internals

@@ -1,7 +1,7 @@
 #!chezscheme
 ; An immobile UTF-16 encoded bytevector used for the pstring buffer.
 ; Offsets are handled as code units unlike with a raw bytevector.
-(library (purs runtime pstring-buffer)
+(library (purescm pstring-buffer)
   (export code-unit-length
           pstring-buffer-alloc
           pstring-buffer-ref

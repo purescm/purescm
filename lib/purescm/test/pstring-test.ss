@@ -1,9 +1,9 @@
-(library (purs runtime test pstring-test)
+(library (purescm test pstring-test)
   (export main)
   (import (chezscheme)
-          (prefix (purs runtime) rt:)
-          (prefix (purs runtime srfi :214) srfi:214:)
-          (purs runtime pstring))
+          (prefix (purescm runtime) rt:)
+          (prefix (srfi :214) srfi:214:)
+          (purescm pstring))
 
   (define check-raises
     (lambda (thunk)
