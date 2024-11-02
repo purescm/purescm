@@ -1,7 +1,7 @@
 (library (Snapshot.Literals.Record foreign) 
   (export minusTwo unsafeGetNotFound)
   (import (chezscheme)
-          (prefix (purs runtime) rt:))
+          (prefix (purescm runtime) rt:))
   
   (define minusTwo -2)
 

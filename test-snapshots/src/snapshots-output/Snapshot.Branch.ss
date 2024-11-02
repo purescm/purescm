@@ -9,7 +9,7 @@
     i)
   (import
     (prefix (chezscheme) scm:)
-    (prefix (purs runtime) rt:))
+    (prefix (purescm runtime) rt:))
 
   (scm:define i
     (scm:lambda (v0)

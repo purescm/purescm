@@ -69,7 +69,7 @@ main = do
 runSnapshotTests :: TestArgs -> Aff Unit
 runSnapshotTests { accept, filter } = do
   currentDirectory <- liftEffect Process.cwd
-  let vendorDirectory = Path.concat [ currentDirectory, "vendor" ]
+  let vendorDirectory = Path.concat [ currentDirectory, "lib" ]
 
   -- Get into the snapshot project and build it
   liftEffect $ Process.chdir $ Path.concat [ "test-snapshots" ]
@@ -112,7 +112,7 @@ runSnapshotTests { accept, filter } = do
     let
       runAcceptedTest = do
         result <- loadModuleMain
-          { libdir: vendorDirectory <> ":" <> "output"
+          { libdir: vendorDirectory <> ":output"
           , scheme: schemeBin
           , hasMain
           , modulePath: actualSnapshotOutputPath

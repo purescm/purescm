@@ -28,7 +28,7 @@
     Stop2?)
   (import
     (prefix (chezscheme) scm:)
-    (prefix (purs runtime) rt:))
+    (prefix (purescm runtime) rt:))
 
   (scm:define Nil
     (scm:quote Nil))
