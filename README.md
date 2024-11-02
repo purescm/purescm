@@ -70,22 +70,15 @@ We vendor [chez-srfi](https://github.com/arcfide/chez-srfi) using the following 
 
 1. Clone `chez-srfi` at the project root.
 
-2. Navigate to `chez-srfi` and run `./install.chezscheme.sps ../vendor`. This should produce an `srfi` folder inside of `vendor`.
+2. Navigate to `chez-srfi` and run `./install.chezscheme.sps ../lib`.
 
-3. Copy the desired SRFIs from `vendor/srfi` into `vendor/purs/runtime/srfi`. Make sure to also copy the SRFIs and other scheme files (e.g. the ones in the `private` folder) that they depend on. The [library-requirements](https://cisco.github.io/ChezScheme/csug9.5/libraries.html#./libraries:h7) function can aid in this process.
-
-4. Modify the copied scheme files such that the library names align with the folder structure. [`sd`](https://github.com/chmln/sd) makes this easy!
-```sh
-sd "\(srfi " "(purs runtime srfi " vendor/purs/**/*.sls
-```
-
-5. To verify, simply invoke the Scheme REPL:
+3. To verify, simply invoke the Scheme REPL:
 ```scheme
-$ scheme --libdirs ./vendor:
+$ scheme --libdirs ./lib:
 Chez Scheme Version 9.5.8
 Copyright 1984-2022 Cisco Systems, Inc.
 
-> (import (purs runtime srfi :125))
+> (import (srfi :125))
 >
 ```
 
