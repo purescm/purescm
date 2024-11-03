@@ -159,8 +159,6 @@ main cliRoot = do
 
 runBuild :: BuildArgs -> Aff Unit
 runBuild args = do
-  -- let runtimePath = Path.concat [ args.outputDir, "lib" ]
-  -- mkdirp runtimePath
   basicBuildMain
     { coreFnDirectory: args.coreFnDir
     , coreFnGlobs: pure "**"
