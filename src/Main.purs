@@ -212,10 +212,11 @@ runBundle cliRoot args = do
       ]
   FS.writeTextFile UTF8 mainPath mainContent
   let
-    runtimePath = Path.concat [ cliRoot, "lib" ]
-    runtimeLibPathPair = runtimePath <> "::" <> (Path.concat [ args.outputDir ])
-    libDirPathPair = args.libDir <> "::" <> args.outputDir
-    libDirs = runtimeLibPathPair <> ":" <> libDirPathPair <> ":"
+    -- Compile `lib/` to `[output]/`
+    runtimeLibPath = Path.concat [ cliRoot, "lib" ] <> "::" <> args.outputDir
+    -- Compile purescm generated scheme code to `[output]/`
+    purescmLibPath = args.libDir <> "::" <> args.outputDir
+    libDirs = runtimeLibPath <> ":" <> purescmLibPath <> ":"
     arguments = [ "-q", "--libdirs", libDirs ]
   res <- evalScheme arguments $ Array.fold
     [ "(top-level-program (import (chezscheme))"
@@ -237,8 +238,8 @@ runBundle cliRoot args = do
 runRun :: FilePath -> RunArgs -> Aff Unit
 runRun cliRoot args = do
   let
-    runtimePath = Path.concat [ cliRoot, "lib" ]
-    libDirs = runtimePath <> ":" <> args.libDir <> ":"
+    runtimeLibPath = Path.concat [ cliRoot, "lib" ]
+    libDirs = runtimeLibPath <> ":" <> args.libDir <> ":"
     arguments = [ "-q", "--libdirs", libDirs ]
   res <- evalScheme arguments $ Array.fold
     -- Set up an exception handler here so that compilation warnings get caught
