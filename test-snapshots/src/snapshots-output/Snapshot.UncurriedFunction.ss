@@ -14,7 +14,7 @@
     test4b)
   (import
     (prefix (chezscheme) scm:)
-    (prefix (purs runtime) rt:)
+    (prefix (purescm runtime) rt:)
     (prefix (Data.Function.Uncurried lib) Data.Function.Uncurried.)
     (prefix (Effect.Console lib) Effect.Console.)
     (prefix (Test.Assert lib) Test.Assert.))

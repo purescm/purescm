@@ -159,8 +159,6 @@ main cliRoot = do
 
 runBuild :: BuildArgs -> Aff Unit
 runBuild args = do
-  let runtimePath = Path.concat [ args.outputDir, "purs", "runtime" ]
-  mkdirp runtimePath
   basicBuildMain
     { coreFnDirectory: args.coreFnDir
     , coreFnGlobs: pure "**"
@@ -203,8 +201,8 @@ runBundle cliRoot args = do
     mainContent = String.joinWith "\n"
       [ "#!chezscheme"
       , "(import (chezscheme)"
-      , "        (only (purs runtime stack-trace) print-stack-trace)"
-      , "        (only (purs runtime finalizers) run-finalizers)"
+      , "        (only (purescm stack-trace) print-stack-trace)"
+      , "        (only (purescm finalizers) run-finalizers)"
       , "        (only (" <> args.moduleName <> " lib) main))"
       , "(base-exception-handler (lambda (e) (print-stack-trace e) (exit -1)))"
       , "(collect-request-handler (lambda () (collect) (run-finalizers)))"
@@ -212,10 +210,11 @@ runBundle cliRoot args = do
       ]
   FS.writeTextFile UTF8 mainPath mainContent
   let
-    runtimePath = Path.concat [ cliRoot, "vendor" ]
-    runtimeLibPathPair = runtimePath <> "::" <> (Path.concat [ args.outputDir ])
-    libDirPathPair = args.libDir <> "::" <> args.outputDir
-    libDirs = runtimeLibPathPair <> ":" <> libDirPathPair <> ":"
+    -- Compile `lib/` to `[output]/`
+    runtimeLibPath = Path.concat [ cliRoot, "lib" ] <> "::" <> args.outputDir
+    -- Compile purescm generated scheme code to `[output]/`
+    purescmLibPath = args.libDir <> "::" <> args.outputDir
+    libDirs = runtimeLibPath <> ":" <> purescmLibPath <> ":"
     arguments = [ "-q", "--libdirs", libDirs ]
   res <- evalScheme arguments $ Array.fold
     [ "(top-level-program (import (chezscheme))"
@@ -237,8 +236,8 @@ runBundle cliRoot args = do
 runRun :: FilePath -> RunArgs -> Aff Unit
 runRun cliRoot args = do
   let
-    runtimePath = Path.concat [ cliRoot, "vendor" ]
-    libDirs = runtimePath <> ":" <> args.libDir <> ":"
+    runtimeLibPath = Path.concat [ cliRoot, "lib" ]
+    libDirs = runtimeLibPath <> ":" <> args.libDir <> ":"
     arguments = [ "-q", "--libdirs", libDirs ]
   res <- evalScheme arguments $ Array.fold
     -- Set up an exception handler here so that compilation warnings get caught
@@ -247,8 +246,8 @@ runRun cliRoot args = do
     , "  (newline (console-error-port))"
     , "  (exit -1)))"
     , "(top-level-program (import (chezscheme)"
-    , "                           (only (purs runtime finalizers) run-finalizers)"
-    , "                           (only (purs runtime stack-trace) print-stack-trace)"
+    , "                           (only (purescm finalizers) run-finalizers)"
+    , "                           (only (purescm stack-trace) print-stack-trace)"
     , "                           (only (" <> args.moduleName <> " lib) main))"
     , "  (base-exception-handler (lambda (e) (print-stack-trace e) (exit -1)))"
     , "  (collect-request-handler (lambda () (collect) (run-finalizers)))"

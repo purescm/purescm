@@ -7,7 +7,7 @@
     g)
   (import
     (prefix (chezscheme) scm:)
-    (prefix (purs runtime) rt:))
+    (prefix (purescm runtime) rt:))
 
   (scm:define f
     (scm:lambda (x0)

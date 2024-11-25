@@ -10,7 +10,7 @@
     stringComparison)
   (import
     (prefix (chezscheme) scm:)
-    (prefix (purs runtime) rt:))
+    (prefix (purescm runtime) rt:))
 
   (scm:define stringComparison
     (scm:lambda (x0)

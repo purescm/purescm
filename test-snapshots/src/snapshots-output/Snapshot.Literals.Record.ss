@@ -12,7 +12,7 @@
     unsafeGetNotFound)
   (import
     (prefix (chezscheme) scm:)
-    (prefix (purs runtime) rt:)
+    (prefix (purescm runtime) rt:)
     (prefix (Record lib) Record.)
     (prefix (Test.Assert lib) Test.Assert.)
     (prefix (Type.Proxy lib) Type.Proxy.)

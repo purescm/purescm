@@ -10,7 +10,7 @@
     main)
   (import
     (prefix (chezscheme) scm:)
-    (prefix (purs runtime) rt:)
+    (prefix (purescm runtime) rt:)
     (prefix (Data.Unit lib) Data.Unit.))
 
   (scm:define main

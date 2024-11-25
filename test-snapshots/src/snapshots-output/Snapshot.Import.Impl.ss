@@ -12,7 +12,7 @@
     fortyTwo)
   (import
     (prefix (chezscheme) scm:)
-    (prefix (purs runtime) rt:)
+    (prefix (purescm runtime) rt:)
     (Snapshot.Import.Impl foreign))
 
   (scm:define-record-type (Product$ Product* Product?)

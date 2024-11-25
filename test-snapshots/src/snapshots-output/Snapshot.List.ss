@@ -12,7 +12,7 @@
     xs)
   (import
     (prefix (chezscheme) scm:)
-    (prefix (purs runtime) rt:)
+    (prefix (purescm runtime) rt:)
     (prefix (Data.List.Types lib) Data.List.Types.)
     (prefix (Data.Maybe lib) Data.Maybe.)
     (prefix (Data.Show lib) Data.Show.)
