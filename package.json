@@ -4,8 +4,8 @@
   "main": "index.js",
   "type": "module",
   "files": [
-    "vendor/**/*.ss",
-    "vendor/**/*.sls",
+    "lib/**/*.ss",
+    "lib/**/*.sls",
     "bundle/index.js"
   ],
   "bin": {
